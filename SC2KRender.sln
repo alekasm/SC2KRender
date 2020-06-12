@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29613.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SC2KRender", "SC2KRender\SC2KRender.vcxproj", "{E59C6B7A-263D-4650-8340-C742E0883AC6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Debug|x64.ActiveCfg = Debug|x64
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Debug|x64.Build.0 = Debug|x64
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Debug|x86.ActiveCfg = Debug|Win32
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Debug|x86.Build.0 = Debug|Win32
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Release|x64.ActiveCfg = Release|x64
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Release|x64.Build.0 = Release|x64
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Release|x86.ActiveCfg = Release|Win32
+		{E59C6B7A-263D-4650-8340-C742E0883AC6}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C0EABC6B-16A4-4D49-8F50-B5BAAB39F4D1}
+	EndGlobalSection
+EndGlobal
