@@ -17,9 +17,9 @@ enum TileType
   ETT_SLOPE_SW, // 0x07
   ETT_SLOPE_NW, // 0x08
   ETT_CORNER_NE, // 0x09
-  ETT_CORNER_SE, // 0x10
-  ETT_CORNER_SW, // 0x0
-  ETT_CORNER_NW, // 0x05
+  ETT_CORNER_SE, // 0xA
+  ETT_CORNER_SW, // 0xB
+  ETT_CORNER_NW, // 0xC
   ETT_HIGHGROUND,
   ETT_UNUSED_0E,
   ETT_UNUSED_0F,
@@ -109,4 +109,7 @@ struct Map
   MapTile* tiles;
   int sea_level;
   std::string city_name;
+  //uint32_t founding_year;
+  //uint32_t days_elapsed;
+  //int32_t money_supply;
 };

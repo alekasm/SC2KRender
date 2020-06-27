@@ -19,7 +19,24 @@ void UnimplementedFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   fseek(file, segment_size, SEEK_CUR);
 }
-
+/*
+void ExtractMISCFunction(FILE* file, uint32_t segment_size, Map& map)
+{  
+  printf("Reading MISC(0x%x), Size: %d\n", ftell(file), segment_size);
+  uint16_t remainder = segment_size % 2;
+  uint16_t read_size = segment_size - remainder;
+  printf("Read Size: %d, Remainder: %d\n", read_size, remainder);
+  uint32_t* misc_data = new uint32_t[read_size];
+  fread(&*misc_data, read_size, 1, file);  
+  fseek(file, remainder, SEEK_CUR);
+  if (read_size > 4)
+  {
+    map.founding_year = _byteswap_ulong(misc_data[3]);
+    map.days_elapsed = _byteswap_ulong(misc_data[4]);
+    map.money_supply = static_cast<int32_t>(_byteswap_ulong(misc_data[5]));
+  }
+}
+*/
 void ExtractCNAMFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   //Assume in this case segment_size always = 32
@@ -49,14 +66,18 @@ void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
       //bool water = ((((altitude_map & 0b0000000010000000) >> 7) & 1) == 0);
       map.tiles[x + 128 * y].height = height;
      // map.tiles[x + 128 * y].water = water;
-#if 0
-      if (x < 10 && y < 10)
-      {
-        printf("X:%d Y:%d Height:%d\n", x, y, height);
-      }
-#endif      
+  
     }
   }
+#if 0
+  for (int x = 0; x < 3; x++)
+  {
+    for (int y = 0; y < 3; y++)
+    {
+      printf("%d, %d: %d\n", x, y, map.tiles[x + 128 * y].height);
+    }
+  }
+#endif
 }
 
 void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
@@ -114,11 +135,13 @@ void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
     printf("Error extracting XTER Data!\n");
   }
 #if 0
-  printf("Tiles Read: %d\n", tile_number);
-  printf("0, 0: %d\n", map.tiles[0 + 128 * 0].type);
-  printf("1, 0: %d\n", map.tiles[1 + 128 * 0].type);
-  printf("0, 1: %d\n", map.tiles[0 + 128 * 1].type);
-  printf("1, 1: %d\n", map.tiles[1 + 128 * 1].type);
+  for (int x = 0; x < 3; x++)
+  {
+    for (int y = 0; y < 3; y++)
+    {
+      printf("%d, %d: %x\n", x, y, map.tiles[x + 128 * y].type);
+    }
+  }
 #endif
 }
 
@@ -129,7 +152,8 @@ namespace
   {
     {"CNAM", ExtractCNAMFunction},
     {"ALTM", ExtractALTMFunction},
-    {"XTER", ExtractXTERFunction}
+    {"XTER", ExtractXTERFunction},
+    //{"MISC", ExtractMISCFunction}
   };
 }
 
@@ -161,7 +185,6 @@ bool MapLoader::LoadMap(std::string filename)
   {
     MapSegmentHeader segment_header;
     fread(&segment_header, sizeof(segment_header), 1, file);
-    //segment_header.segment_type = _byteswap_ulong(segment_header.segment_type);
     segment_header.totalbytes = _byteswap_ulong(segment_header.totalbytes);
     unsigned int next_seek = segment_header.totalbytes;
 
@@ -170,7 +193,7 @@ bool MapLoader::LoadMap(std::string filename)
     it = segment_types.find(segtype);
     if (it == segment_types.end())
     {
-      printf("Skipping Segment Type: %s\n", segtype.c_str());
+      printf("Skipping %s(0x%x), Size: %d\n", segtype.c_str(), ftell(file), segment_header.totalbytes);
       fseek(file, segment_header.totalbytes, SEEK_CUR);
       continue;
     }
@@ -178,6 +201,9 @@ bool MapLoader::LoadMap(std::string filename)
   }
 
   printf("City Name: %s\n", map.city_name.c_str());
+  //printf("Founding Year: %d\n", map.founding_year);
+  //printf("Days Elapsed: %d\n", map.days_elapsed);
+  //printf("Money Supply: %d\n", map.money_supply);
 
   fclose(file);
   return true;
