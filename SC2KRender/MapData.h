@@ -84,10 +84,6 @@ struct MapTile
   int height;
   bool water;
   TileType type;
-  int GetHeightValue()
-  {
-    return (height * 100) + 50;
-  }
 };
 
 struct MapSegmentHeader

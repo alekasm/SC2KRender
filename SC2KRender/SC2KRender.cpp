@@ -10,7 +10,6 @@
 #include <iostream>
 #include "MapLoader.h"
 
-#include <D2d1_1.h>
 #include <dwrite.h>
 #pragma comment(lib, "d2d1")
 #pragma comment(lib, "Dwmapi")

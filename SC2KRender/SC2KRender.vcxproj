@@ -88,6 +88,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -115,6 +116,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -140,12 +142,82 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DirectXTK\BasicEffect.cpp" />
+    <ClCompile Include="DirectXTK\BasicPostProcess.cpp" />
+    <ClCompile Include="DirectXTK\BinaryReader.cpp" />
+    <ClCompile Include="DirectXTK\BufferHelpers.cpp" />
+    <ClCompile Include="DirectXTK\CommonStates.cpp" />
+    <ClCompile Include="DirectXTK\DDSTextureLoader.cpp" />
+    <ClCompile Include="DirectXTK\DebugEffect.cpp" />
+    <ClCompile Include="DirectXTK\DGSLEffect.cpp" />
+    <ClCompile Include="DirectXTK\DGSLEffectFactory.cpp" />
+    <ClCompile Include="DirectXTK\DirectXHelpers.cpp" />
+    <ClCompile Include="DirectXTK\DualPostProcess.cpp" />
+    <ClCompile Include="DirectXTK\DualTextureEffect.cpp" />
+    <ClCompile Include="DirectXTK\EffectCommon.cpp" />
+    <ClCompile Include="DirectXTK\EffectFactory.cpp" />
+    <ClCompile Include="DirectXTK\EnvironmentMapEffect.cpp" />
+    <ClCompile Include="DirectXTK\GeometricPrimitive.cpp" />
+    <ClCompile Include="DirectXTK\Geometry.cpp" />
+    <ClCompile Include="DirectXTK\GraphicsMemory.cpp" />
+    <ClCompile Include="DirectXTK\Model.cpp" />
+    <ClCompile Include="DirectXTK\ModelLoadCMO.cpp" />
+    <ClCompile Include="DirectXTK\ModelLoadSDKMESH.cpp" />
+    <ClCompile Include="DirectXTK\ModelLoadVBO.cpp" />
+    <ClCompile Include="DirectXTK\NormalMapEffect.cpp" />
+    <ClCompile Include="DirectXTK\PBREffect.cpp" />
+    <ClCompile Include="DirectXTK\PBREffectFactory.cpp" />
+    <ClCompile Include="DirectXTK\PrimitiveBatch.cpp" />
+    <ClCompile Include="DirectXTK\ScreenGrab.cpp" />
+    <ClCompile Include="DirectXTK\SimpleMath.cpp" />
+    <ClCompile Include="DirectXTK\SkinnedEffect.cpp" />
+    <ClCompile Include="DirectXTK\SpriteBatch.cpp" />
+    <ClCompile Include="DirectXTK\SpriteFont.cpp" />
+    <ClCompile Include="DirectXTK\ToneMapPostProcess.cpp" />
+    <ClCompile Include="DirectXTK\VertexTypes.cpp" />
+    <ClCompile Include="DirectXTK\WICTextureLoader.cpp" />
     <ClCompile Include="MapLoader.cpp" />
     <ClCompile Include="SC2KRender.cpp" />
+    <ClCompile Include="Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DirectXTK.h" />
+    <ClInclude Include="DirectXTK\AlignedNew.h" />
+    <ClInclude Include="DirectXTK\Audio.h" />
+    <ClInclude Include="DirectXTK\Bezier.h" />
+    <ClInclude Include="DirectXTK\BinaryReader.h" />
+    <ClInclude Include="DirectXTK\BufferHelpers.h" />
+    <ClInclude Include="DirectXTK\CommonStates.h" />
+    <ClInclude Include="DirectXTK\DDS.h" />
+    <ClInclude Include="DirectXTK\DDSTextureLoader.h" />
+    <ClInclude Include="DirectXTK\DemandCreate.h" />
+    <ClInclude Include="DirectXTK\DirectXHelpers.h" />
+    <ClInclude Include="DirectXTK\EffectCommon.h" />
+    <ClInclude Include="DirectXTK\Effects.h" />
+    <ClInclude Include="DirectXTK\GeometricPrimitive.h" />
+    <ClInclude Include="DirectXTK\Geometry.h" />
+    <ClInclude Include="DirectXTK\GraphicsMemory.h" />
+    <ClInclude Include="DirectXTK\LoaderHelpers.h" />
+    <ClInclude Include="DirectXTK\Model.h" />
+    <ClInclude Include="DirectXTK\pch.h" />
+    <ClInclude Include="DirectXTK\PlatformHelpers.h" />
+    <ClInclude Include="DirectXTK\PostProcess.h" />
+    <ClInclude Include="DirectXTK\PrimitiveBatch.h" />
+    <ClInclude Include="DirectXTK\ScreenGrab.h" />
+    <ClInclude Include="DirectXTK\SDKMesh.h" />
+    <ClInclude Include="DirectXTK\SharedResourcePool.h" />
+    <ClInclude Include="DirectXTK\SimpleMath.h" />
+    <ClInclude Include="DirectXTK\SpriteBatch.h" />
+    <ClInclude Include="DirectXTK\SpriteFont.h" />
+    <ClInclude Include="DirectXTK\vbo.h" />
+    <ClInclude Include="DirectXTK\VertexTypes.h" />
+    <ClInclude Include="DirectXTK\WICTextureLoader.h" />
     <ClInclude Include="MapData.h" />
     <ClInclude Include="MapLoader.h" />
+    <ClInclude Include="Scene.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DirectXTK\SimpleMath.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
