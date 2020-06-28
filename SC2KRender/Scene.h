@@ -9,7 +9,6 @@
 #define WIN32_LEAN_AND_MEAN
 
 #define HEIGHT_INCREMENT 0.5f
-#define TILES_DIMENSION 16
 
 
 #include <Windows.h>
@@ -23,30 +22,119 @@
 #include "DirectXTK.h"
 #include "MapData.h"
 
+namespace DX
+{
+  inline void ThrowIfFailed(HRESULT hr)
+  {
+    if (FAILED(hr))
+    {
+      // Set a breakpoint on this line to catch DirectX API errors
+      throw std::exception();
+    }
+  }
+}
+
 
 namespace DirectX::Colors
 {
-  DirectX::XMFLOAT4 SC2K_DIRT_FLAT(0.6078431f, 0.5294117f, 0.2784313f, 1.0f);
-  DirectX::XMFLOAT4 SC2K_DIRT_BRIGHT(0.6941176f, 0.6235294f, 0.3725490f, 1.0f);
-  DirectX::XMFLOAT4 SC2K_DIRT_DARK(0.5294117f, 0.4196078f, 0.2f, 1.0f);
-  DirectX::XMFLOAT4 SC2K_DIRT_DARKER(0.4509803f, 0.3254901f, 0.1372549f, 1.0f);
-  DirectX::XMFLOAT4 SC2K_DIRT_DARKEST(0.3725490f, 0.2313725f, 0.0745098f, 1.0f);
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_FLAT = { {{0.6078431f, 0.5294117f, 0.2784313f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_BRIGHT = { {{0.6941176f, 0.6235294f, 0.3725490f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARK = { {{0.5294117f, 0.4196078f, 0.2f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKER = { {{0.4509803f, 0.3254901f, 0.1372549f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKEST = { {{0.3725490f, 0.2313725f, 0.0745098f, 1.0f}} };
 };
 
-struct SceneTile : public MapTile
+struct SceneTile
 {
   DirectX::SimpleMath::Vector3 v_topleft, v_topright, v_bottomleft, v_bottomright;
   DirectX::VertexPositionColor vpc_topleft, vpc_topright, vpc_bottomleft, vpc_bottomright;
   DirectX::XMVECTORF32 c_topleft, c_topright, c_bottomleft, c_bottomright;
-  MapTile map_tile;
+  float height;
+
+  SceneTile()
+  {
+    c_topleft = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_topright = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_bottomleft = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_bottomright = DirectX::Colors::SC2K_DIRT_FLAT;
+  }
+
+  void CreateVertexPositionColors()
+  {
+    vpc_topleft = DirectX::VertexPositionColor(v_topleft, c_topleft);
+    vpc_bottomleft = DirectX::VertexPositionColor(v_bottomleft, c_bottomleft);
+    vpc_topright = DirectX::VertexPositionColor(v_topright, c_topright);
+    vpc_bottomright = DirectX::VertexPositionColor(v_bottomright, c_bottomright);
+  }
+
+  void FillAttributes(const MapTile& tile)
+  {
+    this->height = static_cast<float>(tile.height * HEIGHT_INCREMENT);
+    v_topleft.y = height;
+    v_topright.y = height;
+    v_bottomleft.y = height;
+    v_bottomright.y = height;
+    switch (tile.type)
+    {
+    case ETT_SLOPE_E:
+      v_topleft.y += HEIGHT_INCREMENT;
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_topright = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      break;
+    case ETT_SLOPE_N:
+      v_topleft.y += HEIGHT_INCREMENT;
+      v_topright.y += HEIGHT_INCREMENT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARKER;
+      c_topright = DirectX::Colors::SC2K_DIRT_DARKER;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKER;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKER;
+      break;
+    case ETT_SLOPE_S:
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      v_bottomright.y += HEIGHT_INCREMENT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_topright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      break;
+    case ETT_SLOPE_W:
+      v_topright.y += HEIGHT_INCREMENT;
+      v_bottomright.y += HEIGHT_INCREMENT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_topright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      break;
+    case ETT_CORNER_NE:
+      v_topleft.y += HEIGHT_INCREMENT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      break;
+    case ETT_CORNER_SE:
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      break;
+    case ETT_CORNER_SW:
+      v_bottomright.y += HEIGHT_INCREMENT;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      break;
+    case ETT_CORNER_NW:
+      v_topright.y += HEIGHT_INCREMENT;
+      c_topright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      break;
+    }
+    CreateVertexPositionColors();
+  }
 };
 
 
 class Scene
 {
 public:
-  void Initialize(HWND window, int width, int height);
-  void MouseLook(float x, float z, float y);
+  void Initialize(HWND window, MapTile* tiles, int width, int height);
+  void MouseLook(int x, int z, int y);
   void Tick();
   void Render();
   void Update(DX::StepTimer const& timer);
@@ -59,6 +147,7 @@ private:
   HWND m_window;
   int m_outputWidth;
   int m_outputHeight;
+  bool render_scene = false;
 
   D3D_FEATURE_LEVEL m_featureLevel;
   Microsoft::WRL::ComPtr<ID3D11Device1> m_d3dDevice;
@@ -80,7 +169,7 @@ private:
   float rotation_x = 0.0f;
   float rotation_y = 0.8f;
   float z = 0.1f;
-  int window_cx = 0, window_cy = 0;//
+  int window_cx = 0, window_cy = 0;
   float look_x = 0.f, look_y = 0.f, look_z = 0.f;
   float eye_x = 3.f, eye_y = 2.f, eye_z = 3.f;
   SceneTile* tiles;

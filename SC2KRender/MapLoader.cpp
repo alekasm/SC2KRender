@@ -157,7 +157,7 @@ namespace
   };
 }
 
-bool MapLoader::LoadMap(std::string filename)
+bool MapLoader::LoadMap(std::string filename, MapTile* &tile_out)
 {
   FILE* file;
   int result = fopen_s(&file, filename.c_str(), "rb");
@@ -179,7 +179,7 @@ bool MapLoader::LoadMap(std::string filename)
 
   Map map;
   map.header = header;
-  map.tiles = new MapTile[128 * 128];
+  map.tiles = new MapTile[TILES_DIMENSION * TILES_DIMENSION];
   long total_filesize = header.totalbytes + 0x8; //The header doesn't include the first 8 bytes
   while (ftell(file) < total_filesize)
   {
@@ -206,5 +206,6 @@ bool MapLoader::LoadMap(std::string filename)
   //printf("Money Supply: %d\n", map.money_supply);
 
   fclose(file);
+  tile_out = map.tiles;
   return true;
 }

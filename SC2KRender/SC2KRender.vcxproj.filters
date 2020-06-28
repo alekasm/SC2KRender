@@ -235,5 +235,6 @@
     <None Include="DirectXTK\SimpleMath.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="d3d.spritefont" />
   </ItemGroup>
 </Project>

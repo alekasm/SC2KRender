@@ -2,7 +2,7 @@
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 
-void Scene::Initialize(HWND window, int width, int height)
+void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 {
   m_window = window;
   m_outputWidth = width;
@@ -13,10 +13,10 @@ void Scene::Initialize(HWND window, int width, int height)
   window_cx = static_cast<int>(rect.left + ((rect.right - rect.left) / 2));
   window_cy = static_cast<int>(rect.top + ((rect.bottom - rect.top) / 2));
   SetCursorPos(window_cx, window_cy);
-  //ShowCursor(FALSE);
+  ShowCursor(FALSE);
 
   CreateDevice();
-  CreateResources();
+  CreateResources();  
 
   m_view = Matrix::CreateLookAt(Vector3(3.f, 2.f, 3.f), Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.1f, 10.f);
@@ -35,21 +35,10 @@ void Scene::Initialize(HWND window, int width, int height)
       t.v_bottomleft = Vector3(fx, 0, fy + 1);
       t.v_topright = Vector3(fx + 1, 0, fy);
       t.v_bottomright = Vector3(fx + 1, 0, fy + 1);
-      //t.CreateVertexPositionColors();
+      t.FillAttributes(map_tiles[x + TILES_DIMENSION * y]);
     }
-  }
-  /*
-  tiles[0 + 16 * 0].FillAttributes(TileType::ETT_CORNER_SW, 0);
-  tiles[0 + 16 * 1].FillAttributes(TileType::ETT_SLOPE_W, 0);
-  tiles[0 + 16 * 2].FillAttributes(TileType::ETT_CORNER_NW, 0);
-  tiles[1 + 16 * 0].FillAttributes(TileType::ETT_SLOPE_S, 0);
-  tiles[1 + 16 * 1].FillAttributes(TileType::ETT_FLAT, 1 * HEIGHT_INCREMENT);
-  tiles[1 + 16 * 2].FillAttributes(TileType::ETT_SLOPE_N, 0);
-  tiles[2 + 16 * 0].FillAttributes(TileType::ETT_CORNER_SE, 0);
-  tiles[2 + 16 * 1].FillAttributes(TileType::ETT_SLOPE_E, 0);
-  tiles[2 + 16 * 2].FillAttributes(TileType::ETT_CORNER_NE, 0);
-  */
-
+  }  
+  render_scene = true;
 }
 
 void Scene::CreateDevice()
@@ -146,6 +135,7 @@ void Scene::CreateResources()
     fsSwapChainDesc.Windowed = TRUE;
 
     // Create a SwapChain from a Win32 window.
+    HRESULT hr_dxgifactory =
     dxgiFactory->CreateSwapChainForHwnd(
       m_d3dDevice.Get(),
       m_window,
@@ -154,6 +144,18 @@ void Scene::CreateResources()
       nullptr,
       m_swapChain.ReleaseAndGetAddressOf()
     );
+    if (hr_dxgifactory != S_OK)
+    {
+      if (hr_dxgifactory == E_OUTOFMEMORY)
+        OutputDebugString("out of memory\n");
+      else if (hr_dxgifactory == DXGI_ERROR_INVALID_CALL)
+        OutputDebugString("invalid call\n");
+      else
+        printf("Result: %x\n", hr_dxgifactory);
+      if (m_window == NULL)
+        OutputDebugString("null window\n");
+      ExitProcess(1);
+    }
    dxgiFactory->MakeWindowAssociation(m_window, DXGI_MWA_NO_ALT_ENTER);
   }
   // Obtain the backbuffer for this window which will be the final 3D rendertarget.
@@ -191,11 +193,11 @@ void Scene::Tick()
   Render();
 }
 
-void Scene::MouseLook(float x, float z, float y)
+void Scene::MouseLook(int x, int z, int y)
 {
   SetCursorPos(window_cx, window_cy);
-  float dx = x - window_cx;
-  float dy = y - window_cy;
+  float dx = static_cast<float>(x - window_cx);
+  float dy = static_cast<float>(y - window_cy);
   dx *= 0.001f;
   dy *= 0.001f;
   if (std::abs(dx) > 0.1 || std::abs(dy) > 0.1)
@@ -253,20 +255,17 @@ void Scene::Update(DX::StepTimer const& timer)
   m_world *= Matrix::CreateScale(z);
   m_view = Matrix::CreateLookAt(Vector3(eye_x, eye_y, eye_z), Vector3(look_x, look_y, look_z), Vector3::UnitY);
 
-
-  elapsedTime;
 }
 
 void Scene::Render()
 {
   // Don't try to render anything before the first Update.
-  if (m_timer.GetFrameCount() == 0)
+  if (!render_scene)
   {
     return;
   }
 
   Clear();
-
 
   m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
   m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
@@ -274,20 +273,26 @@ void Scene::Render()
 
   m_effect->SetWorld(m_world);
   m_effect->SetView(m_view);
-
   m_effect->Apply(m_d3dContext.Get());
-
   m_d3dContext->IASetInputLayout(m_inputLayout.Get());
-
 
 
   m_batch->Begin();
 
-  Vector3 xaxis((float)TILES_DIMENSION, 0.f, 0.f);
-  Vector3 yaxis(0.f, 0.f, (float)TILES_DIMENSION);
+  Vector3 xaxis((float)TILES_DIMENSION, 2.f, 0.f);
+  Vector3 yaxis(0.f, 2.f, (float)TILES_DIMENSION);
   Vector3 origin = Vector3::Zero;
   size_t divisions = TILES_DIMENSION;
 
+  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  {
+    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    {
+      const SceneTile t = tiles[x + TILES_DIMENSION * y];
+      m_batch->DrawTriangle(t.vpc_topleft, t.vpc_bottomleft, t.vpc_topright);
+      m_batch->DrawTriangle(t.vpc_bottomright, t.vpc_bottomleft, t.vpc_topright);
+    }
+  }
 
 
   for (size_t i = 0; i <= divisions; i++)
@@ -297,7 +302,7 @@ void Scene::Render()
 
     Vector3 scale = yaxis * fPercent + origin;
 
-    DirectX::VertexPositionColor v1(scale + Vector3::Zero, DirectX::Colors::Black);
+    DirectX::VertexPositionColor v1(scale + Vector3(0, 2, 0), DirectX::Colors::Black);
     DirectX::VertexPositionColor v2(scale + xaxis, DirectX::Colors::Black);
     m_batch->DrawLine(v1, v2);
   }
@@ -309,21 +314,14 @@ void Scene::Render()
 
     Vector3 scale = xaxis * fPercent + origin;
 
-    DirectX::VertexPositionColor v1(scale + Vector3::Zero, DirectX::Colors::Black);
+    DirectX::VertexPositionColor v1(scale + Vector3(0, 2, 0), DirectX::Colors::Black);
     DirectX::VertexPositionColor v2(scale + yaxis, DirectX::Colors::Black);
     m_batch->DrawLine(v1, v2);
   }
 
-  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
-  {
-    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
-    {
-      const SceneTile t = tiles[x + TILES_DIMENSION * y];
-      m_batch->DrawTriangle(t.vpc_topleft, t.vpc_bottomleft, t.vpc_topright);
-      m_batch->DrawTriangle(t.vpc_bottomright, t.vpc_bottomleft, t.vpc_topright);
-    }
-  }
-   m_batch->End();
+
+
+  m_batch->End();
 
 
   m_spriteBatch->Begin();
@@ -331,5 +329,11 @@ void Scene::Render()
   m_font->DrawString(m_spriteBatch.get(), text.c_str(), DirectX::XMFLOAT2(5, 5), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
   m_spriteBatch->End();
 
-  m_swapChain->Present(1, 0);
+  HRESULT hr = m_swapChain->Present(1, 0);
+  if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
+  {
+    //m_swapChain.Reset();
+    //CreateDevice();
+    //CreateResources();
+  }
 }

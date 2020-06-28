@@ -1,6 +1,7 @@
 #pragma once
 #include <Windows.h>
 #include <string>
+#define TILES_DIMENSION 128
 
 #define FORM 0x4d524f46
 #define ISCD 0x48444353 //Referred to as SCDH
