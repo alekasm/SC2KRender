@@ -9,6 +9,8 @@
 #define WIN32_LEAN_AND_MEAN
 
 #define HEIGHT_INCREMENT 0.5f
+#define TILES_DIMENSION 16
+
 
 #include <Windows.h>
 #include <memory>
@@ -16,11 +18,11 @@
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 #include <wrl/client.h>
-#include "DirectXTK.h"
-
 #pragma comment(lib, "D3D11")
 
+#include "DirectXTK.h"
 #include "MapData.h"
+
 
 namespace DirectX::Colors
 {
@@ -33,12 +35,10 @@ namespace DirectX::Colors
 
 struct SceneTile : public MapTile
 {
-  DirectX::XMFLOAT3 v_topleft, v_topright, v_bottomleft, v_bottomright;
+  DirectX::SimpleMath::Vector3 v_topleft, v_topright, v_bottomleft, v_bottomright;
+  DirectX::VertexPositionColor vpc_topleft, vpc_topright, vpc_bottomleft, vpc_bottomright;
+  DirectX::XMVECTORF32 c_topleft, c_topright, c_bottomleft, c_bottomright;
   MapTile map_tile;
-  SceneTile(const MapTile& map_tile)
-  {
-    this->map_tile = map_tile;
-  }
 };
 
 
@@ -48,8 +48,14 @@ public:
   void Initialize(HWND window, int width, int height);
   void MouseLook(float x, float z, float y);
   void Tick();
+  void Render();
+  void Update(DX::StepTimer const& timer);
 
 private:
+  void CreateDevice();
+  void CreateResources();
+  void Clear();
+
   HWND m_window;
   int m_outputWidth;
   int m_outputHeight;
@@ -70,9 +76,13 @@ private:
   DirectX::SimpleMath::Matrix m_world;
   DirectX::SimpleMath::Matrix m_view;
   DirectX::SimpleMath::Matrix m_proj;
-
-  float window_cx = 0, window_cy = 0;
-  float look_x = 0, look_y = 0, look_z = 0;
+  DX::StepTimer m_timer;
+  float rotation_x = 0.0f;
+  float rotation_y = 0.8f;
+  float z = 0.1f;
+  int window_cx = 0, window_cy = 0;//
+  float look_x = 0.f, look_y = 0.f, look_z = 0.f;
   float eye_x = 3.f, eye_y = 2.f, eye_z = 3.f;
+  SceneTile* tiles;
 
 };

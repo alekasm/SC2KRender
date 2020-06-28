@@ -29,3 +29,4 @@
 #include "DirectXTK/vbo.h"
 #include "DirectXTK/VertexTypes.h"
 #include "DirectXTK/WICTextureLoader.h"
+#include "DirectXTK/StepTimer.h"

@@ -44,17 +44,12 @@ BYTE VK_MOUSELEFT = 0x01;
 BYTE VK_MOUSERIGHT = 0x02;
 bool CanClick = true;
 
-RECT ClientRect;
+RECT ClientRect = {0, 0, 512, 512};
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
-
-	ClientRect.top = 0;
-	ClientRect.left = 0;
-	ClientRect.bottom = 512;
-	ClientRect.right = 512;
 
 	AllocConsole();
 	FILE* p_file;
