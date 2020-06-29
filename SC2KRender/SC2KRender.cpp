@@ -16,9 +16,6 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HWND hWnd;
 
 RECT WindowRect;
-
-int width = 512;
-int height = 512;
 DWORD dwProcID = NULL;
 DWORD dwActiveProcID = NULL;
 
@@ -27,7 +24,7 @@ BYTE VK_MOUSELEFT = 0x01;
 BYTE VK_MOUSERIGHT = 0x02;
 bool CanClick = true;
 
-RECT ClientRect = {0, 0, 512, 512};
+RECT ClientRect = {0, 0, 1024, 768};
 
 namespace
 {

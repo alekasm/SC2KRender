@@ -41,7 +41,7 @@ namespace DirectX::Colors
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_BRIGHT = { {{0.6941176f, 0.6235294f, 0.3725490f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARK = { {{0.5294117f, 0.4196078f, 0.2f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKER = { {{0.4509803f, 0.3254901f, 0.1372549f, 1.0f}} };
-  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKEST = { {{0.3725490f, 0.2313725f, 0.0745098f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKEST = { {{0.5529411f, 0.4f, 0.1725490f, 1.0f}} };
 };
 
 struct SceneTile
@@ -67,6 +67,30 @@ struct SceneTile
     vpc_bottomright = DirectX::VertexPositionColor(v_bottomright, c_bottomright);
   }
 
+  void Rotate90Degrees()
+  {
+    DirectX::SimpleMath::Vector3 v_topleft_original = v_topleft;
+    v_topleft = v_bottomleft;
+    v_bottomleft = v_bottomright;
+    v_bottomright = v_topright;
+    v_topright = v_topleft_original;  
+
+    DirectX::XMVECTORF32 c_topleft_original = c_topleft;
+    c_topleft = c_bottomleft;
+    c_bottomleft = c_bottomright;
+    c_bottomright = c_topright;
+    c_topright = c_topleft_original;
+  }
+
+  void ColorTile(DirectX::XMVECTORF32 color)
+  {
+    c_topleft = color;
+    c_topright = color;
+    c_bottomleft = color;
+    c_bottomright = color;
+    CreateVertexPositionColors();
+  }
+
   void FillAttributes(const MapTile& tile)
   {
     this->height = static_cast<float>(tile.height * HEIGHT_INCREMENT);
@@ -83,7 +107,7 @@ struct SceneTile
       c_topright = DirectX::Colors::SC2K_DIRT_BRIGHT;
       c_bottomleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
       c_bottomright = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      break;
+      break;      
     case ETT_SLOPE_N:
       v_topleft.y += HEIGHT_INCREMENT;
       v_topright.y += HEIGHT_INCREMENT;
@@ -108,21 +132,55 @@ struct SceneTile
       c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
       c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
       break;
+    case ETT_SLOPE_NE:
+      v_topleft.y += HEIGHT_INCREMENT;
+      v_topright.y += HEIGHT_INCREMENT;
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKER;
+      break;
+    case ETT_SLOPE_NW:
+      v_topleft.y += HEIGHT_INCREMENT;
+      v_bottomright.y += HEIGHT_INCREMENT;
+      v_topright.y += HEIGHT_INCREMENT;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKER;
+      //v_bottomleft.y += HEIGHT_INCREMENT;
+      //c_topright = DirectX::Colors::SC2K_DIRT_DARKER;
+      break;
+    case ETT_SLOPE_SE:
+      v_topleft.y += HEIGHT_INCREMENT;
+      v_bottomright.y += HEIGHT_INCREMENT;
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      c_topright = DirectX::Colors::SC2K_DIRT_DARKER;
+      break;
+    case ETT_SLOPE_SW:
+      v_topright.y += HEIGHT_INCREMENT;
+      v_bottomright.y += HEIGHT_INCREMENT;
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARKER;
+      break;
     case ETT_CORNER_NE:
       v_topleft.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_topleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_topright = DirectX::Colors::SC2K_DIRT_DARK;
+      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARK;
       break;
     case ETT_CORNER_SE:
       v_bottomleft.y += HEIGHT_INCREMENT;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARK;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARK;
+      Rotate90Degrees();
       break;
     case ETT_CORNER_SW:
       v_bottomright.y += HEIGHT_INCREMENT;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      //c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
       break;
     case ETT_CORNER_NW:
-      v_topright.y += HEIGHT_INCREMENT;
-      c_topright = DirectX::Colors::SC2K_DIRT_DARKEST;
+      v_topright.y += HEIGHT_INCREMENT;      
+      c_topright = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_topleft = DirectX::Colors::SC2K_DIRT_DARK;
+      c_bottomright = DirectX::Colors::SC2K_DIRT_DARK;
+      Rotate90Degrees();
       break;
     }
     CreateVertexPositionColors();

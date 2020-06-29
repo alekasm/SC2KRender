@@ -284,17 +284,6 @@ void Scene::Render()
   Vector3 origin = Vector3::Zero;
   size_t divisions = TILES_DIMENSION;
 
-  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
-  {
-    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
-    {
-      const SceneTile t = tiles[x + TILES_DIMENSION * y];
-      m_batch->DrawTriangle(t.vpc_topleft, t.vpc_bottomleft, t.vpc_topright);
-      m_batch->DrawTriangle(t.vpc_bottomright, t.vpc_bottomleft, t.vpc_topright);
-    }
-  }
-
-
   for (size_t i = 0; i <= divisions; i++)
   {
     float fPercent = float(i) / float(divisions);
@@ -317,6 +306,16 @@ void Scene::Render()
     DirectX::VertexPositionColor v1(scale + Vector3(0, 2, 0), DirectX::Colors::Black);
     DirectX::VertexPositionColor v2(scale + yaxis, DirectX::Colors::Black);
     m_batch->DrawLine(v1, v2);
+  }
+
+  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  {
+    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    {
+      const SceneTile t = tiles[x + TILES_DIMENSION * y];
+      m_batch->DrawTriangle(t.vpc_topleft, t.vpc_bottomleft, t.vpc_topright);
+      m_batch->DrawTriangle(t.vpc_bottomright, t.vpc_bottomleft, t.vpc_topright);
+    }
   }
 
 

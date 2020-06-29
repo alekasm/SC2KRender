@@ -64,15 +64,14 @@ void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
       int height = ((altitude_map & 0b0000000000001111));   
       //bool water = ((altitude_map & 0b0000000010000000) >> 7);
       //bool water = ((((altitude_map & 0b0000000010000000) >> 7) & 1) == 0);
-      map.tiles[x + 128 * y].height = height;
-     // map.tiles[x + 128 * y].water = water;
-  
+      map.tiles[y + 128 * x].height = height; //TODO Investigate why x/y is flipped
+     // map.tiles[x + 128 * y].water = water;  
     }
   }
 #if 0
-  for (int x = 0; x < 3; x++)
+  for (int x = 0; x < 5; x++)
   {
-    for (int y = 0; y < 3; y++)
+    for (int y = 0; y < 5; y++)
     {
       printf("%d, %d: %d\n", x, y, map.tiles[x + 128 * y].height);
     }
@@ -135,9 +134,9 @@ void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
     printf("Error extracting XTER Data!\n");
   }
 #if 0
-  for (int x = 0; x < 3; x++)
+  for (int x = 0; x < 5; x++)
   {
-    for (int y = 0; y < 3; y++)
+    for (int y = 0; y < 5; y++)
     {
       printf("%d, %d: %x\n", x, y, map.tiles[x + 128 * y].type);
     }
