@@ -69,12 +69,6 @@
     <ClCompile Include="DirectXTK\EnvironmentMapEffect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirectXTK\GeometricPrimitive.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DirectXTK\Geometry.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DirectXTK\GraphicsMemory.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -171,12 +165,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirectXTK\Effects.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectXTK\GeometricPrimitive.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DirectXTK\Geometry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DirectXTK\GraphicsMemory.h">

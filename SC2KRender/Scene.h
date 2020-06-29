@@ -42,6 +42,7 @@ namespace DirectX::Colors
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARK = { {{0.5294117f, 0.4196078f, 0.2f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKER = { {{0.4509803f, 0.3254901f, 0.1372549f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKEST = { {{0.5529411f, 0.4f, 0.1725490f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_EXPOSED = { {{0.3725490f, 0.2313725f, 0.0745098f, 1.0f}} };
 };
 
 struct SceneTile
@@ -181,6 +182,18 @@ struct SceneTile
       c_topleft = DirectX::Colors::SC2K_DIRT_DARK;
       c_bottomright = DirectX::Colors::SC2K_DIRT_DARK;
       Rotate90Degrees();
+      break;
+    case ETT_HIGHGROUND:
+      //ColorTile(DirectX::Colors::Red);
+      v_topright.y += HEIGHT_INCREMENT;
+      v_topleft.y += HEIGHT_INCREMENT;
+      v_bottomright.y += HEIGHT_INCREMENT;
+      v_bottomleft.y += HEIGHT_INCREMENT;
+      break;
+    case ETT_FLAT:
+      break;
+    case ETT_UNDERWATER_FLAT:
+      ColorTile(DirectX::Colors::DarkBlue);
       break;
     }
     CreateVertexPositionColors();

@@ -146,14 +146,7 @@ void Scene::CreateResources()
     );
     if (hr_dxgifactory != S_OK)
     {
-      if (hr_dxgifactory == E_OUTOFMEMORY)
-        OutputDebugString("out of memory\n");
-      else if (hr_dxgifactory == DXGI_ERROR_INVALID_CALL)
-        OutputDebugString("invalid call\n");
-      else
-        printf("Result: %x\n", hr_dxgifactory);
-      if (m_window == NULL)
-        OutputDebugString("null window\n");
+      printf("Result: %x\n", hr_dxgifactory);
       ExitProcess(1);
     }
    dxgiFactory->MakeWindowAssociation(m_window, DXGI_MWA_NO_ALT_ENTER);
@@ -259,7 +252,6 @@ void Scene::Update(DX::StepTimer const& timer)
 
 void Scene::Render()
 {
-  // Don't try to render anything before the first Update.
   if (!render_scene)
   {
     return;
@@ -275,7 +267,6 @@ void Scene::Render()
   m_effect->SetView(m_view);
   m_effect->Apply(m_d3dContext.Get());
   m_d3dContext->IASetInputLayout(m_inputLayout.Get());
-
 
   m_batch->Begin();
 
@@ -318,10 +309,7 @@ void Scene::Render()
     }
   }
 
-
-
   m_batch->End();
-
 
   m_spriteBatch->Begin();
   std::wstring text = L"RotX: " + std::to_wstring(rotation_x) + L", RotY: " + std::to_wstring(rotation_y) + L", Scale: " + std::to_wstring(z);

@@ -157,8 +157,6 @@
     <ClCompile Include="DirectXTK\EffectCommon.cpp" />
     <ClCompile Include="DirectXTK\EffectFactory.cpp" />
     <ClCompile Include="DirectXTK\EnvironmentMapEffect.cpp" />
-    <ClCompile Include="DirectXTK\GeometricPrimitive.cpp" />
-    <ClCompile Include="DirectXTK\Geometry.cpp" />
     <ClCompile Include="DirectXTK\GraphicsMemory.cpp" />
     <ClCompile Include="DirectXTK\Model.cpp" />
     <ClCompile Include="DirectXTK\ModelLoadCMO.cpp" />
@@ -194,8 +192,6 @@
     <ClInclude Include="DirectXTK\DirectXHelpers.h" />
     <ClInclude Include="DirectXTK\EffectCommon.h" />
     <ClInclude Include="DirectXTK\Effects.h" />
-    <ClInclude Include="DirectXTK\GeometricPrimitive.h" />
-    <ClInclude Include="DirectXTK\Geometry.h" />
     <ClInclude Include="DirectXTK\GraphicsMemory.h" />
     <ClInclude Include="DirectXTK\LoaderHelpers.h" />
     <ClInclude Include="DirectXTK\Model.h" />

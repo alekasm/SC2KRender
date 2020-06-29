@@ -12,8 +12,6 @@
 #include "DirectXTK/DirectXHelpers.h"
 #include "DirectXTK/EffectCommon.h"
 #include "DirectXTK/Effects.h"
-#include "DirectXTK/GeometricPrimitive.h"
-#include "DirectXTK/Geometry.h"
 #include "DirectXTK/GraphicsMemory.h"
 #include "DirectXTK/LoaderHelpers.h"
 #include "DirectXTK/Model.h"
