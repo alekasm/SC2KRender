@@ -60,11 +60,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		return 1;
 	}
 
-
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 
 	DWORD grfStyle, grfExStyle;
-	grfStyle = WS_VISIBLE | WS_CLIPCHILDREN | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
+	grfStyle = WS_CLIPCHILDREN | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 	grfExStyle = WS_EX_STATICEDGE;
 	AdjustWindowRectEx(&ClientRect, grfStyle, FALSE, grfExStyle);
 
@@ -92,9 +91,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	GetWindowThreadProcessId(hWnd, &dwProcID);
 	RECT rc;
 	GetClientRect(hWnd, &rc);
-
-
-
 	
 	scene = std::make_unique<Scene>();
 	scene->Initialize(hWnd, tiles, rc.right - rc.left, rc.bottom - rc.top);	
@@ -111,7 +107,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
-		//Sleep(1);
 	}
 
 	scene.reset();
@@ -133,16 +128,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 	{
 		scene->Tick();
-		/*
-		target->BeginDraw();
-		target->SetTransform(D2D1::Matrix3x2F::Identity());
-		target->Clear();
-		GetCursorPos(&MousePoint);
-		ScreenToClient(hWnd, &MousePoint);		
-		std::wstring text = L"Hello World";
-		target->DrawText(text.c_str(), text.length(), format, D2D1::RectF(25, 25, 300, 20), brush);
-		target->EndDraw();
-		*/
 	}
 	break;
 	case WM_MOUSEMOVE:

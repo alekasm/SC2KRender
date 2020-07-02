@@ -1,6 +1,7 @@
 #include "Scene.h"
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
+typedef SceneTile::VertexPos VPos;
 
 void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 {
@@ -31,13 +32,104 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
       SceneTile& t = tiles[x + TILES_DIMENSION * y];
       float fx = static_cast<float>(x);
       float fy = static_cast<float>(y);
-      t.v_topleft = Vector3(fx, 0, fy);
-      t.v_bottomleft = Vector3(fx, 0, fy + 1);
-      t.v_topright = Vector3(fx + 1, 0, fy);
-      t.v_bottomright = Vector3(fx + 1, 0, fy + 1);
+      t.v_pos[VPos::TOP_LEFT] = Vector3(fx, 0, fy);
+      t.v_pos[VPos::BOTTOM_LEFT] = Vector3(fx, 0, fy + 1);
+      t.v_pos[VPos::TOP_RIGHT] = Vector3(fx + 1, 0, fy);
+      t.v_pos[VPos::BOTTOM_RIGHT] = Vector3(fx + 1, 0, fy + 1);
       t.FillAttributes(map_tiles[x + TILES_DIMENSION * y]);
     }
+  } 
+
+  //Fill-in tile polygons using minimal vertices, compare using top and left tiles.
+  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  {
+    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    {
+      const SceneTile& this_tile = tiles[x + TILES_DIMENSION * y]; 
+      if (x > 0)
+      {
+        SceneTile cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
+        bool d1 = cmp_left.v_pos[VPos::TOP_RIGHT] == this_tile.v_pos[VPos::TOP_LEFT];
+        bool d2 = cmp_left.v_pos[VPos::BOTTOM_RIGHT] == this_tile.v_pos[VPos::BOTTOM_LEFT];
+        if (d1 == false || d2 == false)
+        {
+          fill_tiles.push_back(DirectX::VertexPositionColor(this_tile.v_pos[VPos::TOP_LEFT], DirectX::Colors::SC2K_DIRT_EXPOSED));
+          fill_tiles.push_back(DirectX::VertexPositionColor(this_tile.v_pos[VPos::BOTTOM_LEFT], DirectX::Colors::SC2K_DIRT_EXPOSED));
+          fill_tiles.push_back(DirectX::VertexPositionColor(cmp_left.v_pos[VPos::BOTTOM_RIGHT], DirectX::Colors::SC2K_DIRT_EXPOSED));
+          fill_tiles.push_back(DirectX::VertexPositionColor(cmp_left.v_pos[VPos::TOP_RIGHT], DirectX::Colors::SC2K_DIRT_EXPOSED));
+        }
+      }      
+
+      if (y > 0)
+      {
+        SceneTile cmp_top = tiles[x + TILES_DIMENSION * (y - 1)];
+        bool d3 = cmp_top.v_pos[VPos::BOTTOM_LEFT] == this_tile.v_pos[VPos::TOP_LEFT];
+        bool d4 = cmp_top.v_pos[VPos::BOTTOM_RIGHT] == this_tile.v_pos[VPos::TOP_RIGHT];
+        if (d3 == false || d4 == false)
+        {
+          fill_tiles.push_back(DirectX::VertexPositionColor(this_tile.v_pos[VPos::TOP_LEFT], DirectX::Colors::SC2K_DIRT_DARKEST));
+          fill_tiles.push_back(DirectX::VertexPositionColor(this_tile.v_pos[VPos::TOP_RIGHT], DirectX::Colors::SC2K_DIRT_DARKEST));
+          fill_tiles.push_back(DirectX::VertexPositionColor(cmp_top.v_pos[VPos::BOTTOM_RIGHT], DirectX::Colors::SC2K_DIRT_DARKEST));
+          fill_tiles.push_back(DirectX::VertexPositionColor(cmp_top.v_pos[VPos::BOTTOM_LEFT], DirectX::Colors::SC2K_DIRT_DARKEST));
+        }
+      }
+    }
+  }
+
+  //Fill in map edges
+  //Map edges x-coordinate
+  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  {
+    {
+      const SceneTile& t = tiles[x + TILES_DIMENSION * 0];
+      Vector3 t_topleft = t.v_pos[VPos::TOP_LEFT];
+      Vector3 g_topleft = Vector3(t_topleft.x, 0, t_topleft.z);
+      Vector3 t_topright = t.v_pos[VPos::TOP_RIGHT];
+      Vector3 g_topright = Vector3(t_topright.x, 0, t_topright.z);
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+    }
+    {
+      const SceneTile& t = tiles[x + TILES_DIMENSION * (TILES_DIMENSION - 1)];
+      Vector3 t_bottomleft = t.v_pos[VPos::BOTTOM_LEFT];
+      Vector3 g_bottomleft = Vector3(t_bottomleft.x, 0, t_bottomleft.z);
+      Vector3 t_bottomright = t.v_pos[VPos::BOTTOM_RIGHT];
+      Vector3 g_bottomright = Vector3(t_bottomright.x, 0, t_bottomright.z);
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+    }
+  }
+  //Map edges y-coordinate
+  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+  {
+    {
+      const SceneTile& t = tiles[0 + TILES_DIMENSION * y];
+      Vector3 t_topleft = t.v_pos[VPos::TOP_LEFT];
+      Vector3 g_topleft = Vector3(t_topleft.x, 0, t_topleft.z);
+      Vector3 t_bottomleft = t.v_pos[VPos::BOTTOM_LEFT];
+      Vector3 g_bottomleft = Vector3(t_bottomleft.x, 0, t_bottomleft.z);
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+    }
+    {
+      const SceneTile& t = tiles[(TILES_DIMENSION - 1) + TILES_DIMENSION * y];
+      Vector3 t_topright = t.v_pos[VPos::TOP_RIGHT];
+      Vector3 g_topright = Vector3(t_topright.x, 0, t_topright.z);
+      Vector3 t_bottomright = t.v_pos[VPos::BOTTOM_RIGHT];
+      Vector3 g_bottomright = Vector3(t_bottomright.x, 0, t_bottomright.z);
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+    }
   }  
+
   render_scene = true;
 }
 
@@ -211,9 +303,9 @@ void Scene::Update(DX::StepTimer const& timer)
   else if (GetAsyncKeyState(VK_LEFT))
     rotation_y -= 0.01f;
   else if (GetAsyncKeyState(VK_UP))
-    z += 0.001f;
+    z += 0.0005f;
   else if (GetAsyncKeyState(VK_DOWN))
-    z -= 0.001f;
+    z -= 0.0005f;
 
   else if (GetAsyncKeyState(0x57)) //W 
   {
@@ -274,7 +366,7 @@ void Scene::Render()
   Vector3 yaxis(0.f, 2.f, (float)TILES_DIMENSION);
   Vector3 origin = Vector3::Zero;
   size_t divisions = TILES_DIMENSION;
-
+/*
   for (size_t i = 0; i <= divisions; i++)
   {
     float fPercent = float(i) / float(divisions);
@@ -298,14 +390,21 @@ void Scene::Render()
     DirectX::VertexPositionColor v2(scale + yaxis, DirectX::Colors::Black);
     m_batch->DrawLine(v1, v2);
   }
+  */
+
+  for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
+  {
+    m_batch->DrawQuad(fill_tiles[quad_ix], fill_tiles[quad_ix + 1], fill_tiles[quad_ix + 2], fill_tiles[quad_ix + 3]);
+  }
 
   for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
   {
     for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
     {
       const SceneTile t = tiles[x + TILES_DIMENSION * y];
-      m_batch->DrawTriangle(t.vpc_topleft, t.vpc_bottomleft, t.vpc_topright);
-      m_batch->DrawTriangle(t.vpc_bottomright, t.vpc_bottomleft, t.vpc_topright);
+      //m_batch->DrawQuad(t.vpc_topleft, t.vpc_topright, t.vpc_bottomright, t.vpc_bottomleft);
+      m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+      m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
     }
   }
 

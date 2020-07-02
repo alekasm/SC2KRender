@@ -47,156 +47,212 @@ namespace DirectX::Colors
 
 struct SceneTile
 {
-  DirectX::SimpleMath::Vector3 v_topleft, v_topright, v_bottomleft, v_bottomright;
-  DirectX::VertexPositionColor vpc_topleft, vpc_topright, vpc_bottomleft, vpc_bottomright;
-  DirectX::XMVECTORF32 c_topleft, c_topright, c_bottomleft, c_bottomright;
-  float height;
+  enum VertexPos {TOP_LEFT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_RIGHT};
+  DirectX::SimpleMath::Vector3 v_pos[4];
+  DirectX::XMVECTORF32 c_pos[4];
+  DirectX::VertexPositionColor vpc_pos[4];
 
+  float height;
+ // m_batch->DrawTriangle(t.vpc_pos[TOP_LEFT], t.vpc_bottomleft, t.vpc_topright);
+ // m_batch->DrawTriangle(t.vpc_bottomright, t.vpc_bottomleft, t.vpc_topright);
   SceneTile()
   {
-    c_topleft = DirectX::Colors::SC2K_DIRT_FLAT;
-    c_topright = DirectX::Colors::SC2K_DIRT_FLAT;
-    c_bottomleft = DirectX::Colors::SC2K_DIRT_FLAT;
-    c_bottomright = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_FLAT;
+    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_FLAT;
   }
 
   void CreateVertexPositionColors()
   {
-    vpc_topleft = DirectX::VertexPositionColor(v_topleft, c_topleft);
-    vpc_bottomleft = DirectX::VertexPositionColor(v_bottomleft, c_bottomleft);
-    vpc_topright = DirectX::VertexPositionColor(v_topright, c_topright);
-    vpc_bottomright = DirectX::VertexPositionColor(v_bottomright, c_bottomright);
+    vpc_pos[TOP_LEFT] = DirectX::VertexPositionColor(v_pos[TOP_LEFT], c_pos[TOP_LEFT]);
+    vpc_pos[BOTTOM_LEFT] = DirectX::VertexPositionColor(v_pos[BOTTOM_LEFT], c_pos[BOTTOM_LEFT]);
+    vpc_pos[TOP_RIGHT] = DirectX::VertexPositionColor(v_pos[TOP_RIGHT], c_pos[TOP_RIGHT]);
+    vpc_pos[BOTTOM_RIGHT] = DirectX::VertexPositionColor(v_pos[BOTTOM_RIGHT], c_pos[BOTTOM_RIGHT]);
   }
 
   void Rotate90Degrees()
   {
-    DirectX::SimpleMath::Vector3 v_topleft_original = v_topleft;
-    v_topleft = v_bottomleft;
-    v_bottomleft = v_bottomright;
-    v_bottomright = v_topright;
-    v_topright = v_topleft_original;  
-
-    DirectX::XMVECTORF32 c_topleft_original = c_topleft;
-    c_topleft = c_bottomleft;
-    c_bottomleft = c_bottomright;
-    c_bottomright = c_topright;
-    c_topright = c_topleft_original;
+    DirectX::VertexPositionColor original = vpc_pos[TOP_LEFT];
+    vpc_pos[TOP_LEFT] = vpc_pos[BOTTOM_LEFT];
+    vpc_pos[BOTTOM_LEFT] = vpc_pos[BOTTOM_RIGHT];
+    vpc_pos[BOTTOM_RIGHT] = vpc_pos[TOP_RIGHT];
+    vpc_pos[TOP_RIGHT] = original;
+   // ColorTile(DirectX::Colors::Purple);
   }
 
   void ColorTile(DirectX::XMVECTORF32 color)
   {
-    c_topleft = color;
-    c_topright = color;
-    c_bottomleft = color;
-    c_bottomright = color;
+    c_pos[TOP_LEFT] = color;
+    c_pos[TOP_RIGHT] = color;
+    c_pos[BOTTOM_LEFT] = color;
+    c_pos[BOTTOM_RIGHT] = color;
     CreateVertexPositionColors();
   }
 
   void FillAttributes(const MapTile& tile)
   {
     this->height = static_cast<float>(tile.height * HEIGHT_INCREMENT);
-    v_topleft.y = height;
-    v_topright.y = height;
-    v_bottomleft.y = height;
-    v_bottomright.y = height;
+    v_pos[TOP_LEFT].y = height;
+    v_pos[TOP_RIGHT].y = height;
+    v_pos[BOTTOM_LEFT].y = height;
+    v_pos[BOTTOM_RIGHT].y = height;
     switch (tile.type)
     {
+    case ETT_WATER_SUBMERGED_SLOPE_E:
+    case ETT_UNDERWATER_SLOPE_E:
     case ETT_SLOPE_E:
-      v_topleft.y += HEIGHT_INCREMENT;
-      v_bottomleft.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      c_topright = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      break;      
+    case ETT_SURFACE_WATER_SLOPE_E:
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      break;     
+    case ETT_WATER_SUBMERGED_SLOPE_N:
+    case ETT_UNDERWATER_SLOPE_N:
     case ETT_SLOPE_N:
-      v_topleft.y += HEIGHT_INCREMENT;
-      v_topright.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARKER;
-      c_topright = DirectX::Colors::SC2K_DIRT_DARKER;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKER;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKER;
+    case ETT_SURFACE_WATER_SLOPE_N:
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
+      c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
+    case ETT_WATER_SUBMERGED_SLOPE_S:
+    case ETT_UNDERWATER_SLOPE_S:
     case ETT_SLOPE_S:
-      v_bottomleft.y += HEIGHT_INCREMENT;
-      v_bottomright.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARKEST;
-      c_topright = DirectX::Colors::SC2K_DIRT_DARKEST;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+    case ETT_SURFACE_WATER_SLOPE_S:
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
       break;
+    case ETT_WATER_SUBMERGED_SLOPE_W:
     case ETT_SLOPE_W:
-      v_topright.y += HEIGHT_INCREMENT;
-      v_bottomright.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARKEST;
-      c_topright = DirectX::Colors::SC2K_DIRT_DARKEST;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKEST;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+    case ETT_UNDERWATER_SLOPE_W:
+    case ETT_SURFACE_WATER_SLOPE_W:
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
       break;
+    case ETT_WATER_SUBMERGED_SLOPE_NE:
+    case ETT_UNDERWATER_SLOPE_NE:
     case ETT_SLOPE_NE:
-      v_topleft.y += HEIGHT_INCREMENT;
-      v_topright.y += HEIGHT_INCREMENT;
-      v_bottomleft.y += HEIGHT_INCREMENT;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARKER;
+    case ETT_SURFACE_WATER_SLOPE_NE:
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
+    case ETT_WATER_SUBMERGED_SLOPE_NW:
+    case ETT_UNDERWATER_SLOPE_NW:
     case ETT_SLOPE_NW:
-      v_topleft.y += HEIGHT_INCREMENT;
-      v_bottomright.y += HEIGHT_INCREMENT;
-      v_topright.y += HEIGHT_INCREMENT;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARKER;
-      //v_bottomleft.y += HEIGHT_INCREMENT;
-      //c_topright = DirectX::Colors::SC2K_DIRT_DARKER;
+    case ETT_SURFACE_WATER_SLOPE_NW:
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+      c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
+      //v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      //c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
+    case ETT_WATER_SUBMERGED_SLOPE_SE:
+    case ETT_UNDERWATER_SLOPE_SE:
     case ETT_SLOPE_SE:
-      v_topleft.y += HEIGHT_INCREMENT;
-      v_bottomright.y += HEIGHT_INCREMENT;
-      v_bottomleft.y += HEIGHT_INCREMENT;
-      c_topright = DirectX::Colors::SC2K_DIRT_DARKER;
+    case ETT_SURFACE_WATER_SLOPE_SE:
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
+    case ETT_WATER_SUBMERGED_SLOPE_SW:
+    case ETT_UNDERWATER_SLOPE_SW:
     case ETT_SLOPE_SW:
-      v_topright.y += HEIGHT_INCREMENT;
-      v_bottomright.y += HEIGHT_INCREMENT;
-      v_bottomleft.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARKER;
+    case ETT_SURFACE_WATER_SLOPE_SW:
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
+    case ETT_WATER_SUBMERGED_CORNER_NE:
+    case ETT_UNDERWATER_CORNER_NE:
     case ETT_CORNER_NE:
-      v_topleft.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      c_topright = DirectX::Colors::SC2K_DIRT_DARK;
-      c_bottomleft = DirectX::Colors::SC2K_DIRT_DARK;
+    case ETT_SURFACE_WATER_CORNER_NE:
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
+      c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
       break;
+    case ETT_WATER_SUBMERGED_CORNER_SE:
+    case ETT_UNDERWATER_CORNER_SE:
     case ETT_CORNER_SE:
-      v_bottomleft.y += HEIGHT_INCREMENT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARK;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARK;
-      Rotate90Degrees();
+    case ETT_SURFACE_WATER_CORNER_SE:
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
       break;
+    case ETT_WATER_SUBMERGED_CORNER_SW:
+    case ETT_UNDERWATER_CORNER_SW:
     case ETT_CORNER_SW:
-      v_bottomright.y += HEIGHT_INCREMENT;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      //c_bottomright = DirectX::Colors::SC2K_DIRT_DARKEST;
+    case ETT_SURFACE_WATER_CORNER_SW:
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      //c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
       break;
+    case ETT_WATER_SUBMERGED_CORNER_NW:
+    case ETT_UNDERWATER_CORNER_NW:
     case ETT_CORNER_NW:
-      v_topright.y += HEIGHT_INCREMENT;      
-      c_topright = DirectX::Colors::SC2K_DIRT_BRIGHT;
-      c_topleft = DirectX::Colors::SC2K_DIRT_DARK;
-      c_bottomright = DirectX::Colors::SC2K_DIRT_DARK;
-      Rotate90Degrees();
+    case ETT_SURFACE_WATER_CORNER_NW:
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;      
+      c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
+      c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;      
       break;
+    case ETT_WATER_SUBMERGED_HIGHGROUND:
+    case ETT_UNDERWATER_HIGHGROUND:
     case ETT_HIGHGROUND:
+    case ETT_SURFACE_WATER_HIGHGROUND:
       //ColorTile(DirectX::Colors::Red);
-      v_topright.y += HEIGHT_INCREMENT;
-      v_topleft.y += HEIGHT_INCREMENT;
-      v_bottomright.y += HEIGHT_INCREMENT;
-      v_bottomleft.y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      ColorTile(DirectX::Colors::SC2K_DIRT_EXPOSED);
       break;
     case ETT_FLAT:
       break;
+    case ETT_WATER_SUBMERGED_FLAT:
     case ETT_UNDERWATER_FLAT:
       ColorTile(DirectX::Colors::DarkBlue);
       break;
+    case ETT_SURFACE_WATER_CANAL_WE:
+    case ETT_SURFACE_WATER_CANAL_NS:
+    case ETT_SURFACE_WATER_BAY_OPEN_S:
+    case ETT_SURFACE_WATER_BAY_OPEN_W:
+    case ETT_SURFACE_WATER_BAY_OPEN_N:
+    case ETT_SURFACE_WATER_BAY_OPEN_E:
+    case ETT_SURFACE_WATER_FLAT:
+    default:
+      ColorTile(DirectX::Colors::SC2K_DIRT_FLAT);
+      break;
     }
+
     CreateVertexPositionColors();
+
+    switch (tile.type)
+    {
+    case ETT_CORNER_NW:
+    case ETT_CORNER_SE:
+      Rotate90Degrees();
+      break;
+    }
   }
 };
 
@@ -244,5 +300,5 @@ private:
   float look_x = 0.f, look_y = 0.f, look_z = 0.f;
   float eye_x = 3.f, eye_y = 2.f, eye_z = 3.f;
   SceneTile* tiles;
-
+  std::vector<DirectX::VertexPositionColor> fill_tiles;
 };
