@@ -8,7 +8,7 @@
 #define NOHELP
 #define WIN32_LEAN_AND_MEAN
 
-#define HEIGHT_INCREMENT 0.5f
+#define HEIGHT_INCREMENT 1.f
 
 
 #include <Windows.h>
@@ -99,21 +99,22 @@ struct SceneTile
     v_pos[BOTTOM_RIGHT].y = height;
     switch (tile.type)
     {
-    case ETT_WATER_SUBMERGED_SLOPE_E:
-    case ETT_UNDERWATER_SLOPE_E:
-    case ETT_SLOPE_E:
-    case ETT_SURFACE_WATER_SLOPE_E:
+    case ETT_WATER_SUBMERGED_SLOPE_N:
+    case ETT_UNDERWATER_SLOPE_N:
+    case ETT_SLOPE_N:
+    case ETT_SURFACE_WATER_SLOPE_N:
       v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
       c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
       c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
       c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+      //ColorTile(DirectX::Colors::Red);
       break;     
-    case ETT_WATER_SUBMERGED_SLOPE_N:
-    case ETT_UNDERWATER_SLOPE_N:
-    case ETT_SLOPE_N:
-    case ETT_SURFACE_WATER_SLOPE_N:
+    case ETT_WATER_SUBMERGED_SLOPE_E:
+    case ETT_UNDERWATER_SLOPE_E:
+    case ETT_SLOPE_E:
+    case ETT_SURFACE_WATER_SLOPE_E:
       v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
       v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
@@ -121,10 +122,10 @@ struct SceneTile
       c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
       c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
-    case ETT_WATER_SUBMERGED_SLOPE_S:
-    case ETT_UNDERWATER_SLOPE_S:
-    case ETT_SLOPE_S:
-    case ETT_SURFACE_WATER_SLOPE_S:
+    case ETT_WATER_SUBMERGED_SLOPE_W:
+    case ETT_SLOPE_W:
+    case ETT_UNDERWATER_SLOPE_W:
+    case ETT_SURFACE_WATER_SLOPE_W:
       v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
@@ -132,10 +133,10 @@ struct SceneTile
       c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
       c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
       break;
-    case ETT_WATER_SUBMERGED_SLOPE_W:
-    case ETT_SLOPE_W:
-    case ETT_UNDERWATER_SLOPE_W:
-    case ETT_SURFACE_WATER_SLOPE_W:
+    case ETT_WATER_SUBMERGED_SLOPE_S:
+    case ETT_UNDERWATER_SLOPE_S:
+    case ETT_SLOPE_S:
+    case ETT_SURFACE_WATER_SLOPE_S:
       v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
@@ -157,8 +158,8 @@ struct SceneTile
     case ETT_SLOPE_NW:
     case ETT_SURFACE_WATER_SLOPE_NW:
       v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
       //v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
       //c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
@@ -168,16 +169,18 @@ struct SceneTile
     case ETT_SLOPE_SE:
     case ETT_SURFACE_WATER_SLOPE_SE:
       v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      //v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      //v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
       c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
     case ETT_WATER_SUBMERGED_SLOPE_SW:
     case ETT_UNDERWATER_SLOPE_SW:
     case ETT_SLOPE_SW:
     case ETT_SURFACE_WATER_SLOPE_SW:
-      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
       break;
@@ -194,7 +197,7 @@ struct SceneTile
     case ETT_UNDERWATER_CORNER_SE:
     case ETT_CORNER_SE:
     case ETT_SURFACE_WATER_CORNER_SE:
-      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
       c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
       break;
@@ -210,7 +213,7 @@ struct SceneTile
     case ETT_UNDERWATER_CORNER_NW:
     case ETT_CORNER_NW:
     case ETT_SURFACE_WATER_CORNER_NW:
-      v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;      
+      v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
       c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
       c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
       c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;      
@@ -240,7 +243,7 @@ struct SceneTile
     case ETT_SURFACE_WATER_BAY_OPEN_E:
     case ETT_SURFACE_WATER_FLAT:
     default:
-      ColorTile(DirectX::Colors::SC2K_DIRT_FLAT);
+      ColorTile(DirectX::Colors::Red);
       break;
     }
 

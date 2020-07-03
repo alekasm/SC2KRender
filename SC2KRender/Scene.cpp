@@ -20,7 +20,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
   CreateResources();  
 
   m_view = Matrix::CreateLookAt(Vector3(3.f, 2.f, 3.f), Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.1f, 10.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.1f, 15.f);
 
   m_effect->SetView(m_view);
   m_effect->SetProjection(m_proj);
@@ -129,6 +129,15 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
       fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
     }
   }  
+
+  for (unsigned int x = 0; x < 3; ++x)
+  {
+    for (unsigned int y = 0; y < 3; ++y)
+    {
+      const SceneTile& t = tiles[x + TILES_DIMENSION * y];
+      printf("%d, %d - Height(base): %f, Height(top-left): %f\n", x, y, t.height, t.v_pos[VPos::TOP_LEFT].y);
+    }
+  }
 
   render_scene = true;
 }
