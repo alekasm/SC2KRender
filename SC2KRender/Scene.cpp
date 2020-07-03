@@ -18,9 +18,9 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 
   CreateDevice();
   CreateResources();  
-
-  m_view = Matrix::CreateLookAt(Vector3(3.f, 2.f, 3.f), Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  //m_proj = Matrix::CreatePerspectiveFieldOfView(M_PI / 8, float(width) / float(height), 0.1f, 15.f);
+  m_position = Vector3(3.f, 2.f, 3.f);
+  m_world = Matrix::CreateScale(scale);
+  m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.1f, 15.f);
 
   m_effect->SetView(m_view);
@@ -130,16 +130,6 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
       fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
     }
   }  
-
-  for (unsigned int x = 0; x < 3; ++x)
-  {
-    for (unsigned int y = 0; y < 3; ++y)
-    {
-      const SceneTile& t = tiles[x + TILES_DIMENSION * y];
-      printf("%d, %d - Height(base): %f, Height(top-left): %f\n", x, y, t.height, t.v_pos[VPos::TOP_LEFT].y);
-    }
-  }
-
   render_scene = true;
 }
 
@@ -291,26 +281,17 @@ void Scene::Tick()
 void Scene::MouseLook(int x, int z, int y)
 {
   SetCursorPos(window_cx, window_cy);
-
-  float rot_speed = 0.005f;
- // float max_rot = 0.2f;
-
-  float dx = static_cast<float>(x - window_cx) * rot_speed;
-  float dy = static_cast<float>(y - window_cy) * rot_speed;
-  //if (std::abs(dx) > max_rot || std::abs(dy) > max_rot)
-  //  return;
-
-  //yaw = std::clamp(yaw + dx, 0.f, (float)M_PI * 2.f);
-  //yaw = atan2(sin(yaw + dx), cos(yaw + dx)); // wrap angle between -pi and pi
-  yaw = atan2(sin((yaw + dx) - M_PI), cos((yaw + dx) - M_PI)) + M_PI; // wrap angle between 0 and 2pi
-  pitch = std::clamp(pitch + dy,  (float)-M_PI,  (float)M_PI);
-  m_look_at = Vector3(yaw, -pitch, -yaw);
-  
+  float dx = static_cast<float>(x - window_cx) * 0.005f;
+  float dy = static_cast<float>(y - window_cy) * 0.003f;
+  yaw = atan2(sin((yaw + dx) - (float)M_PI), cos((yaw + dx) - (float)M_PI)) + (float)M_PI; // wrap angle between 0 and 2pi
+  pitch = std::clamp(pitch + dy,  (float)-M_PI_4, (float)M_PI_4);
+  m_view = Matrix::CreateTranslation(-m_position);
+  m_view *= Matrix::CreateFromYawPitchRoll(yaw, 0, 0); 
+  m_view *= Matrix::CreateFromYawPitchRoll(0, pitch, 0);
 }
 
 void Scene::Update(DX::StepTimer const& timer)
 {
-
   float elapsedTime = float(timer.GetElapsedSeconds());
   if (GetAsyncKeyState(VK_ESCAPE))
     PostQuitMessage(0);
@@ -319,45 +300,21 @@ void Scene::Update(DX::StepTimer const& timer)
   else if (GetAsyncKeyState(VK_LEFT))
     rotation_y -= 0.01f;
   else if (GetAsyncKeyState(VK_UP))
-    z += 0.0005f;
+    m_world = Matrix::CreateScale(scale += 0.0005f);
   else if (GetAsyncKeyState(VK_DOWN))
-    z -= 0.0005f;
-
+    m_world = Matrix::CreateScale(scale -= 0.0005f);
   else if (GetAsyncKeyState(0x57)) //W 
-  {
-    eye_x -= 0.01f;
-    eye_z -= 0.01f;
-  }
-  else if (GetAsyncKeyState(0x53))
-  {
-    eye_x += 0.01f;
-    eye_z += 0.01f;
-  }
+    m_position.z -= move_speed;
+  else if (GetAsyncKeyState(0x53)) //S
+    m_position.z += move_speed;
   else if (GetAsyncKeyState(0x41)) //A
-  {
-    eye_x -= 0.01f;
-    eye_z += 0.01f;
-  }
+    m_position.x -= move_speed;
   else if (GetAsyncKeyState(0x44)) //D
-  {
-    eye_x += 0.01f;
-    eye_z -= 0.01f;
-  }
-
+    m_position.x += move_speed;
   else if (GetAsyncKeyState(0x52)) //R
-    eye_y += 0.01f;
+    m_position.y += move_speed;
   else if (GetAsyncKeyState(0x46)) //F
-    eye_y -= 0.01f;
-
-  rotation_y = atan2(sin(rotation_y), cos(rotation_y));
-
-  m_world = Matrix::Identity;
-  m_world *= Matrix::CreateRotationY(rotation_y);
-  m_world *= Matrix::CreateScale(z);
-  m_position = Vector3(eye_x, eye_y, eye_z); 
-  m_view = Matrix::CreateLookAt(m_position, m_look_at, Vector3::UnitY);
-  
-
+    m_position.y -= move_speed;
 }
 
 void Scene::Render()
@@ -384,7 +341,8 @@ void Scene::Render()
   Vector3 yaxis(0.f, 2.f, (float)TILES_DIMENSION);
   Vector3 origin = Vector3::Zero;
   size_t divisions = TILES_DIMENSION;
-/*
+
+  /*
   for (size_t i = 0; i <= divisions; i++)
   {
     float fPercent = float(i) / float(divisions);
@@ -429,7 +387,7 @@ void Scene::Render()
   m_batch->End();
 
   m_spriteBatch->Begin();
-  std::wstring text = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch) + L", Scale: " + std::to_wstring(z);
+  std::wstring text = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
   m_font->DrawString(m_spriteBatch.get(), text.c_str(), DirectX::XMFLOAT2(5, 5), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
   m_spriteBatch->End();
 
