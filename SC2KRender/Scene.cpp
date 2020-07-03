@@ -20,6 +20,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
   CreateResources();  
 
   m_view = Matrix::CreateLookAt(Vector3(3.f, 2.f, 3.f), Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
+  //m_proj = Matrix::CreatePerspectiveFieldOfView(M_PI / 8, float(width) / float(height), 0.1f, 15.f);
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.1f, 15.f);
 
   m_effect->SetView(m_view);
@@ -290,15 +291,21 @@ void Scene::Tick()
 void Scene::MouseLook(int x, int z, int y)
 {
   SetCursorPos(window_cx, window_cy);
-  float dx = static_cast<float>(x - window_cx);
-  float dy = static_cast<float>(y - window_cy);
-  dx *= 0.001f;
-  dy *= 0.001f;
-  if (std::abs(dx) > 0.1 || std::abs(dy) > 0.1)
-    return;
-  look_x += dx;
-  look_y -= dy;
-  look_z -= dx;
+
+  float rot_speed = 0.005f;
+ // float max_rot = 0.2f;
+
+  float dx = static_cast<float>(x - window_cx) * rot_speed;
+  float dy = static_cast<float>(y - window_cy) * rot_speed;
+  //if (std::abs(dx) > max_rot || std::abs(dy) > max_rot)
+  //  return;
+
+  //yaw = std::clamp(yaw + dx, 0.f, (float)M_PI * 2.f);
+  //yaw = atan2(sin(yaw + dx), cos(yaw + dx)); // wrap angle between -pi and pi
+  yaw = atan2(sin((yaw + dx) - M_PI), cos((yaw + dx) - M_PI)) + M_PI; // wrap angle between 0 and 2pi
+  pitch = std::clamp(pitch + dy,  (float)-M_PI,  (float)M_PI);
+  m_look_at = Vector3(yaw, -pitch, -yaw);
+  
 }
 
 void Scene::Update(DX::StepTimer const& timer)
@@ -347,7 +354,9 @@ void Scene::Update(DX::StepTimer const& timer)
   m_world = Matrix::Identity;
   m_world *= Matrix::CreateRotationY(rotation_y);
   m_world *= Matrix::CreateScale(z);
-  m_view = Matrix::CreateLookAt(Vector3(eye_x, eye_y, eye_z), Vector3(look_x, look_y, look_z), Vector3::UnitY);
+  m_position = Vector3(eye_x, eye_y, eye_z); 
+  m_view = Matrix::CreateLookAt(m_position, m_look_at, Vector3::UnitY);
+  
 
 }
 
@@ -420,7 +429,7 @@ void Scene::Render()
   m_batch->End();
 
   m_spriteBatch->Begin();
-  std::wstring text = L"RotX: " + std::to_wstring(rotation_x) + L", RotY: " + std::to_wstring(rotation_y) + L", Scale: " + std::to_wstring(z);
+  std::wstring text = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch) + L", Scale: " + std::to_wstring(z);
   m_font->DrawString(m_spriteBatch.get(), text.c_str(), DirectX::XMFLOAT2(5, 5), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
   m_spriteBatch->End();
 

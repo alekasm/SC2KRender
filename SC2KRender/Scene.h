@@ -298,10 +298,15 @@ private:
   DX::StepTimer m_timer;
   float rotation_x = 0.0f;
   float rotation_y = 0.8f;
+  float yaw = 0;
+  float pitch = 0;
   float z = 0.1f;
   int window_cx = 0, window_cy = 0;
   float look_x = 0.f, look_y = 0.f, look_z = 0.f;
   float eye_x = 3.f, eye_y = 2.f, eye_z = 3.f;
   SceneTile* tiles;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
+  DirectX::SimpleMath::Vector3 m_position, m_up_vector, m_look_at;
+
+
 };
