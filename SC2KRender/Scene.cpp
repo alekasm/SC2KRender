@@ -18,10 +18,10 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 
   CreateDevice();
   CreateResources();  
-  m_position = Vector3(3.f, 2.f, 3.f);
+  m_position = Vector3(8.f, 3.f, 8.f);
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.1f, 15.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.01f, 40.f);
 
   m_effect->SetView(m_view);
   m_effect->SetProjection(m_proj);
@@ -304,13 +304,25 @@ void Scene::Update(DX::StepTimer const& timer)
   else if (GetAsyncKeyState(VK_DOWN))
     m_world = Matrix::CreateScale(scale -= 0.0005f);
   else if (GetAsyncKeyState(0x57)) //W 
-    m_position.z -= move_speed;
+  {
+    m_position.x += cos(yaw - M_PI_2) * move_speed;
+    m_position.z += sin(yaw - M_PI_2) * move_speed;
+  }
   else if (GetAsyncKeyState(0x53)) //S
-    m_position.z += move_speed;
+  {
+    m_position.x -= cos(yaw - M_PI_2) * move_speed;
+    m_position.z -= sin(yaw - M_PI_2) * move_speed;
+  }
   else if (GetAsyncKeyState(0x41)) //A
-    m_position.x -= move_speed;
+  {
+    m_position.x -= cos(yaw) * move_speed;
+    m_position.z -= sin(yaw) * move_speed;
+  }
   else if (GetAsyncKeyState(0x44)) //D
-    m_position.x += move_speed;
+  {
+    m_position.x += cos(yaw) * move_speed;
+    m_position.z += sin(yaw) * move_speed;
+  }
   else if (GetAsyncKeyState(0x52)) //R
     m_position.y += move_speed;
   else if (GetAsyncKeyState(0x46)) //F
@@ -326,8 +338,8 @@ void Scene::Render()
 
   Clear();
 
-  m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);
-  m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
+  m_d3dContext->OMSetBlendState(m_states->Opaque(), nullptr, 0xFFFFFFFF);  
+  m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
   m_d3dContext->RSSetState(m_states->CullNone());
 
   m_effect->SetWorld(m_world);
@@ -378,7 +390,6 @@ void Scene::Render()
     for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
     {
       const SceneTile t = tiles[x + TILES_DIMENSION * y];
-      //m_batch->DrawQuad(t.vpc_topleft, t.vpc_topright, t.vpc_bottomright, t.vpc_bottomleft);
       m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
       m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
     }

@@ -1,3 +1,13 @@
+/*
+Created by Aleksander Krimsky
+
+Thanks/Extra Credits:
+fr0zi - https://github.com/fr0zi/sccopter
+bzroom (GameDev.net Discord) - DirectX Help
+slicer4ever (GameDev.net Discord) - DirectX Help
+*/
+
+
 #include <vector>
 #include <ctime>
 #include <thread>
@@ -84,7 +94,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	hWnd = CreateWindowEx(
 		grfExStyle,
-		MainClass.lpszClassName, "WindowClass",
+		MainClass.lpszClassName, "SC2KRender",
 		grfStyle,
 		0, 0, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top, NULL, NULL, hInstance, NULL);
 

@@ -301,7 +301,7 @@ private:
   float yaw = 0.f;
   float pitch = 0.f;
   float scale = 0.1f;
-  float move_speed = 0.03f;
+  float move_speed = 0.02f;
   int window_cx = 0, window_cy = 0;
   SceneTile* tiles;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
