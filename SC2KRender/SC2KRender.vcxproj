@@ -177,6 +177,7 @@
     <ClCompile Include="MapLoader.cpp" />
     <ClCompile Include="SC2KRender.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneTile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DirectXTK.h" />
@@ -211,6 +212,7 @@
     <ClInclude Include="MapData.h" />
     <ClInclude Include="MapLoader.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneTile.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="d3d.spritefont" />

@@ -22,18 +22,8 @@ slicer4ever (GameDev.net Discord) - DirectX Help
 
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-
 HWND hWnd;
-
 RECT WindowRect;
-DWORD dwProcID = NULL;
-DWORD dwActiveProcID = NULL;
-
-POINT MousePoint;
-BYTE VK_MOUSELEFT = 0x01;
-BYTE VK_MOUSERIGHT = 0x02;
-bool CanClick = true;
-
 RECT ClientRect = {0, 0, 1024, 768};
 
 namespace
@@ -98,7 +88,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		grfStyle,
 		0, 0, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top, NULL, NULL, hInstance, NULL);
 
-	GetWindowThreadProcessId(hWnd, &dwProcID);
 	RECT rc;
 	GetClientRect(hWnd, &rc);
 	
@@ -106,12 +95,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	scene->Initialize(hWnd, tiles, rc.right - rc.left, rc.bottom - rc.top);	
 	ShowWindow(hWnd, TRUE);
 
-
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
-		GetWindowThreadProcessId(GetForegroundWindow(), &dwActiveProcID);
-		if (dwActiveProcID == dwProcID)
+		if (GetActiveWindow() == hWnd)
 		{
 			GetWindowRect(hWnd, &WindowRect);
 		}
@@ -130,16 +117,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	switch (message)
 	{
 	case WM_COMMAND:
-	{
-	}
-	break;
+		break;
 	case WM_ERASEBKGND:
 		break;
 	case WM_PAINT:
-	{
 		scene->Tick();
-	}
-	break;
+		break;
 	case WM_MOUSEMOVE:
 		POINT p;
 		GetCursorPos(&p);

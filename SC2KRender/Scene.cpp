@@ -1,4 +1,6 @@
 #include "Scene.h"
+#include "SceneTile.h"
+
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 typedef SceneTile::VertexPos VPos;
@@ -303,29 +305,31 @@ void Scene::Update(DX::StepTimer const& timer)
     m_world = Matrix::CreateScale(scale += 0.0005f);
   else if (GetAsyncKeyState(VK_DOWN))
     m_world = Matrix::CreateScale(scale -= 0.0005f);
-  else if (GetAsyncKeyState(0x57)) //W 
+  else if (GetAsyncKeyState(0x57)) //W (move forward)
   {
-    m_position.x += cos(yaw - M_PI_2) * move_speed;
-    m_position.z += sin(yaw - M_PI_2) * move_speed;
+    m_position.x += cos(yaw - (float)M_PI_2) * move_speed;
+    m_position.z += sin(yaw - (float)M_PI_2) * move_speed;
+    m_position.y -= sin(pitch) * move_speed;
   }
-  else if (GetAsyncKeyState(0x53)) //S
+  else if (GetAsyncKeyState(0x53)) //S (move backwards)
   {
-    m_position.x -= cos(yaw - M_PI_2) * move_speed;
-    m_position.z -= sin(yaw - M_PI_2) * move_speed;
+    m_position.x -= cos(yaw - (float)M_PI_2) * move_speed;
+    m_position.z -= sin(yaw - (float)M_PI_2) * move_speed;
+    m_position.y += sin(pitch) * move_speed;
   }
-  else if (GetAsyncKeyState(0x41)) //A
+  else if (GetAsyncKeyState(0x41)) //A (strafe left)
   {
     m_position.x -= cos(yaw) * move_speed;
     m_position.z -= sin(yaw) * move_speed;
   }
-  else if (GetAsyncKeyState(0x44)) //D
+  else if (GetAsyncKeyState(0x44)) //D (strafe right)
   {
     m_position.x += cos(yaw) * move_speed;
     m_position.z += sin(yaw) * move_speed;
   }
-  else if (GetAsyncKeyState(0x52)) //R
+  else if (GetAsyncKeyState(0x52)) //R (strafe up)
     m_position.y += move_speed;
-  else if (GetAsyncKeyState(0x46)) //F
+  else if (GetAsyncKeyState(0x46)) //F (strafe down)
     m_position.y -= move_speed;
 }
 
@@ -349,12 +353,13 @@ void Scene::Render()
 
   m_batch->Begin();
 
-  Vector3 xaxis((float)TILES_DIMENSION, 2.f, 0.f);
-  Vector3 yaxis(0.f, 2.f, (float)TILES_DIMENSION);
+  /*
+  Vector3 xaxis((float)TILES_DIMENSION, 4.f, 0.f);
+  Vector3 yaxis(0.f, 4.f, (float)TILES_DIMENSION);
   Vector3 origin = Vector3::Zero;
   size_t divisions = TILES_DIMENSION;
 
-  /*
+  
   for (size_t i = 0; i <= divisions; i++)
   {
     float fPercent = float(i) / float(divisions);
@@ -379,6 +384,7 @@ void Scene::Render()
     m_batch->DrawLine(v1, v2);
   }
   */
+  
 
   for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
   {

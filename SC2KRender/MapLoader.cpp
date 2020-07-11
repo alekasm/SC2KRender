@@ -69,9 +69,9 @@ void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
     }
   }
 #if 1
-  for (int x = 0; x < 5; x++)
+  for (int x = 5; x < 10; x++)
   {
-    for (int y = 0; y < 5; y++)
+    for (int y = 5; y < 10; y++)
     {
       printf("%d, %d: %d\n", x, y, map.tiles[x + 128 * y].height);
     }
@@ -134,9 +134,9 @@ void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
     printf("Error extracting XTER Data!\n");
   }
 #if 1
-  for (int x = 0; x < 5; x++)
+  for (int x = 5; x < 10; x++)
   {
-    for (int y = 0; y < 5; y++)
+    for (int y = 5; y < 10; y++)
     {
       printf("%d, %d: %x\n", x, y, map.tiles[x + 128 * y].type);
     }
