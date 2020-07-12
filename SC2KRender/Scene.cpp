@@ -302,9 +302,17 @@ void Scene::Update(DX::StepTimer const& timer)
   else if (GetAsyncKeyState(VK_LEFT))
     rotation_y -= 0.01f;
   else if (GetAsyncKeyState(VK_UP))
-    m_world = Matrix::CreateScale(scale += 0.0005f);
+  {
+    scale = std::clamp(scale + 0.0005f, 0.05f, 1.f);
+    move_speed = 0.3f * scale;
+    m_world = Matrix::CreateScale(scale);
+  }
   else if (GetAsyncKeyState(VK_DOWN))
-    m_world = Matrix::CreateScale(scale -= 0.0005f);
+  {
+    scale = std::clamp(scale - 0.0005f, 0.05f, 1.f);
+    move_speed = 0.3f * scale;
+    m_world = Matrix::CreateScale(scale);
+  }
   else if (GetAsyncKeyState(0x57)) //W (move forward)
   {
     m_position.x += cos(yaw - (float)M_PI_2) * move_speed;
@@ -360,6 +368,11 @@ void Scene::MouseClick()
   }
 exit_loop:
   return;  
+}
+
+void Scene::MultiplyMovementSpeed(float value)
+{
+  move_speed *= value;
 }
 
 void Scene::Render()

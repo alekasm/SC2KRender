@@ -45,6 +45,7 @@ public:
   void Tick();
   void Render();
   void Update(DX::StepTimer const& timer);
+  void MultiplyMovementSpeed(float value);
 
 private:
   void CreateDevice();
@@ -78,7 +79,7 @@ private:
   float yaw = 0.f;
   float pitch = 0.f;
   float scale = 0.1f;
-  float move_speed = 0.02f;
+  float move_speed = 0.3f * scale;
   int window_cx = 0, window_cy = 0;
   SceneTile* tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
