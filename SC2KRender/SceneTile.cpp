@@ -37,6 +37,7 @@ void SceneTile::ColorTile(DirectX::XMVECTORF32 color)
 
 void SceneTile::FillAttributes(const MapTile& tile)
 {
+  map_tile = &tile;
   this->height = static_cast<float>(tile.height * HEIGHT_INCREMENT);
   v_pos[TOP_LEFT].y = height;
   v_pos[TOP_RIGHT].y = height;

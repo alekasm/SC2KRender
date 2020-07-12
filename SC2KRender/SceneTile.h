@@ -18,6 +18,7 @@ struct SceneTile
   DirectX::VertexPositionColor vpc_pos[4];
   float height;
   SceneTile();
+  const MapTile* map_tile;
   void CreateVertexPositionColors();
   void Rotate90Degrees();
   void ColorTile(DirectX::XMVECTORF32 color);

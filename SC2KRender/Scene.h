@@ -41,6 +41,7 @@ class Scene
 public:
   void Initialize(HWND window, MapTile* tiles, int width, int height);
   void MouseLook(int x, int z, int y);
+  void MouseClick();
   void Tick();
   void Render();
   void Update(DX::StepTimer const& timer);
@@ -82,6 +83,4 @@ private:
   SceneTile* tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
-
-
 };

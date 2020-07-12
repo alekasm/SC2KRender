@@ -35,7 +35,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 {
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
-	
+
 	AllocConsole();
 	FILE* p_file;
 	freopen_s(&p_file, "CONIN$", "r", stdin);
@@ -127,6 +127,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		POINT p;
 		GetCursorPos(&p);
 		scene->MouseLook(p.x, 0, p.y);
+		break;
+	case WM_LBUTTONDOWN:
+		if (wParam == MK_LBUTTON)
+			scene->MouseClick();
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);

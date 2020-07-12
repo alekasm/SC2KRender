@@ -333,6 +333,35 @@ void Scene::Update(DX::StepTimer const& timer)
     m_position.y -= move_speed;
 }
 
+void Scene::MouseClick()
+{
+  
+  float ray_x = + cos(yaw - (float)M_PI_2);
+  float ray_z = + sin(yaw - (float)M_PI_2);
+  float ray_y = - sin(pitch); // TODO not accurate
+
+  DirectX::SimpleMath::Ray ray(m_position, Vector3(ray_x, ray_y, ray_z));
+  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  {
+    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    {
+      SceneTile& t = tiles[x + TILES_DIMENSION * y];
+      float distance1, distance2;    
+      bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance1);
+      bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance2);
+      if(tri1 || tri2)
+      {
+        t.ColorTile(DirectX::Colors::Crimson);
+        printf("[Debug] Tile(%d, %d) Dist (Tri1 %f, Tri2 %f) : Map Height: %d, Map Type: %x\n", 
+          x, y, distance1, distance2, t.map_tile->height, t.map_tile->type);
+        goto exit_loop;
+      }
+    }
+  }
+exit_loop:
+  return;  
+}
+
 void Scene::Render()
 {
   if (!render_scene)
@@ -384,7 +413,8 @@ void Scene::Render()
     m_batch->DrawLine(v1, v2);
   }
   */
-  
+
+
 
   for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
   {
@@ -404,8 +434,11 @@ void Scene::Render()
   m_batch->End();
 
   m_spriteBatch->Begin();
-  std::wstring text = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
-  m_font->DrawString(m_spriteBatch.get(), text.c_str(), DirectX::XMFLOAT2(5, 5), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
+  std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
+  m_font->DrawString(m_spriteBatch.get(), translation.c_str(), DirectX::XMFLOAT2(5, 5), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
+  std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
+  m_font->DrawString(m_spriteBatch.get(), position.c_str(), DirectX::XMFLOAT2(5, 5 + 12), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
+  m_font->DrawString(m_spriteBatch.get(), L"+", DirectX::XMFLOAT2(window_cx, window_cy), DirectX::Colors::Black, 0.f, DirectX::XMFLOAT2(0, 0));
   m_spriteBatch->End();
 
   HRESULT hr = m_swapChain->Present(1, 0);
