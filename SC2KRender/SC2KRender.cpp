@@ -41,10 +41,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	freopen_s(&p_file, "CONIN$", "r", stdin);
 	freopen_s(&p_file, "CONOUT$", "w", stdout);
 	freopen_s(&p_file, "CONOUT$", "w", stderr);
-	std::cout << "SC2KRender" << std::endl;
-	std::cout << "Created by Aleksander Krimsky" << std::endl;
+	std::cout << "SC2KRender by Aleksander Krimsky" << std::endl;
 	std::string filename;
-	std::cout << "Enter a SC2K Map to load: ";
+	std::cout << "Enter a SimCity 2000 Map to load: ";
 	std::cin >> filename;
 
 	
@@ -84,7 +83,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	hWnd = CreateWindowEx(
 		grfExStyle,
-		MainClass.lpszClassName, "SC2KRender",
+		MainClass.lpszClassName, std::string("SC2KRender - " + filename).c_str(),
 		grfStyle,
 		0, 0, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top, NULL, NULL, hInstance, NULL);
 
@@ -127,6 +126,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		POINT p;
 		GetCursorPos(&p);
 		scene->MouseLook(p.x, 0, p.y);
+		break;
+	case WM_KEYDOWN:
+		if(wParam == VK_ESCAPE)
+			PostQuitMessage(0);
 		break;
 	case WM_LBUTTONDOWN:
 		if (wParam == MK_LBUTTON)

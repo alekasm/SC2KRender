@@ -23,6 +23,7 @@
 #include "MapData.h"
 
 struct SceneTile;
+struct MapSceneTile;
 
 namespace DX
 {
@@ -51,6 +52,8 @@ private:
   void CreateDevice();
   void CreateResources();
   void Clear();
+  void FillMapEdges();
+  void FillTileEdges();
 
   HWND m_window;
   int m_outputWidth;
@@ -81,7 +84,8 @@ private:
   float scale = 0.1f;
   float move_speed = 0.3f * scale;
   int window_cx = 0, window_cy = 0;
-  SceneTile* tiles = nullptr;
+  MapSceneTile* tiles = nullptr;
+  SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
 };

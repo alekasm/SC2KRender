@@ -2,12 +2,22 @@
 #include "Scene.h"
 namespace DirectX::Colors
 {
-  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_FLAT = { {{0.6078431f, 0.5294117f, 0.2784313f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_BRIGHT = { {{0.6941176f, 0.6235294f, 0.3725490f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_DIRT_FLAT = { {{0.6078431f, 0.5294117f, 0.2784313f, 1.0f}} };  
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARK = { {{0.5294117f, 0.4196078f, 0.2f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKER = { {{0.4509803f, 0.3254901f, 0.1372549f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_DARKEST = { {{0.5529411f, 0.4f, 0.1725490f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_EXPOSED = { {{0.3725490f, 0.2313725f, 0.0745098f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_SEA_BLUE = { {{0.1372549f, 0.1529411f, 1.f, 0.5f}} };
+}
+
+namespace
+{
+  std::vector<DirectX::XMVECTORF32> fill_colors =
+  {
+    DirectX::Colors::SC2K_DIRT_EXPOSED, DirectX::Colors::DarkBlue, 
+    DirectX::Colors::DarkBlue, DirectX::Colors::Blue, DirectX::Colors::CadetBlue
+  };
 }
 
 struct SceneTile
@@ -16,11 +26,13 @@ struct SceneTile
   DirectX::SimpleMath::Vector3 v_pos[4];
   DirectX::XMVECTORF32 c_pos[4];
   DirectX::VertexPositionColor vpc_pos[4];
-  float height;
+  float height = -1.f;
   SceneTile();
-  const MapTile* map_tile;
+  
   void CreateVertexPositionColors();
   void Rotate90Degrees();
   void ColorTile(DirectX::XMVECTORF32 color);
-  void FillAttributes(const MapTile& tile); 
+  void SetHeight(int height);
+  void SetOrigin(unsigned int x, unsigned int y);
+  
 };

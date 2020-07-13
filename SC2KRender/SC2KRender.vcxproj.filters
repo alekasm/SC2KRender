@@ -123,6 +123,9 @@
     <ClCompile Include="SceneTile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MapSceneTile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MapData.h">
@@ -222,6 +225,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="SceneTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MapSceneTile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

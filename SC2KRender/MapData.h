@@ -82,8 +82,9 @@ enum TileType
 
 struct MapTile
 {
+  uint16_t altm;
   int height;
-  bool water;
+  int water_height;
   TileType type;
 };
 
