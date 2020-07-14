@@ -105,30 +105,37 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     c_pos[TOP_LEFT] = colors[SC2K_COLOR::BRIGHT];
     c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_1];
     c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::NORMAL];
     break;
   case ETT_WATER_SUBMERGED_CORNER_SE:
   case ETT_UNDERWATER_CORNER_SE:
   case ETT_CORNER_SE:
   case ETT_SURFACE_WATER_CORNER_SE:
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::BRIGHT];
     c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_1];
     c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::NORMAL];
     break;
   case ETT_WATER_SUBMERGED_CORNER_SW:
   case ETT_UNDERWATER_CORNER_SW:
   case ETT_CORNER_SW:
   case ETT_SURFACE_WATER_CORNER_SW:
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::BRIGHT];
     c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_1];
     c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::NORMAL];
     break;
   case ETT_WATER_SUBMERGED_CORNER_NW:
   case ETT_UNDERWATER_CORNER_NW:
   case ETT_CORNER_NW:
   case ETT_SURFACE_WATER_CORNER_NW:
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::NORMAL];
     c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_1];
     c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::BRIGHT];
     break;
   case ETT_WATER_SUBMERGED_HIGHGROUND:
   case ETT_UNDERWATER_HIGHGROUND:
@@ -173,8 +180,14 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
 
   switch (tile->type)
   {
+  case ETT_WATER_SUBMERGED_CORNER_NW:
+  case ETT_UNDERWATER_CORNER_NW:
   case ETT_CORNER_NW:
+  case ETT_SURFACE_WATER_CORNER_NW:
+  case ETT_WATER_SUBMERGED_CORNER_SE:
+  case ETT_UNDERWATER_CORNER_SE:
   case ETT_CORNER_SE:
+  case ETT_SURFACE_WATER_CORNER_SE:
     Rotate90Degrees();
     break;
   }
