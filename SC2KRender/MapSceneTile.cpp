@@ -3,7 +3,18 @@
 void MapSceneTile::FillAttributes(const MapTile* tile)
 {
   map_tile = tile;
-  SetHeight(tile->height);
+  
+  if (tile->type / 0x10 == 3)
+  {
+    SetHeight(tile->height - 1);
+    ColorTile(DirectX::Colors::SC2K_SEA_NORMAL, false);
+  }
+  else
+  {
+    SetHeight(tile->height);
+  }  
+  bool index = tile->type / 0x10 > 1;
+  const std::vector<DirectX::XMVECTORF32>& colors = color_palette[index];
   switch (tile->type)
   {
   case ETT_WATER_SUBMERGED_SLOPE_N:
@@ -12,10 +23,10 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
   case ETT_SURFACE_WATER_SLOPE_N:
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::BRIGHT];
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::BRIGHT];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::BRIGHT];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::BRIGHT];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_E:
   case ETT_UNDERWATER_SLOPE_E:
@@ -23,10 +34,10 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
   case ETT_SURFACE_WATER_SLOPE_E:
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_3];
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_3];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_3];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_3];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_W:
   case ETT_SLOPE_W:
@@ -34,10 +45,10 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
   case ETT_SURFACE_WATER_SLOPE_W:
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKEST;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKEST;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_3];
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_3];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_3];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_3];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_S:
   case ETT_UNDERWATER_SLOPE_S:
@@ -45,10 +56,10 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
   case ETT_SURFACE_WATER_SLOPE_S:
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_2];
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_2];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_2];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_2];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_NE:
   case ETT_UNDERWATER_SLOPE_NE:
@@ -57,7 +68,7 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_2];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_NW:
   case ETT_UNDERWATER_SLOPE_NW:
@@ -66,7 +77,7 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARKER;
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_2];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_SE:
   case ETT_UNDERWATER_SLOPE_SE:
@@ -75,7 +86,7 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_2];
     break;
   case ETT_WATER_SUBMERGED_SLOPE_SW:
   case ETT_UNDERWATER_SLOPE_SW:
@@ -84,40 +95,40 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARKER;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_2];
     break;
   case ETT_WATER_SUBMERGED_CORNER_NE:
   case ETT_UNDERWATER_CORNER_NE:
   case ETT_CORNER_NE:
   case ETT_SURFACE_WATER_CORNER_NE:
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_BRIGHT;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::BRIGHT];
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_1];
     break;
   case ETT_WATER_SUBMERGED_CORNER_SE:
   case ETT_UNDERWATER_CORNER_SE:
   case ETT_CORNER_SE:
   case ETT_SURFACE_WATER_CORNER_SE:
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_1];
     break;
   case ETT_WATER_SUBMERGED_CORNER_SW:
   case ETT_UNDERWATER_CORNER_SW:
   case ETT_CORNER_SW:
   case ETT_SURFACE_WATER_CORNER_SW:
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-    c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
-    c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
+    c_pos[BOTTOM_LEFT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[TOP_RIGHT] = colors[SC2K_COLOR::DARK_1];
     break;
   case ETT_WATER_SUBMERGED_CORNER_NW:
   case ETT_UNDERWATER_CORNER_NW:
   case ETT_CORNER_NW:
   case ETT_SURFACE_WATER_CORNER_NW:
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
-    c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_DARK;
-    c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_DARK;
+    c_pos[TOP_LEFT] = colors[SC2K_COLOR::DARK_1];
+    c_pos[BOTTOM_RIGHT] = colors[SC2K_COLOR::DARK_1];
     break;
   case ETT_WATER_SUBMERGED_HIGHGROUND:
   case ETT_UNDERWATER_HIGHGROUND:
@@ -127,7 +138,7 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
-    ColorTile(DirectX::Colors::SC2K_DIRT_EXPOSED);
+    ColorTile(colors[SC2K_COLOR::DARKEST]);
     break;
   case ETT_WATERFALL:
     v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;

@@ -181,6 +181,7 @@
     <ClCompile Include="SceneTile.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ColorConstants.h" />
     <ClInclude Include="DirectXTK.h" />
     <ClInclude Include="DirectXTK\AlignedNew.h" />
     <ClInclude Include="DirectXTK\Audio.h" />

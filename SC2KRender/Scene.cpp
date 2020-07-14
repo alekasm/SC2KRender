@@ -37,13 +37,15 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
       t.SetOrigin(x, y);
       const MapTile* map_tile = &map_tiles[x + TILES_DIMENSION * y];
       t.FillAttributes(map_tile);
-      if (map_tile->height < map_tile->water_height)
+      bool add_water = map_tile->height < map_tile->water_height || map_tile->type / 0x10 == 3;
+      if (add_water)
       {
         SceneTile& sea_tile = sea_tiles[x + TILES_DIMENSION * y];
         sea_tile.SetOrigin(x, y);
         sea_tile.SetHeight(map_tile->water_height);
         sea_tile.ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
       }
+
     }
   } 
   FillTileEdges();
@@ -298,8 +300,6 @@ void Scene::Render()
 
   Clear();
 
-  m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), nullptr, 0xFFFFFFFF);  
-  m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
   m_d3dContext->RSSetState(m_states->CullNone());
 
   m_effect->SetWorld(m_world);
@@ -307,6 +307,9 @@ void Scene::Render()
   m_effect->Apply(m_d3dContext.Get());
   m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
+
+  m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
+  m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
   m_batch->Begin();
 
   /*
@@ -345,25 +348,30 @@ void Scene::Render()
   for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
   {
     m_batch->DrawQuad(fill_tiles[quad_ix], fill_tiles[quad_ix + 1], fill_tiles[quad_ix + 2], fill_tiles[quad_ix + 3]);
-  }
-
-  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  }  
+  
+  for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
   {
-    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    const SceneTile t = tiles[i]; //object slice is ok
+    m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+    m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+  }
+  m_batch->End();
+
+  m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
+  m_batch->Begin();
+  for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
+  {
+    const SceneTile w = sea_tiles[i];
+    if (w.height > -1.f)
     {
-      const SceneTile t = tiles[x + TILES_DIMENSION * y]; //object slice is ok
-      m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
-      m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
-      const SceneTile w = sea_tiles[x + TILES_DIMENSION * y];
-      if (w.height > -1.f)
-      {
-        m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
-        m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
-      }
+      m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
+      m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
     }
   }
-
   m_batch->End();
+
+
 
   m_spriteBatch->Begin();
   std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
@@ -434,10 +442,10 @@ void Scene::FillMapEdges()
       Vector3 g_topleft = Vector3(t_topleft.x, 0, t_topleft.z);
       Vector3 t_topright = t.v_pos[VPos::TOP_RIGHT];
       Vector3 g_topright = Vector3(t_topright.x, 0, t_topright.z);
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topleft, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topleft, DirectX::Colors::SC2K_DIRT_DARKEST));
       const SceneTile& w = sea_tiles[x + TILES_DIMENSION * 0];
       if (w.height > -1)
       {
@@ -457,10 +465,10 @@ void Scene::FillMapEdges()
       Vector3 g_bottomleft = Vector3(t_bottomleft.x, 0, t_bottomleft.z);
       Vector3 t_bottomright = t.v_pos[VPos::BOTTOM_RIGHT];
       Vector3 g_bottomright = Vector3(t_bottomright.x, 0, t_bottomright.z);
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomleft, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomleft, DirectX::Colors::SC2K_DIRT_DARKEST));
       const SceneTile& w = sea_tiles[x + TILES_DIMENSION * (TILES_DIMENSION - 1)];
       if (w.height > -1)
       {
@@ -484,10 +492,10 @@ void Scene::FillMapEdges()
       Vector3 g_topleft = Vector3(t_topleft.x, 0, t_topleft.z);
       Vector3 t_bottomleft = t.v_pos[VPos::BOTTOM_LEFT];
       Vector3 g_bottomleft = Vector3(t_bottomleft.x, 0, t_bottomleft.z);
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_topleft, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topleft, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomleft, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomleft, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topleft, DirectX::Colors::SC2K_DIRT_DARKEST));
       const SceneTile& w = tiles[0 + TILES_DIMENSION * y];
       if (w.height > -1)
       {
@@ -507,10 +515,10 @@ void Scene::FillMapEdges()
       Vector3 g_topright = Vector3(t_topright.x, 0, t_topright.z);
       Vector3 t_bottomright = t.v_pos[VPos::BOTTOM_RIGHT];
       Vector3 g_bottomright = Vector3(t_bottomright.x, 0, t_bottomright.z);
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomright, DirectX::Colors::SC2K_DIRT_EXPOSED));
-      fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_EXPOSED));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_topright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(t_bottomright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_bottomright, DirectX::Colors::SC2K_DIRT_DARKEST));
+      fill_tiles.push_back(DirectX::VertexPositionColor(g_topright, DirectX::Colors::SC2K_DIRT_DARKEST));
       const SceneTile& w = tiles[(TILES_DIMENSION - 1) + TILES_DIMENSION * y];
       if (w.height > -1)
       {

@@ -100,9 +100,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		if (GetActiveWindow() == hWnd)
 		{
 			GetWindowRect(hWnd, &WindowRect);
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
 		}
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
 	}
 
 	scene.reset();
