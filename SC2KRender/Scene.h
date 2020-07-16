@@ -24,6 +24,7 @@
 
 struct SceneTile;
 struct MapSceneTile;
+using DirectX::SimpleMath::Vector3;
 
 namespace DX
 {
@@ -36,6 +37,7 @@ namespace DX
     }
   }
 }
+enum Edge { LEFT, TOP, BOTTOM, RIGHT };
 
 class Scene
 {
@@ -51,9 +53,11 @@ public:
 private:
   void CreateDevice();
   void CreateResources();
-  void Clear();
-  void FillMapEdges();
+  void Clear();  
   void FillTileEdges();
+  
+  BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
+  BOOL FillEdgeSceneTile(unsigned int, Edge);
 
   HWND m_window;
   int m_outputWidth;

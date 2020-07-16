@@ -3,18 +3,15 @@
 void MapSceneTile::FillAttributes(const MapTile* tile)
 {
   map_tile = tile;
-  
   if (tile->type / 0x10 == 3)
   {
-    SetHeight(tile->height - 1);
-    ColorTile(DirectX::Colors::SC2K_SEA_NORMAL, false);
+    SetHeight(tile->height - 1);   
   }
   else
   {
     SetHeight(tile->height);
   }  
-  bool index = tile->type / 0x10 > 1;
-  const std::vector<DirectX::XMVECTORF32>& colors = color_palette[index];
+  const std::vector<DirectX::XMVECTORF32>& colors = color_palette[0];
   switch (tile->type)
   {
   case ETT_WATER_SUBMERGED_SLOPE_N:
@@ -148,31 +145,26 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     ColorTile(colors[SC2K_COLOR::DARKEST]);
     break;
   case ETT_WATERFALL:
-    v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT;
-    v_pos[TOP_LEFT].y += HEIGHT_INCREMENT;
-    v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT;
-    v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT;
-    ColorTile(DirectX::Colors::DarkBlue);
+    v_pos[TOP_RIGHT].y += HEIGHT_INCREMENT * 2;
+    v_pos[TOP_LEFT].y += HEIGHT_INCREMENT * 2;
+    v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT * 2;
+    v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT * 2;
+    ColorTile(DirectX::Colors::SC2K_SEA_BLUE_STATIC);
     break;
   case ETT_FLAT:
-    break;
   case ETT_WATER_SUBMERGED_FLAT:
   case ETT_UNDERWATER_FLAT:
-    ColorTile(DirectX::Colors::DarkBlue);
     break;
   case ETT_SURFACE_WATER_BAY_OPEN_S: //These tiles contain semi-circle water sprites
   case ETT_SURFACE_WATER_BAY_OPEN_W: //no good way to handle them for now
   case ETT_SURFACE_WATER_BAY_OPEN_N:
   case ETT_SURFACE_WATER_BAY_OPEN_E:
   case ETT_SURFACE_WATER_FLAT:
-    ColorTile(DirectX::Colors::DarkBlue);
     break;
   case ETT_SURFACE_WATER_CANAL_WE: //These tiles have have thin ground on
   case ETT_SURFACE_WATER_CANAL_NS: //each side of water, no good way to handle
-    ColorTile(DirectX::Colors::DarkBlue);
     break;
   default:
-    ColorTile(DirectX::Colors::HotPink);
     break;
   }
 

@@ -3,7 +3,12 @@
 #include "DirectXColors.h"
 namespace DirectX::Colors
 {
-  XMGLOBALCONST XMVECTORF32 SC2K_SEA_BLUE = { {{0.f, 0.f, 0.5450980f, 0.5f}} };
+  //XMGLOBALCONST XMVECTORF32 SC2K_SEA_BLUE = { {{0.f, 0.f, 0.5450980f, 0.5f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_SEA_BLUE = { {{0.f, 0.0980392f, 0.6156863f, 0.85f}} };
+  
+  XMGLOBALCONST XMVECTORF32 SC2K_SEA_BLUE_STATIC = { {{0.f, 0.0980392f, 0.6156863f, 1.0f}} };
+  XMGLOBALCONST XMVECTORF32 SC2K_SEA_BLUE_STATIC_BRIGHT = { {{0.f, 0.1411764f, 0.9411764f, 1.0f}} };
+  
 
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_BRIGHT = { {{0.6941176f, 0.6235294f, 0.3725490f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_DIRT_NORMAL = { {{0.6078431f, 0.5294117f, 0.2784313f, 1.0f}} };
@@ -18,8 +23,6 @@ namespace DirectX::Colors
   XMGLOBALCONST XMVECTORF32 SC2K_SEA_DARK_2 = { {{0.f, 0.f, 0.31764705f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_SEA_DARK_3 = { {{0.f, 0.f, 0.2352941f, 1.0f}} };
   XMGLOBALCONST XMVECTORF32 SC2K_SEA_DARKEST = { {{0.f, 0.f, 0.1568627f, 1.0f}} };
-
-
 }
 
 namespace
@@ -33,10 +36,14 @@ namespace
     {DirectX::Colors::SC2K_SEA_BRIGHT, DirectX::Colors::SC2K_SEA_NORMAL, DirectX::Colors::SC2K_SEA_DARK_1,
     DirectX::Colors::SC2K_SEA_DARK_2, DirectX::Colors::SC2K_SEA_DARK_3, DirectX::Colors::SC2K_SEA_DARKEST}
   };
-
+  
   std::vector<DirectX::XMVECTORF32> fill_colors =
   {
-    DirectX::Colors::SC2K_DIRT_DARKEST, DirectX::Colors::DarkBlue,
-    DirectX::Colors::DarkBlue, DirectX::Colors::Blue, DirectX::Colors::CadetBlue
+    DirectX::Colors::SC2K_DIRT_DARKEST, DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT,
+    DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT, DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT, 
+    DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT
+    //DirectX::Colors::SC2K_DIRT_DARKEST, DirectX::Colors::DarkBlue,
+    //DirectX::Colors::DarkBlue, DirectX::Colors::Blue, DirectX::Colors::CadetBlue
   };
+  
 }

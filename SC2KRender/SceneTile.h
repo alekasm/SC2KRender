@@ -4,7 +4,7 @@
 
 struct SceneTile
 {  
-  enum VertexPos { TOP_LEFT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_RIGHT };
+  enum VertexPos { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT };
   DirectX::SimpleMath::Vector3 v_pos[4];
   DirectX::XMVECTORF32 c_pos[4];
   DirectX::VertexPositionColor vpc_pos[4];

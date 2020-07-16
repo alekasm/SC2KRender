@@ -23,7 +23,6 @@ void SceneTile::Rotate90Degrees()
   vpc_pos[BOTTOM_LEFT] = vpc_pos[BOTTOM_RIGHT];
   vpc_pos[BOTTOM_RIGHT] = vpc_pos[TOP_RIGHT];
   vpc_pos[TOP_RIGHT] = original;
-  // ColorTile(DirectX::Colors::Purple);
 }
 
 void SceneTile::ColorTile(DirectX::XMVECTORF32 color, bool update)
