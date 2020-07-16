@@ -49,9 +49,8 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 
     }
   } 
-  //TILE_DIMENSION * SIDES * LAYERS (GROUND/WATER)
+
   FillTileEdges();
-  //FillMapEdges();
   render_scene = true;
 }
 

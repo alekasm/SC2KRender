@@ -19,6 +19,7 @@ slicer4ever (GameDev.net Discord) - DirectX Help
 #include "MapLoader.h"
 #include "Scene.h"
 #include <conio.h>
+#include "resource.h"
 
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -41,23 +42,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	freopen_s(&p_file, "CONIN$", "r", stdin);
 	freopen_s(&p_file, "CONOUT$", "w", stdout);
 	freopen_s(&p_file, "CONOUT$", "w", stderr);
-	std::cout << "SC2KRender by Aleksander Krimsky" << std::endl;
+	std::cout << "SC2KRender (Version 0.1) by Aleksander Krimsky | www.krimsky.net" << std::endl;
 	std::string filename;
-	std::cout << "Enter a SimCity 2000 Map to load: ";
-	std::cin >> filename;
-
-	
-	if (filename.empty())
-	{
-		return 1;
-	}
-
 	MapTile* tiles = nullptr;
-	if (!MapLoader::LoadMap(filename, tiles))
+	do
 	{
-		_getch();
-		return 1;
-	}
+		std::cout << "Enter a SimCity 2000 Map to load: ";
+		std::cin >> filename;
+	} while (filename.empty() || !MapLoader::LoadMap(filename, tiles));
 
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 
@@ -73,8 +65,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	MainClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	MainClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
 	MainClass.cbSize = sizeof(WNDCLASSEX);
-	//MainClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(108));
-	//MainClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(108));
+	MainClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
+	MainClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
 	MainClass.hInstance = hInstance;
 	MainClass.lpfnWndProc = WndProc;
 	MainClass.lpszClassName = "WindowClassName";

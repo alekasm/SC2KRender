@@ -153,7 +153,7 @@ bool MapLoader::LoadMap(std::string filename, MapTile* &tile_out)
   bool is_sc2kfile = header.iff_file == FORM && header.file_type == ISCD;  
   if (!is_sc2kfile)
   {
-    printf("The file is not a valid SC2K Map: %s,\n", filename.c_str());
+    printf("The file is not a valid SC2K Map: %s\n", filename.c_str());
     return false;
   }
 

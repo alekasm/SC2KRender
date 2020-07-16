@@ -214,12 +214,19 @@
     <ClInclude Include="MapData.h" />
     <ClInclude Include="MapLoader.h" />
     <ClInclude Include="MapSceneTile.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneTile.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="d3d.spritefont" />
     <None Include="DirectXTK\SimpleMath.inl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SC2KRender.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
