@@ -1,12 +1,12 @@
 #pragma once
 #define NOMINMAX
-#define NODRAWTEXT
-#define NOGDI
-#define NOBITMAP
-#define NOMCX
-#define NOSERVICE
-#define NOHELP
-#define WIN32_LEAN_AND_MEAN
+//#define NODRAWTEXT
+//#define NOGDI
+//#define NOBITMAP
+//#define NOMCX
+//#define NOSERVICE
+//#define NOHELP
+//#define WIN32_LEAN_AND_MEAN
 
 #define HEIGHT_INCREMENT 1.f
 
@@ -21,6 +21,11 @@
 
 #include "DirectXTK.h"
 #include "MapData.h"
+
+#include <dwrite.h>
+#include <d2d1_1.h>
+#pragma comment(lib, "d2d1")
+#pragma comment(lib, "dwrite")
 
 struct SceneTile;
 struct MapSceneTile;
@@ -71,8 +76,12 @@ private:
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_renderTargetView;
   Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depthStencilView;
 
-  std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
-  std::unique_ptr<DirectX::SpriteFont> m_font;
+  //Text Drawing
+  Microsoft::WRL::ComPtr<ID2D1DeviceContext> device_context;
+  Microsoft::WRL::ComPtr<IDWriteFactory> wfactory;
+  Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> whiteBrush;
+  IDWriteTextFormat* format = NULL;
+
   std::unique_ptr<DirectX::CommonStates> m_states;
   std::unique_ptr<DirectX::BasicEffect> m_effect;
   std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_batch;

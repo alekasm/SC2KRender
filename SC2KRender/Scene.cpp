@@ -56,7 +56,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 
 void Scene::CreateDevice()
 {
-  UINT creationFlags = 0;
+  UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT; //Direct2D needs this flag
   static const D3D_FEATURE_LEVEL featureLevels[] =
   {
     D3D_FEATURE_LEVEL_11_1,
@@ -102,8 +102,6 @@ void Scene::CreateDevice()
     m_inputLayout.ReleaseAndGetAddressOf());
 
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
-  m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
-  m_font = std::make_unique<DirectX::SpriteFont>(m_d3dDevice.Get(), L"d3d.spritefont");
 }
 
 void Scene::CreateResources()
@@ -128,12 +126,12 @@ void Scene::CreateResources()
   }
   else
   {
-    Microsoft::WRL::ComPtr<IDXGIDevice1> dxgiDevice;
+    Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
     m_d3dDevice.As(&dxgiDevice);
     Microsoft::WRL::ComPtr<IDXGIAdapter> dxgiAdapter;
     dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf());
     Microsoft::WRL::ComPtr<IDXGIFactory2> dxgiFactory;
-    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.GetAddressOf()));
+    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.GetAddressOf()));  
 
     // Create a descriptor for the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -157,12 +155,35 @@ void Scene::CreateResources()
       nullptr,
       m_swapChain.ReleaseAndGetAddressOf()
     );
-    if (hr_dxgifactory != S_OK)
-    {
-      printf("Result: %x\n", hr_dxgifactory);
-      ExitProcess(1);
-    }
-   dxgiFactory->MakeWindowAssociation(m_window, DXGI_MWA_NO_ALT_ENTER);
+
+    dxgiFactory->MakeWindowAssociation(m_window, DXGI_MWA_NO_ALT_ENTER);
+
+    DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), &wfactory);
+    wfactory->CreateTextFormat(L"Lucida Console", NULL, DWRITE_FONT_WEIGHT_REGULAR, DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STRETCH_NORMAL, 10.0f, L"en-us", &format);
+
+    Microsoft::WRL::ComPtr<ID2D1Factory1> factory;
+    D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED, factory.GetAddressOf());
+
+    Microsoft::WRL::ComPtr<ID2D1Device> dev;
+    factory->CreateDevice(dxgiDevice.Get(), dev.GetAddressOf());
+
+    dev->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_ENABLE_MULTITHREADED_OPTIMIZATIONS, device_context.GetAddressOf());
+
+    D2D1_BITMAP_PROPERTIES1 bp;
+    bp.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    bp.pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
+    bp.dpiX = 96.0f;
+    bp.dpiY = 96.0f;
+    bp.bitmapOptions = D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW;
+    bp.colorContext = nullptr;
+
+    Microsoft::WRL::ComPtr<IDXGISurface> dxgiBuffer;
+    m_swapChain->GetBuffer(0, __uuidof(IDXGISurface), &dxgiBuffer);
+
+    Microsoft::WRL::ComPtr<ID2D1Bitmap1> targetBitmap;
+    device_context->CreateBitmapFromDxgiSurface(dxgiBuffer.Get(), &bp, &targetBitmap);
+    device_context->SetTarget(targetBitmap.Get());
+    device_context->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &whiteBrush);   
   }
   // Obtain the backbuffer for this window which will be the final 3D rendertarget.
   Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
@@ -173,6 +194,9 @@ void Scene::CreateResources()
   m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf());
   CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
   m_d3dDevice->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, m_depthStencilView.ReleaseAndGetAddressOf());
+
+
+
 }
 
 void Scene::Clear()
@@ -372,17 +396,18 @@ void Scene::Render()
   }
   m_batch->End();
 
-
-
-  m_spriteBatch->Begin();
   std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
-  m_font->DrawString(m_spriteBatch.get(), translation.c_str(), DirectX::XMFLOAT2(5, 5), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
   std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
-  m_font->DrawString(m_spriteBatch.get(), position.c_str(), DirectX::XMFLOAT2(5, 5 + 12), DirectX::Colors::White, 0.f, DirectX::XMFLOAT2(0, 0));
-  m_font->DrawString(m_spriteBatch.get(), L"+", DirectX::XMFLOAT2(window_cx, window_cy), DirectX::Colors::Black, 0.f, DirectX::XMFLOAT2(0, 0));
-  m_spriteBatch->End();
+  Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2;
+  wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
+  wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
+  device_context->BeginDraw();
+  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
+  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
+  device_context->EndDraw();
 
   HRESULT hr = m_swapChain->Present(1, 0);
+
   if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
   {
     //m_swapChain.Reset();

@@ -219,7 +219,6 @@
     <ClInclude Include="SceneTile.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="d3d.spritefont" />
     <None Include="DirectXTK\SimpleMath.inl" />
   </ItemGroup>
   <ItemGroup>
