@@ -22,6 +22,7 @@ slicer4ever (GameDev.net Discord) - DirectX Help
 #include "resource.h"
 
 
+
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 HWND hWnd;
 RECT WindowRect;
@@ -43,13 +44,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	freopen_s(&p_file, "CONOUT$", "w", stdout);
 	freopen_s(&p_file, "CONOUT$", "w", stderr);
 	std::cout << "SC2KRender (Version 0.1) by Aleksander Krimsky | www.krimsky.net" << std::endl;
-	std::string filename;
-	MapTile* tiles = nullptr;
-	do
+
+	int argc = 0;
+	LPWSTR* args = CommandLineToArgvW(GetCommandLineW(), &argc);	
+	std::wstring wfilename = L"";
+	if (argc == 2)
 	{
-		std::cout << "Enter a SimCity 2000 Map to load: ";
-		std::cin >> filename;
-	} while (filename.empty() || !MapLoader::LoadMap(filename, tiles));
+		wfilename = std::wstring(args[1]);
+	}
+	LocalFree(args);
+
+	MapTile* tiles = nullptr;
+	std::string filename = "";
+	do
+	{		
+		if (wfilename.empty())
+		{
+			std::cout << "Enter a SimCity 2000 Map to load: ";
+			std::wcin >> wfilename;
+		}		
+		int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wfilename[0], wfilename.size(), NULL, 0, NULL, NULL);
+		filename = std::string(size, 0);
+		WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wfilename[0], wfilename.size(), &filename[0], size, NULL, NULL);
+		wfilename = L"";
+	} while (!MapLoader::LoadMap(filename, tiles));
+
 
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 

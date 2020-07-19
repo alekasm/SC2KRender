@@ -1,8 +1,10 @@
 #include "Scene.h"
 #include "MapSceneTile.h"
+#include "AssetLoader.h"
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
+using DirectX::SimpleMath::Vector2;
 typedef SceneTile::VertexPos VPos;
 
 void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
@@ -26,7 +28,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.01f, 40.f);
 
   m_effect->SetView(m_view);
-  m_effect->SetProjection(m_proj);
+  m_effect->SetProjection(m_proj);  
   tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
   sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
   for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
@@ -51,6 +53,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
   } 
 
   FillTileEdges();
+  //AssetLoader::LoadSprites(m_d3dDevice, "");
   render_scene = true;
 }
 
@@ -101,7 +104,9 @@ void Scene::CreateDevice()
     shaderByteCode, byteCodeLength,
     m_inputLayout.ReleaseAndGetAddressOf());
 
+  m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());  
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
+  m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
 }
 
 void Scene::CreateResources()
@@ -327,48 +332,18 @@ void Scene::Render()
 
   m_d3dContext->RSSetState(m_states->CullNone());
 
+  m_effect->SetTextureEnabled(false);
   m_effect->SetWorld(m_world);
   m_effect->SetView(m_view);
   m_effect->Apply(m_d3dContext.Get());
+  //auto sampler = m_states->LinearClamp();
+  //m_d3dContext->PSSetSamplers(0, 1, &sampler);
   m_d3dContext->IASetInputLayout(m_inputLayout.Get());
-
 
   m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
   m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
-  m_batch->Begin();
 
-  /*
-  Vector3 xaxis((float)TILES_DIMENSION, 4.f, 0.f);
-  Vector3 yaxis(0.f, 4.f, (float)TILES_DIMENSION);
-  Vector3 origin = Vector3::Zero;
-  size_t divisions = TILES_DIMENSION;
-
-  
-  for (size_t i = 0; i <= divisions; i++)
-  {
-    float fPercent = float(i) / float(divisions);
-    fPercent = (fPercent * 1.0f) - 0.0f;
-
-    Vector3 scale = yaxis * fPercent + origin;
-
-    DirectX::VertexPositionColor v1(scale + Vector3(0, 2, 0), DirectX::Colors::Black);
-    DirectX::VertexPositionColor v2(scale + xaxis, DirectX::Colors::Black);
-    m_batch->DrawLine(v1, v2);
-  }
-
-  for (size_t i = 0; i <= divisions; ++i)
-  {
-    float fPercent = float(i) / float(divisions);
-    fPercent = (fPercent * 1.0f) - 0.0f;
-
-    Vector3 scale = xaxis * fPercent + origin;
-
-    DirectX::VertexPositionColor v1(scale + Vector3(0, 2, 0), DirectX::Colors::Black);
-    DirectX::VertexPositionColor v2(scale + yaxis, DirectX::Colors::Black);
-    m_batch->DrawLine(v1, v2);
-  }
-  */
-
+  m_batch->Begin();  
 
   for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
   {
@@ -377,17 +352,19 @@ void Scene::Render()
   
   for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
   {
-    const SceneTile t = tiles[i]; //object slice is ok
+    const SceneTile& t = tiles[i]; //object slice is ok
     m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
     m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
   }
   m_batch->End();
 
+  //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
   m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
   m_batch->Begin();
+
   for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
   {
-    const SceneTile w = sea_tiles[i];
+    const SceneTile& w = sea_tiles[i];
     if (w.height > -1.f)
     {
       m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
@@ -396,14 +373,101 @@ void Scene::Render()
   }
   m_batch->End();
 
+  /*
+  m_texbatch->Begin();
+  m_effect->SetTextureEnabled(true);
+  m_effect->SetTexture(AssetLoader::sprites->at(0).Get());
+  
+  //auto sampler = m_states->LinearClamp();
+  //m_d3dContext->PSSetSamplers(0, 1, &sampler);
+  m_effect->Apply(m_d3dContext.Get());
+  const SceneTile& t = tiles[0];
+  Vector3 a(0.f, t.height, 0.f);
+  Vector3 b(1.f, t.height, 0.f);
+  Vector3 c(1.f, t.height + HEIGHT_INCREMENT, 0.f);
+  Vector3 d(0.f, t.height + HEIGHT_INCREMENT, 0.f);
+
+  DirectX::VertexPositionTexture v1(a, Vector2(0.f, 1.f) );
+  DirectX::VertexPositionTexture v2(b, Vector2(1.f, 1.f) );
+  DirectX::VertexPositionTexture v3(c, Vector2(1.f, 0.f) );
+  DirectX::VertexPositionTexture v4(d, Vector2(0.f, 0.f) );
+  m_texbatch->DrawQuad(v1, v2, v3, v4);
+  m_texbatch->End();
+  */
+  /*
+  
+  if (true)
+  {
+    const SceneTile& t = tiles[0];
+    Vector3 position3d(0.f, t.height, 0.f);
+    position3d *= scale;
+    float distance = Vector3::Distance(position3d, m_position);
+    position3d = Vector3::Transform(position3d, m_view);
+    position3d = Vector3::Transform(position3d, m_proj);
+    position3d.x = m_outputWidth * (position3d.x + 1.f) / 2.f;
+    position3d.y = m_outputHeight * (1.f - (position3d.y + 1.f) / 2.f);
+    float x = position3d.x;
+    float y = position3d.y;
+
+
+    DirectX::SimpleMath::Vector2 m_origin;
+    m_origin.x = 45 / 2;
+    m_origin.y = 49;
+
+    m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
+
+    float scale = 1.f / distance;
+
+    m_spriteBatch->Draw(AssetLoader::sprites->at(0).Get(), DirectX::XMFLOAT2(x, y), nullptr, DirectX::Colors::White, 0.f,
+      m_origin, scale);
+
+    m_spriteBatch->End();
+  }
+  */
+  
+
+
+
+  //var viewProj = m_view * m_proj;
+  //var vp = mDevice.ImmediateContext.Rasterizer.GetViewports()[0];
+  //Vector3::
+  //var screenCoords = Vector3.Project(worldSpaceCoordinates, vp.X, vp.Y, vp.Width, vp.Height, vp.MinZ, vp.MaxZ, m_proj);
+  //Vector3::Pr
+
+  /*
+
+
+
+  float ray_x = +cos(yaw - (float)M_PI_2);
+  float ray_z = +sin(yaw - (float)M_PI_2);
+  float ray_y = -sin(pitch); // TODO not accurate
+
+  //Vector3 direction = Vector3(m_position);
+  //direction.Normalize(position3d);
+  //DirectX::SimpleMath::Ray ray(position3d, direction);
+  float distance1;
+  DirectX::BoundingBox b(position3d, Vector3(0.2f, 0.2f, 0.2f));
+  //if (ray.Intersects(b, distance1))
+  //Vector3(ray_x, ray_y, ray_z)
+  DirectX::SimpleMath::Ray ray(m_position, position3d - m_position);
+  //if(ray.Intersects(b, distance1))
+  */
+ 
+
   std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
   std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
   Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2;
   wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
   wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
+
+//  std::wstring position2ds = L"Position: <" + std::to_wstring(scale) + L", " + std::to_wstring(distance1) + L">";
+// Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout3;
+// wfactory->CreateTextLayout(position2ds.c_str(), position2ds.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
+
   device_context->BeginDraw();
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
+//  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
   device_context->EndDraw();
 
   HRESULT hr = m_swapChain->Present(1, 0);

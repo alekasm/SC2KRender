@@ -84,7 +84,9 @@ private:
 
   std::unique_ptr<DirectX::CommonStates> m_states;
   std::unique_ptr<DirectX::BasicEffect> m_effect;
+  std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>> m_texbatch;
   std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_batch;
+  std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
   Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
   DirectX::SimpleMath::Matrix m_world;
   DirectX::SimpleMath::Matrix m_view;
@@ -95,10 +97,11 @@ private:
   float yaw = 0.f;
   float pitch = 0.f;
   float scale = 0.1f;
-  float move_speed = 0.3f * scale;
+  float move_speed = 0.2f * scale;
   int window_cx = 0, window_cy = 0;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
+ std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
 };
