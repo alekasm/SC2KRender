@@ -8,7 +8,7 @@
 //#define NOHELP
 //#define WIN32_LEAN_AND_MEAN
 
-#define HEIGHT_INCREMENT 1.f
+
 
 
 #include <Windows.h>
@@ -21,6 +21,7 @@
 
 #include "DirectXTK.h"
 #include "MapData.h"
+#include "Sprite3D.h"
 
 #include <dwrite.h>
 #include <d2d1_1.h>
@@ -104,4 +105,5 @@ private:
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
  std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
+ std::vector<Sprite3D> v_sprite3d;
 };

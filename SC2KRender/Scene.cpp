@@ -53,7 +53,15 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
   } 
 
   FillTileEdges();
-  //AssetLoader::LoadSprites(m_d3dDevice, "");
+  //
+#if USING_SPRITES
+  AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
+  v_sprite3d.push_back(Sprite3D(
+    AssetLoader::mresources->at(L"tree"),
+    tiles[0].v_pos[VPos::TOP_LEFT],
+    Orientation::X));
+#endif
+
   render_scene = true;
 }
 
@@ -94,6 +102,8 @@ void Scene::CreateDevice()
   m_states = std::make_unique<DirectX::CommonStates>(m_d3dDevice.Get());
   m_effect = std::make_unique<DirectX::BasicEffect>(m_d3dDevice.Get());
   m_effect->SetVertexColorEnabled(true);
+  //m_effect->SetTextureEnabled(true);
+  //m_effect->SetVertexColorEnabled(true);
 
   void const* shaderByteCode;
   size_t byteCodeLength;
@@ -332,12 +342,11 @@ void Scene::Render()
 
   m_d3dContext->RSSetState(m_states->CullNone());
 
+  m_effect->SetVertexColorEnabled(true);
   m_effect->SetTextureEnabled(false);
   m_effect->SetWorld(m_world);
   m_effect->SetView(m_view);
   m_effect->Apply(m_d3dContext.Get());
-  //auto sampler = m_states->LinearClamp();
-  //m_d3dContext->PSSetSamplers(0, 1, &sampler);
   m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
   m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
@@ -373,27 +382,24 @@ void Scene::Render()
   }
   m_batch->End();
 
-  /*
-  m_texbatch->Begin();
+ 
+#if USING_SPRITES
+  m_effect->SetVertexColorEnabled(false);
   m_effect->SetTextureEnabled(true);
-  m_effect->SetTexture(AssetLoader::sprites->at(0).Get());
-  
-  //auto sampler = m_states->LinearClamp();
-  //m_d3dContext->PSSetSamplers(0, 1, &sampler);
-  m_effect->Apply(m_d3dContext.Get());
-  const SceneTile& t = tiles[0];
-  Vector3 a(0.f, t.height, 0.f);
-  Vector3 b(1.f, t.height, 0.f);
-  Vector3 c(1.f, t.height + HEIGHT_INCREMENT, 0.f);
-  Vector3 d(0.f, t.height + HEIGHT_INCREMENT, 0.f);
+  m_d3dContext->OMSetBlendState(m_states->NonPremultiplied(), nullptr, 0xFFFFFFFF);
+  m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
+  m_d3dContext->RSSetState(m_states->CullNone());
 
-  DirectX::VertexPositionTexture v1(a, Vector2(0.f, 1.f) );
-  DirectX::VertexPositionTexture v2(b, Vector2(1.f, 1.f) );
-  DirectX::VertexPositionTexture v3(c, Vector2(1.f, 0.f) );
-  DirectX::VertexPositionTexture v4(d, Vector2(0.f, 0.f) );
-  m_texbatch->DrawQuad(v1, v2, v3, v4);
-  m_texbatch->End();
-  */
+  for (const Sprite3D& sprite3d : v_sprite3d)
+  {
+    m_effect->SetTexture(sprite3d.resource.Get());
+    m_effect->Apply(m_d3dContext.Get()); 
+    m_texbatch->Begin();
+    m_texbatch->DrawQuad(sprite3d.v1, sprite3d.v2, sprite3d.v3, sprite3d.v4);
+    m_texbatch->End();
+  }
+#endif
+  
   /*
   
   if (true)
@@ -414,6 +420,7 @@ void Scene::Render()
     m_origin.x = 45 / 2;
     m_origin.y = 49;
 
+
     m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
 
     float scale = 1.f / distance;
@@ -423,51 +430,17 @@ void Scene::Render()
 
     m_spriteBatch->End();
   }
-  */
   
-
-
-
-  //var viewProj = m_view * m_proj;
-  //var vp = mDevice.ImmediateContext.Rasterizer.GetViewports()[0];
-  //Vector3::
-  //var screenCoords = Vector3.Project(worldSpaceCoordinates, vp.X, vp.Y, vp.Width, vp.Height, vp.MinZ, vp.MaxZ, m_proj);
-  //Vector3::Pr
-
-  /*
-
-
-
-  float ray_x = +cos(yaw - (float)M_PI_2);
-  float ray_z = +sin(yaw - (float)M_PI_2);
-  float ray_y = -sin(pitch); // TODO not accurate
-
-  //Vector3 direction = Vector3(m_position);
-  //direction.Normalize(position3d);
-  //DirectX::SimpleMath::Ray ray(position3d, direction);
-  float distance1;
-  DirectX::BoundingBox b(position3d, Vector3(0.2f, 0.2f, 0.2f));
-  //if (ray.Intersects(b, distance1))
-  //Vector3(ray_x, ray_y, ray_z)
-  DirectX::SimpleMath::Ray ray(m_position, position3d - m_position);
-  //if(ray.Intersects(b, distance1))
   */
- 
-
   std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
   std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
   Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2;
-  wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
-  wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
-
-//  std::wstring position2ds = L"Position: <" + std::to_wstring(scale) + L", " + std::to_wstring(distance1) + L">";
-// Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout3;
-// wfactory->CreateTextLayout(position2ds.c_str(), position2ds.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
+  wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, static_cast<FLOAT>(m_outputWidth), static_cast<FLOAT>(m_outputHeight), &text_layout1);
+  wfactory->CreateTextLayout(position.c_str(), position.size(), format, static_cast<FLOAT>(m_outputWidth), static_cast<FLOAT>(m_outputHeight), &text_layout2);
 
   device_context->BeginDraw();
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
-//  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
   device_context->EndDraw();
 
   HRESULT hr = m_swapChain->Present(1, 0);

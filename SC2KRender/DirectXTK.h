@@ -1,4 +1,6 @@
 #pragma once
+#define HEIGHT_INCREMENT 1.f
+#define USING_SPRITES FALSE
 #include "DirectXTK/pch.h"
 #include "DirectXTK/AlignedNew.h"
 #include "DirectXTK/Audio.h"
