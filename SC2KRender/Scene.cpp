@@ -1,22 +1,23 @@
 #include "Scene.h"
 #include "MapSceneTile.h"
 #include "AssetLoader.h"
+#include "Sprite3D.h"
+#include "Sprite2D.h"
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector2;
 typedef SceneTile::VertexPos VPos;
 
-void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
+void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
 {
   m_window = window;
-  m_outputWidth = width;
-  m_outputHeight = height;
-
-  RECT rect;
-  GetWindowRect(m_window, &rect);
-  window_cx = static_cast<int>(rect.left + ((rect.right - rect.left) / 2));
-  window_cy = static_cast<int>(rect.top + ((rect.bottom - rect.top) / 2));
+  m_window_coords = window_coords;
+  m_outputWidth = static_cast<float>(window_coords.right - window_coords.left);
+  m_outputHeight = static_cast<float>(window_coords.bottom - window_coords.top);
+  
+  window_cx = static_cast<int>(window_coords.left + (m_outputWidth / 2));
+  window_cy = static_cast<int>(window_coords.top + (m_outputHeight / 2));
   SetCursorPos(window_cx, window_cy);
   ShowCursor(FALSE);
 
@@ -25,7 +26,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
   m_position = Vector3(8.f, 3.f, 8.f);
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, float(width) / float(height), 0.01f, 40.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 40.f);
 
   m_effect->SetView(m_view);
   m_effect->SetProjection(m_proj);  
@@ -54,13 +55,22 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, int width, int height)
 
   FillTileEdges();
   //
-#if USING_SPRITES
+#if USING_SPRITES_3D || USING_SPRITES_2D
   AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
-  v_sprite3d.push_back(Sprite3D(
+#endif
+#if USING_SPRITES_3D
+  v_sprite3d.push_back(new Sprite3D(
     AssetLoader::mresources->at(L"tree"),
     tiles[0].v_pos[VPos::TOP_LEFT],
     Orientation::X));
 #endif
+#if USING_SPRITES_2D
+  v_sprite2d.push_back(new Sprite2D(
+    AssetLoader::mresources->at(L"tree"),
+    AssetLoader::mdescriptions->at(L"tree"),
+    tiles[0].v_pos[VPos::TOP_LEFT]));
+#endif
+
 
   render_scene = true;
 }
@@ -223,7 +233,7 @@ void Scene::Clear()
   m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
 
   // Set the viewport.
-  CD3D11_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(m_outputWidth), static_cast<float>(m_outputHeight));
+  CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
   m_d3dContext->RSSetViewports(1, &viewport);
 }
 
@@ -341,8 +351,6 @@ void Scene::Render()
   Clear();
 
   m_d3dContext->RSSetState(m_states->CullNone());
-
-  m_effect->SetVertexColorEnabled(true);
   m_effect->SetTextureEnabled(false);
   m_effect->SetWorld(m_world);
   m_effect->SetView(m_view);
@@ -370,7 +378,6 @@ void Scene::Render()
   //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
   m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
   m_batch->Begin();
-
   for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
   {
     const SceneTile& w = sea_tiles[i];
@@ -383,60 +390,40 @@ void Scene::Render()
   m_batch->End();
 
  
-#if USING_SPRITES
+#if USING_SPRITES_3D
   m_effect->SetVertexColorEnabled(false);
   m_effect->SetTextureEnabled(true);
   m_d3dContext->OMSetBlendState(m_states->NonPremultiplied(), nullptr, 0xFFFFFFFF);
-  m_d3dContext->OMSetDepthStencilState(m_states->DepthNone(), 0);
-  m_d3dContext->RSSetState(m_states->CullNone());
-
-  for (const Sprite3D& sprite3d : v_sprite3d)
+  for (const Sprite3D* sprite3d : v_sprite3d)
   {
-    m_effect->SetTexture(sprite3d.resource.Get());
+    m_effect->SetTexture(sprite3d->resource.Get());
     m_effect->Apply(m_d3dContext.Get()); 
     m_texbatch->Begin();
-    m_texbatch->DrawQuad(sprite3d.v1, sprite3d.v2, sprite3d.v3, sprite3d.v4);
+    m_texbatch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
     m_texbatch->End();
+    m_effect->SetVertexColorEnabled(true);
+    m_effect->SetTextureEnabled(false);
   }
 #endif
   
-  /*
-  
-  if (true)
+#if USING_SPRITES_2D
+  m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
+  for (Sprite2D* sprite2d : v_sprite2d)
   {
-    const SceneTile& t = tiles[0];
-    Vector3 position3d(0.f, t.height, 0.f);
-    position3d *= scale;
-    float distance = Vector3::Distance(position3d, m_position);
-    position3d = Vector3::Transform(position3d, m_view);
-    position3d = Vector3::Transform(position3d, m_proj);
-    position3d.x = m_outputWidth * (position3d.x + 1.f) / 2.f;
-    position3d.y = m_outputHeight * (1.f - (position3d.y + 1.f) / 2.f);
-    float x = position3d.x;
-    float y = position3d.y;
-
-
-    DirectX::SimpleMath::Vector2 m_origin;
-    m_origin.x = 45 / 2;
-    m_origin.y = 49;
-
-
-    m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
-
-    float scale = 1.f / distance;
-
-    m_spriteBatch->Draw(AssetLoader::sprites->at(0).Get(), DirectX::XMFLOAT2(x, y), nullptr, DirectX::Colors::White, 0.f,
-      m_origin, scale);
-
-    m_spriteBatch->End();
+    sprite2d->Update(this);
+    float distance = Vector3::Distance(sprite2d->position3d * scale, m_position);
+    float dscale = 1.f / distance;
+     m_spriteBatch->Draw(sprite2d->resource.Get(), sprite2d->position2d, nullptr, DirectX::Colors::White, 0.f,
+     sprite2d->origin2d, dscale);
   }
+  m_spriteBatch->End();
+#endif  
   
-  */
   std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
   std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
   Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2;
-  wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, static_cast<FLOAT>(m_outputWidth), static_cast<FLOAT>(m_outputHeight), &text_layout1);
-  wfactory->CreateTextLayout(position.c_str(), position.size(), format, static_cast<FLOAT>(m_outputWidth), static_cast<FLOAT>(m_outputHeight), &text_layout2);
+  wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
+  wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
 
   device_context->BeginDraw();
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());

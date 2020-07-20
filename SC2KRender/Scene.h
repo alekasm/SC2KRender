@@ -1,15 +1,4 @@
 #pragma once
-#define NOMINMAX
-//#define NODRAWTEXT
-//#define NOGDI
-//#define NOBITMAP
-//#define NOMCX
-//#define NOSERVICE
-//#define NOHELP
-//#define WIN32_LEAN_AND_MEAN
-
-
-
 
 #include <Windows.h>
 #include <memory>
@@ -21,7 +10,6 @@
 
 #include "DirectXTK.h"
 #include "MapData.h"
-#include "Sprite3D.h"
 
 #include <dwrite.h>
 #include <d2d1_1.h>
@@ -30,6 +18,8 @@
 
 struct SceneTile;
 struct MapSceneTile;
+struct Sprite2D;
+struct Sprite3D;
 using DirectX::SimpleMath::Vector3;
 
 namespace DX
@@ -48,13 +38,29 @@ enum Edge { LEFT, TOP, BOTTOM, RIGHT };
 class Scene
 {
 public:
-  void Initialize(HWND window, MapTile* tiles, int width, int height);
+  void Initialize(HWND window, MapTile* tiles, RECT window_coords);
   void MouseLook(int x, int z, int y);
   void MouseClick();
   void Tick();
   void Render();
   void Update(DX::StepTimer const& timer);
   void MultiplyMovementSpeed(float value);
+  DirectX::SimpleMath::Matrix GetViewMatrix()
+  {
+    return m_view;
+  }
+  DirectX::SimpleMath::Matrix GetProjectionMatrix()
+  {
+    return m_proj;
+  }
+  DirectX::SimpleMath::Vector2 GetWindowDimensions()
+  {
+    return DirectX::SimpleMath::Vector2(m_outputWidth, m_outputHeight);
+  }
+  float GetScale()
+  {
+    return scale;
+  }
 
 private:
   void CreateDevice();
@@ -66,8 +72,9 @@ private:
   BOOL FillEdgeSceneTile(unsigned int, Edge);
 
   HWND m_window;
-  int m_outputWidth;
-  int m_outputHeight;
+  RECT m_window_coords;
+  float m_outputWidth;
+  float m_outputHeight;
   bool render_scene = false;
 
   D3D_FEATURE_LEVEL m_featureLevel;
@@ -104,6 +111,7 @@ private:
   SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
- std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
- std::vector<Sprite3D> v_sprite3d;
+  std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
+  std::vector<Sprite3D*> v_sprite3d;
+  std::vector<Sprite2D*> v_sprite2d;
 };

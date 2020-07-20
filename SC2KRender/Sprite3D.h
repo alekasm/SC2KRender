@@ -7,7 +7,7 @@ struct Sprite3D
 {
   Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> resource;
   DirectX::VertexPositionTexture v1, v2, v3, v4;
-  Sprite3D(Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> resource, Vector3 origin, Orientation orientation)
+  Sprite3D(Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> resource, const Vector3& origin, Orientation orientation)
   {
     this->resource = resource;
     Vector3 a, b, c, d;

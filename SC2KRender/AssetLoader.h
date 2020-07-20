@@ -24,6 +24,7 @@ struct AssetLoader
     std::vector<std::wstring> files;
     FindFiles(directory, files);
     mresources = new std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>();
+    mdescriptions = new std::map<std::wstring, CD3D11_TEXTURE2D_DESC>();
 
     for (const std::wstring& wfilename : files)
     {
@@ -40,16 +41,16 @@ struct AssetLoader
       resource.As(&texture2d);
       CD3D11_TEXTURE2D_DESC desc;
       texture2d->GetDesc(&desc);
-
+      
       std::wstring key(wfilename);
       key.erase(0, key.find_last_of('\\') + 1);
       key.erase(key.find('.'), key.size() - 1);
-      printf("Insert Key: %ws\n", key.c_str());
       mresources->operator[](key) = texture;
+      mdescriptions->operator[](key) = desc;
     }
-
   }
   static std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>* mresources;
+  static std::map<std::wstring, CD3D11_TEXTURE2D_DESC>* mdescriptions;
 };
 std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>* AssetLoader::mresources;
-
+std::map<std::wstring, CD3D11_TEXTURE2D_DESC>* AssetLoader::mdescriptions;

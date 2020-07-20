@@ -102,7 +102,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	GetClientRect(hWnd, &rc);
 	
 	scene = std::make_unique<Scene>();
-	scene->Initialize(hWnd, tiles, rc.right - rc.left, rc.bottom - rc.top);	
+	scene->Initialize(hWnd, tiles, rc);	
 	ShowWindow(hWnd, TRUE);
 
 	MSG msg;

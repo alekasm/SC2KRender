@@ -40,10 +40,10 @@ void SceneTile::ColorTile(DirectX::XMVECTORF32 color, bool update)
 void SceneTile::SetHeight(int height)
 {
   this->height = static_cast<float>(height * HEIGHT_INCREMENT);
-  v_pos[TOP_LEFT].y = height;
-  v_pos[TOP_RIGHT].y = height;
-  v_pos[BOTTOM_LEFT].y = height;
-  v_pos[BOTTOM_RIGHT].y = height;
+  v_pos[TOP_LEFT].y = this->height;
+  v_pos[TOP_RIGHT].y = this->height;
+  v_pos[BOTTOM_LEFT].y = this->height;
+  v_pos[BOTTOM_RIGHT].y = this->height;
 }
 
 void SceneTile::SetOrigin(unsigned int x, unsigned int y)
