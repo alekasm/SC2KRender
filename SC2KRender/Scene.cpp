@@ -4,6 +4,9 @@
 #include "Sprite3D.h"
 #include "Sprite2D.h"
 
+#define USING_SPRITES_3D TRUE
+#define USING_SPRITES_2D FALSE
+
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector2;
@@ -32,6 +35,11 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
   m_effect->SetProjection(m_proj);  
   tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
   sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
+
+#if USING_SPRITES_3D || USING_SPRITES_2D
+  AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
+#endif
+
   for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
   {
     for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
@@ -41,7 +49,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
       const MapTile* map_tile = &map_tiles[x + TILES_DIMENSION * y];
       t.FillAttributes(map_tile);
       //bool add_water = map_tile->height < map_tile->water_height || map_tile->type / 0x10 == 3;
-      bool add_water = map_tile->type / 0x10 > 0 && map_tile->type != ETT_WATERFALL;
+      bool add_water = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
       if (add_water)
       {
         SceneTile& sea_tile = sea_tiles[x + TILES_DIMENSION * y];
@@ -49,28 +57,28 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
         sea_tile.SetHeight(map_tile->water_height);
         sea_tile.ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
       }
-
+#if USING_SPRITES_3D
+      if (XBLD_IS_TREE(map_tile->xbld))
+      {
+        v_sprite3d.push_back(new Sprite3D(
+          AssetLoader::mresources->at(L"tree"),
+          t.v_pos[VPos::TOP_LEFT],
+          Orientation::X));
+      }
+#endif
+#if USING_SPRITES_2D
+      if (XBLD_IS_TREE(map_tile->xbld))
+      {
+        v_sprite2d.push_back(new Sprite2D(
+          AssetLoader::mresources->at(L"tree"),
+          AssetLoader::mdescriptions->at(L"tree"),
+          t.v_pos[VPos::TOP_LEFT]));
+      }
+#endif
     }
   } 
 
   FillTileEdges();
-  //
-#if USING_SPRITES_3D || USING_SPRITES_2D
-  AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
-#endif
-#if USING_SPRITES_3D
-  v_sprite3d.push_back(new Sprite3D(
-    AssetLoader::mresources->at(L"tree"),
-    tiles[0].v_pos[VPos::TOP_LEFT],
-    Orientation::X));
-#endif
-#if USING_SPRITES_2D
-  v_sprite2d.push_back(new Sprite2D(
-    AssetLoader::mresources->at(L"tree"),
-    AssetLoader::mdescriptions->at(L"tree"),
-    tiles[0].v_pos[VPos::TOP_LEFT]));
-#endif
-
 
   render_scene = true;
 }
@@ -327,7 +335,7 @@ void Scene::MouseClick()
       {
         t.ColorTile(DirectX::Colors::Crimson);
         printf("[Debug] Tile(%d, %d) Dist (Tri1 %f, Tri2 %f) : Map Height: %d, Map Type: %x, Water Height:%d, ALTM: %d\n", 
-          x, y, distance1, distance2, t.map_tile->height, t.map_tile->type, t.map_tile->water_height, t.map_tile->altm);
+          x, y, distance1, distance2, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm);
         goto exit_loop;
       }
     }
@@ -401,9 +409,9 @@ void Scene::Render()
     m_texbatch->Begin();
     m_texbatch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
     m_texbatch->End();
-    m_effect->SetVertexColorEnabled(true);
-    m_effect->SetTextureEnabled(false);
   }
+  m_effect->SetVertexColorEnabled(true);
+  m_effect->SetTextureEnabled(false);
 #endif
   
 #if USING_SPRITES_2D
@@ -475,8 +483,8 @@ BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge 
   if (winner == 0.f)
     return FALSE;
 
-  TileType winner_type = winner > 0.f ? a.map_tile->type : b.map_tile->type;
-  DirectX::XMVECTORF32 winner_color = winner_type == ETT_WATERFALL ?
+  XTERType winner_type = winner > 0.f ? a.map_tile->xter : b.map_tile->xter;
+  DirectX::XMVECTORF32 winner_color = winner_type == XTER_WATERFALL ?
     DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT : DirectX::Colors::SC2K_DIRT_DARKEST;
   fill_tiles.push_back(DirectX::VertexPositionColor(a1, winner_color));
   fill_tiles.push_back(DirectX::VertexPositionColor(a2, winner_color));

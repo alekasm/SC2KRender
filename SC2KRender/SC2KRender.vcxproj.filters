@@ -245,6 +245,9 @@
     <ClInclude Include="Sprite2D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl">

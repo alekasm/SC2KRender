@@ -1,7 +1,5 @@
 #pragma once
 #define HEIGHT_INCREMENT 1.f
-#define USING_SPRITES_3D FALSE
-#define USING_SPRITES_2D FALSE
 #define NOMINMAX
 #include "DirectXTK/pch.h"
 #include "DirectXTK/AlignedNew.h"

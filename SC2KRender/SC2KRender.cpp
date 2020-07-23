@@ -53,7 +53,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		wfilename = std::wstring(args[1]);
 	}
 	LocalFree(args);
-
 	MapTile* tiles = nullptr;
 	std::string filename = "";
 	do

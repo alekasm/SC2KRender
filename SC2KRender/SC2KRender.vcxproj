@@ -220,6 +220,7 @@
     <ClInclude Include="SceneTile.h" />
     <ClInclude Include="Sprite2D.h" />
     <ClInclude Include="Sprite3D.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl" />

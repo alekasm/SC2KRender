@@ -5,6 +5,7 @@
 #include <conio.h>
 #include <algorithm>
 #include <array>
+#include <type_traits>
 
 //http://djm.cc/simcity-2000-info.txt
 
@@ -69,11 +70,25 @@ void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
   }
 }
 
-void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
+template <typename Type>
+void Assign(MapTile& tile, BYTE data)
 {
-  printf("Reading XTER(0x%x), Size: %d\n", ftell(file), segment_size); 
+  if (std::is_same<Type, XTERType>::value)
+  {
+    tile.xter = (XTERType)data;
+  }
+  else if (std::is_same<Type, XBLDType>::value)
+  {
+    tile.xbld = (XBLDType)data;
+  }
+}
+
+template <typename Type>
+void DecompressData(FILE* file, uint32_t segment_size, Map& map)
+{
+  //printf("Reading XTER(0x%x), Size: %d\n", ftell(file), segment_size);
   /*
-  This data segment uses a compression scheme. The first byte is a "data_size" byte which
+  This data segment uses a compression scheme. The first byte is a "data_size" byte whichw
   says how many bytes to read. If the size > 128, then it's "compressed" otherwise it's
   uncompressed.
 
@@ -82,12 +97,12 @@ void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
   second byte is the tile type. The next "size_data" tiles are of this type.
 
   Uncompressed:
-  Read the next bytes one-by-one "size_data" times, each byte represents a unique tile's 
+  Read the next bytes one-by-one "size_data" times, each byte represents a unique tile's
   value.
   */
   unsigned int start_pos = ftell(file);
   unsigned int tile_number = 0;
-  while(ftell(file) - start_pos < segment_size)
+  while (ftell(file) - start_pos < segment_size)
   {
     BYTE size_data;
     fread(&size_data, sizeof(BYTE), 1, file);
@@ -96,25 +111,24 @@ void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
     {
       int repeat_amount = static_cast<int>(size_data) - 127;
       BYTE tile_type_data;
-      fread(&tile_type_data , sizeof(BYTE), 1, file);
-      TileType tile_type = (TileType)tile_type_data;
+      fread(&tile_type_data, sizeof(BYTE), 1, file);
       for (int row_repeat = 0; row_repeat < repeat_amount; ++row_repeat)
       {
         unsigned int x = tile_number % 128;
         unsigned int y = tile_number / 128;
-        map.tiles[y + 128 * x].type = tile_type;
+        Assign<Type>(map.tiles[y + 128 * x], tile_type_data);
         ++tile_number;
       }
     }
     else
-    {      
+    {
       for (int row_index = 0; row_index < size_data; ++row_index)
       {
         BYTE tile_type_data;
         fread(&tile_type_data, sizeof(BYTE), 1, file);
         unsigned int x = tile_number % 128;
         unsigned int y = tile_number / 128;
-        map.tiles[y + 128 * x].type = (TileType)tile_type_data;
+        Assign<Type>(map.tiles[y + 128 * x], tile_type_data);
         ++tile_number;
       }
     }
@@ -125,6 +139,18 @@ void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
   }
 }
 
+void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
+{
+  printf("Reading XTER(0x%x), Size: %d\n", ftell(file), segment_size);
+  DecompressData<XTERType>(file, segment_size, map);
+}
+
+void ExtractXBLDFunction(FILE* file, uint32_t segment_size, Map& map)
+{
+  printf("Reading XBLD(0x%x), Size: %d\n", ftell(file), segment_size);
+  DecompressData<XBLDType>(file, segment_size, map);
+}
+
 #define NAME_VALUE(s) (strtol(s))
 namespace
 {
@@ -133,6 +159,7 @@ namespace
     {"CNAM", ExtractCNAMFunction},
     {"ALTM", ExtractALTMFunction},
     {"XTER", ExtractXTERFunction},
+    {"XBLD", ExtractXBLDFunction}
     //{"MISC", ExtractMISCFunction}
   };
 }
