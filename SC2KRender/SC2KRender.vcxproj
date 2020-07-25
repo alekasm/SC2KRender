@@ -182,6 +182,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetLoader.h" />
+    <ClInclude Include="AssetMaps.h" />
     <ClInclude Include="ColorConstants.h" />
     <ClInclude Include="DirectXTK.h" />
     <ClInclude Include="DirectXTK\AlignedNew.h" />
@@ -215,6 +216,7 @@
     <ClInclude Include="MapData.h" />
     <ClInclude Include="MapLoader.h" />
     <ClInclude Include="MapSceneTile.h" />
+    <ClInclude Include="Model3D.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneTile.h" />
@@ -229,6 +231,7 @@
     <ResourceCompile Include="SC2KRender.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="cup.jpg" />
     <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -19,6 +19,24 @@ struct AssetLoader
     }
   }
 
+  static void LoadModels(
+    Microsoft::WRL::ComPtr<ID3D11Device1> device,
+    const std::unique_ptr<DirectX::IEffectFactory>& effect,
+    std::wstring directory)
+  {
+    std::vector<std::wstring> files;
+    FindFiles(directory, files);
+    mmodels = new std::map<std::wstring, std::shared_ptr<DirectX::Model>>();
+    for (const std::wstring& wfilename : files)
+    {
+      std::wstring key(wfilename);
+      key.erase(0, key.find_last_of('\\') + 1);
+      key.erase(key.find('.'), key.size() - 1);
+      std::unique_ptr<DirectX::Model> model = DirectX::Model::CreateFromCMO(device.Get(), wfilename.c_str(), *effect);
+      mmodels->operator[](key) = std::move(model);
+    }
+  }
+
   static void LoadSprites(Microsoft::WRL::ComPtr<ID3D11Device1> device, std::wstring directory)
   {
     std::vector<std::wstring> files;
@@ -51,6 +69,8 @@ struct AssetLoader
   }
   static std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>* mresources;
   static std::map<std::wstring, CD3D11_TEXTURE2D_DESC>* mdescriptions;
+  static std::map<std::wstring, std::shared_ptr<DirectX::Model>>* mmodels;
 };
 std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>* AssetLoader::mresources;
 std::map<std::wstring, CD3D11_TEXTURE2D_DESC>* AssetLoader::mdescriptions;
+std::map<std::wstring, std::shared_ptr<DirectX::Model>>* AssetLoader::mmodels;

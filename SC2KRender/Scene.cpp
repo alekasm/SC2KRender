@@ -3,9 +3,12 @@
 #include "AssetLoader.h"
 #include "Sprite3D.h"
 #include "Sprite2D.h"
+#include "Model3D.h"
+#include "AssetMaps.h"
 
 #define USING_SPRITES_3D TRUE
 #define USING_SPRITES_2D FALSE
+#define USING_MODELS TRUE
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
@@ -38,6 +41,11 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
 
 #if USING_SPRITES_3D || USING_SPRITES_2D
   AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
+#endif
+  
+#if USING_MODELS
+  m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
+  AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
 #endif
 
   for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
@@ -75,10 +83,21 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
           t.v_pos[VPos::TOP_LEFT]));
       }
 #endif
+#if USING_MODELS
+      if (xbld_map.count(map_tile->xbld))
+      {
+        v_model3d.push_back(new Model3D(
+          AssetLoader::mmodels->at(xbld_map.at(map_tile->xbld)),
+          t.v_pos[VPos::TOP_LEFT]
+        ));
+      }
+#endif
     }
   } 
 
+
   FillTileEdges();
+
 
   render_scene = true;
 }
@@ -358,6 +377,13 @@ void Scene::Render()
 
   Clear();
 
+#if USING_MODELS
+  for (Model3D* model3d : v_model3d)
+  {
+    model3d->Update(this);
+    model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+  }
+#endif
   m_d3dContext->RSSetState(m_states->CullNone());
   m_effect->SetTextureEnabled(false);
   m_effect->SetWorld(m_world);
@@ -367,9 +393,8 @@ void Scene::Render()
 
   m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
   m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
-
-  m_batch->Begin();  
-
+  
+  m_batch->Begin();   
   for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
   {
     m_batch->DrawQuad(fill_tiles[quad_ix], fill_tiles[quad_ix + 1], fill_tiles[quad_ix + 2], fill_tiles[quad_ix + 3]);
@@ -395,8 +420,7 @@ void Scene::Render()
       m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
     }
   }
-  m_batch->End();
-
+  m_batch->End(); 
  
 #if USING_SPRITES_3D
   m_effect->SetVertexColorEnabled(false);

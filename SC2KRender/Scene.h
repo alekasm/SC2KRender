@@ -20,6 +20,7 @@ struct SceneTile;
 struct MapSceneTile;
 struct Sprite2D;
 struct Sprite3D;
+struct Model3D;
 using DirectX::SimpleMath::Vector3;
 
 namespace DX
@@ -52,6 +53,10 @@ public:
   DirectX::SimpleMath::Matrix GetProjectionMatrix()
   {
     return m_proj;
+  }
+  DirectX::SimpleMath::Matrix GetWorldMatrix()
+  {
+    return m_world;
   }
   DirectX::SimpleMath::Vector2 GetWindowDimensions()
   {
@@ -95,6 +100,10 @@ private:
   std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>> m_texbatch;
   std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_batch;
   std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
+
+  std::unique_ptr<DirectX::IEffectFactory> m_fxFactory;
+  //std::unique_ptr<DirectX::Model> m_model;
+
   Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
   DirectX::SimpleMath::Matrix m_world;
   DirectX::SimpleMath::Matrix m_view;
@@ -114,4 +123,5 @@ private:
   std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
   std::vector<Sprite3D*> v_sprite3d;
   std::vector<Sprite2D*> v_sprite2d;
-};
+  std::vector<Model3D*> v_model3d;
+  };
