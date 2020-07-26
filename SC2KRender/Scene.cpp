@@ -95,11 +95,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
 #endif
     }
   } 
-
-
   FillTileEdges();
-
-
   render_scene = true;
 }
 
@@ -364,7 +360,7 @@ void Scene::MouseClick()
       if(tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
-        printf("[Debug] Tile(%d, %d): Map Height: %d, Map Type: %x, Water Height:%d, ALTM: %d, XBLD: %d\n", 
+        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x\n", 
           x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld);
         goto exit_loop;
       }
@@ -620,17 +616,43 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_CROSSOVER_ROAD_RAIL_1:
   case XBLD_CROSSOVER_RAIL_POWER_2:
   case XBLD_ROAD_9:
+  case XBLD_RAIL_9:
+  case XBLD_RAIL_SLOPE_1:
+  case XBLD_RAIL_SLOPE_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->origin.z += 1.f;
     break;
   case XBLD_ROAD_8:
+  case XBLD_RAIL_8:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->origin.z += 1.f;
     model->origin.x += 1.f;
     break;
   case XBLD_ROAD_7:
+  case XBLD_RAIL_7:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
     model->origin.x += 1.f;
     break;
+  case XBLD_ROAD_3:
+  case XBLD_RAIL_3:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitZ, -M_PI_4);
+    model->origin.z += 1.f;
+    break;
+  case XBLD_ROAD_4:
+  case XBLD_RAIL_4:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, M_PI_4);
+    break;
+  case XBLD_ROAD_5:
+  case XBLD_RAIL_5:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitZ, M_PI_4);
+    model->origin.z += 1.f;
+    break;
+  case XBLD_ROAD_6:
+  case XBLD_RAIL_6:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
+    break;
+
   }
 }
