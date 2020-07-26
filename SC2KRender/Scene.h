@@ -72,6 +72,7 @@ private:
   void CreateResources();
   void Clear();  
   void FillTileEdges();
+  void RotateModel(XBLDType, Model3D*);
   
   BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
   BOOL FillEdgeSceneTile(unsigned int, Edge);
@@ -114,7 +115,8 @@ private:
   float yaw = 0.f;
   float pitch = 0.f;
   float scale = 0.1f;
-  float move_speed = 0.2f * scale;
+  float base_move_speed = 0.2f;
+  float move_speed = base_move_speed * scale;  
   int window_cx = 0, window_cy = 0;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;

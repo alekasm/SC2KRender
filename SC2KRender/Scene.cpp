@@ -6,7 +6,7 @@
 #include "Model3D.h"
 #include "AssetMaps.h"
 
-#define USING_SPRITES_3D TRUE
+#define USING_SPRITES_3D FALSE
 #define USING_SPRITES_2D FALSE
 #define USING_MODELS TRUE
 
@@ -90,6 +90,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
           AssetLoader::mmodels->at(xbld_map.at(map_tile->xbld)),
           t.v_pos[VPos::TOP_LEFT]
         ));
+        RotateModel(map_tile->xbld, v_model3d.back());
       }
 #endif
     }
@@ -294,16 +295,26 @@ void Scene::Update(DX::StepTimer const& timer)
     rotation_y += 0.01f;
   else if (GetAsyncKeyState(VK_LEFT))
     rotation_y -= 0.01f;
+  else if (GetAsyncKeyState(VK_OEM_MINUS))
+  {
+    base_move_speed = std::clamp(base_move_speed - 0.025f, 0.025f, 0.2f);
+    move_speed = base_move_speed * scale;
+  }
+  else if (GetAsyncKeyState(VK_OEM_PLUS))
+  {
+    base_move_speed = std::clamp(base_move_speed + 0.025f, 0.025f, 0.2f);
+    move_speed = base_move_speed * scale;
+  }
   else if (GetAsyncKeyState(VK_UP))
   {
     scale = std::clamp(scale + 0.0005f, 0.05f, 1.f);
-    move_speed = 0.3f * scale;
+    move_speed = base_move_speed * scale;
     m_world = Matrix::CreateScale(scale);
   }
   else if (GetAsyncKeyState(VK_DOWN))
   {
     scale = std::clamp(scale - 0.0005f, 0.05f, 1.f);
-    move_speed = 0.3f * scale;
+    move_speed = base_move_speed * scale;
     m_world = Matrix::CreateScale(scale);
   }
   else if (GetAsyncKeyState(0x57)) //W (move forward)
@@ -353,8 +364,8 @@ void Scene::MouseClick()
       if(tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
-        printf("[Debug] Tile(%d, %d) Dist (Tri1 %f, Tri2 %f) : Map Height: %d, Map Type: %x, Water Height:%d, ALTM: %d\n", 
-          x, y, distance1, distance2, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm);
+        printf("[Debug] Tile(%d, %d): Map Height: %d, Map Type: %x, Water Height:%d, ALTM: %d, XBLD: %d\n", 
+          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld);
         goto exit_loop;
       }
     }
@@ -453,13 +464,16 @@ void Scene::Render()
   
   std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
   std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
-  Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2;
+  std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
+  Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3;
   wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
   wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
+  wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
 
   device_context->BeginDraw();
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
   device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
+  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
   device_context->EndDraw();
 
   HRESULT hr = m_swapChain->Present(1, 0);
@@ -594,5 +608,29 @@ void Scene::FillTileEdges()
           FillEdgeSceneTile(index, Edge::BOTTOM);
       }
     }    
+  }
+}
+
+void Scene::RotateModel(XBLDType type, Model3D* model)
+{
+  switch (type)
+  {
+  case XBLD_ROAD_2:
+  case XBLD_RAIL_2:
+  case XBLD_CROSSOVER_ROAD_RAIL_1:
+  case XBLD_CROSSOVER_RAIL_POWER_2:
+  case XBLD_ROAD_9:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+    model->origin.z += 1.f;
+    break;
+  case XBLD_ROAD_8:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+    model->origin.z += 1.f;
+    model->origin.x += 1.f;
+    break;
+  case XBLD_ROAD_7:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+    model->origin.x += 1.f;
+    break;
   }
 }
