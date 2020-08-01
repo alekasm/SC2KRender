@@ -21,17 +21,18 @@ slicer4ever (GameDev.net Discord) - DirectX Help
 #include <conio.h>
 #include "resource.h"
 
-
+#define MENU_LOAD_MAP 1
+#define MENU_SHOW_CONSOLE 2
+#define MENU_SHOW_MODELS 3
+#define MENU_SHOW_TREES 4
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-HWND hWnd;
+HWND hWndClient;
 RECT WindowRect;
 RECT ClientRect = {0, 0, 1024, 768};
+MapTile* tiles = nullptr;
+std::unique_ptr<Scene> scene;
 
-namespace
-{
-	std::unique_ptr<Scene> scene;
-}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -53,8 +54,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		wfilename = std::wstring(args[1]);
 	}
 	LocalFree(args);
-	MapTile* tiles = nullptr;
-	std::string filename = "";
+	scene = std::make_unique<Scene>();
+	
+	//std::string filename = "";
+	/*
 	do
 	{		
 		if (wfilename.empty())
@@ -67,6 +70,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wfilename[0], wfilename.size(), &filename[0], size, NULL, NULL);
 		wfilename = L"";
 	} while (!MapLoader::LoadMap(filename, tiles));
+	*/
 
 
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
@@ -74,7 +78,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	DWORD grfStyle, grfExStyle;
 	grfStyle = WS_CLIPCHILDREN | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
 	grfExStyle = WS_EX_STATICEDGE;
-	AdjustWindowRectEx(&ClientRect, grfStyle, FALSE, grfExStyle);
+	AdjustWindowRectEx(&ClientRect, grfStyle, TRUE, grfExStyle);
 
 	WNDCLASSEX MainClass = {};
 	MainClass.cbClsExtra = NULL;
@@ -91,25 +95,34 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	MainClass.style = CS_HREDRAW | CS_VREDRAW;
 	RegisterClassEx(&MainClass);
 
-	hWnd = CreateWindowEx(
+	hWndClient = CreateWindowEx(
 		grfExStyle,
-		MainClass.lpszClassName, std::string("SC2KRender - " + filename).c_str(),
+		MainClass.lpszClassName, std::string("SC2KRender").c_str(),
 		grfStyle,
 		0, 0, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top, NULL, NULL, hInstance, NULL);
 
-	RECT rc;
-	GetClientRect(hWnd, &rc);
-	
-	scene = std::make_unique<Scene>();
-	scene->Initialize(hWnd, tiles, rc);	
-	ShowWindow(hWnd, TRUE);
+
+
+	HMENU Menu = CreateMenu();
+	HMENU FileMenu = CreateMenu();
+	HMENU AboutMenu = CreateMenu();
+
+	AppendMenu(Menu, MF_POPUP, (UINT_PTR)FileMenu, "File");
+	AppendMenu(Menu, MF_POPUP, (UINT_PTR)AboutMenu, "About");
+	AppendMenu(FileMenu, MF_STRING, MENU_LOAD_MAP, "Load Map");
+	AppendMenu(FileMenu, MF_CHECKED, MENU_SHOW_MODELS, "Show Debug");
+	AppendMenu(FileMenu, MF_CHECKED, MENU_SHOW_MODELS, "Render Models (Beta)");
+	AppendMenu(FileMenu, MF_UNCHECKED, MENU_SHOW_TREES, "Render Trees (Beta)");
+	SetMenu(hWndClient, Menu);
+
+	scene->PreInitialize(hWndClient);
+	ShowWindow(hWndClient, TRUE);	
 
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))
 	{
-		if (GetActiveWindow() == hWnd)
+		if (GetActiveWindow() == hWndClient)
 		{
-			GetWindowRect(hWnd, &WindowRect);
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -125,25 +138,90 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
+	case WM_WINDOWPOSCHANGED:		
+		if (scene->Initialized())
+		{			
+			scene->UpdateWindow(hWnd);
+		}
+		break;
 	case WM_COMMAND:
+		switch (LOWORD(wParam))
+		{
+		case MENU_LOAD_MAP:
+		{
+			::SetFocus(NULL);
+			char szFile[256];
+			OPENFILENAME ofn;
+			ZeroMemory(&ofn, sizeof(ofn));
+			ofn.lStructSize = sizeof(ofn);
+			ofn.hwndOwner = NULL;
+			ofn.lpstrFile = szFile;
+			ofn.lpstrFile[0] = '\0';
+			ofn.nMaxFile = sizeof(szFile);
+			ofn.lpstrFilter = "SimCity 2000 Map File\0*.sc2;*.SC2\0";
+			ofn.nFilterIndex = 1;
+			ofn.lpstrFileTitle = NULL;
+			ofn.nMaxFileTitle = 0;
+			ofn.lpstrInitialDir = NULL;
+			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+			GetOpenFileName(&ofn);
+			std::string filename(ofn.lpstrFile);
+			printf("Loading map: %s\n", filename.c_str());
+			if (!filename.empty() && MapLoader::LoadMap(filename, tiles))
+			{
+				scene->Initialize(tiles);
+				scene->SetFocus(true);
+				SetWindowTextA(hWndClient, std::string("SC2KRender - " + filename).c_str());
+			}
+		}
+		break;
+		}
 		break;
 	case WM_ERASEBKGND:
 		break;
 	case WM_PAINT:
-		scene->Tick();
+			scene->Tick();
 		break;
 	case WM_MOUSEMOVE:
-		POINT p;
-		GetCursorPos(&p);
-		scene->MouseLook(p.x, 0, p.y);
+		if (scene->HasFocus())
+		{
+			POINT p;
+			GetCursorPos(&p);
+			scene->MouseLook(p.x, 0, p.y);
+		}
 		break;
 	case WM_KEYDOWN:
-		if(wParam == VK_ESCAPE)
-			PostQuitMessage(0);
+		if (wParam == VK_ESCAPE)
+		{
+			if (scene->HasFocus())
+			{
+				scene->SetFocus(false);
+			}
+			else
+			{
+				PostQuitMessage(0);
+			}
+		}
 		break;
 	case WM_LBUTTONDOWN:
 		if (wParam == MK_LBUTTON)
-			scene->MouseClick();
+		{
+			if (scene->HasFocus())
+			{
+				scene->MouseClick();
+			}
+			else
+			{
+				POINT p;
+				GetCursorPos(&p);
+				RECT rc;
+				GetWindowRect(hWndClient, &rc);
+				if (PtInRect(&rc, p))
+				{
+					scene->SetFocus(true);					
+				}
+			}
+		}
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);

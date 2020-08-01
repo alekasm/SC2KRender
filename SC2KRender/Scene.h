@@ -39,7 +39,9 @@ enum Edge { LEFT, TOP, BOTTOM, RIGHT };
 class Scene
 {
 public:
-  void Initialize(HWND window, MapTile* tiles, RECT window_coords);
+  void Initialize(MapTile* tiles);
+  void PreInitialize(HWND window);
+  void UpdateWindow(HWND window);
   void MouseLook(int x, int z, int y);
   void MouseClick();
   void Tick();
@@ -66,6 +68,23 @@ public:
   {
     return scale;
   }
+  void SetFocus(bool value)
+  {
+    focused = render_scene ? value : false;
+    ShowCursor(!focused);
+    if (focused)
+    {
+      SetCursorPos(window_cx, window_cy);
+    }
+  }
+  bool HasFocus()
+  {
+    return focused;
+  }
+  bool Initialized()
+  {
+    return initialized;
+  }
 
 private:
   void CreateDevice();
@@ -82,6 +101,8 @@ private:
   float m_outputWidth;
   float m_outputHeight;
   bool render_scene = false;
+  bool focused = false;
+  bool initialized = false;
 
   D3D_FEATURE_LEVEL m_featureLevel;
   Microsoft::WRL::ComPtr<ID3D11Device1> m_d3dDevice;

@@ -8,34 +8,48 @@
 
 #define USING_SPRITES_3D FALSE
 #define USING_SPRITES_2D FALSE
-#define USING_MODELS TRUE
+#define USING_MODELS FALSE
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector2;
 typedef SceneTile::VertexPos VPos;
 
-void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
+void Scene::UpdateWindow(HWND hWnd)
 {
-  m_window = window;
-  m_window_coords = window_coords;
-  m_outputWidth = static_cast<float>(window_coords.right - window_coords.left);
-  m_outputHeight = static_cast<float>(window_coords.bottom - window_coords.top);
-  
-  window_cx = static_cast<int>(window_coords.left + (m_outputWidth / 2));
-  window_cy = static_cast<int>(window_coords.top + (m_outputHeight / 2));
-  SetCursorPos(window_cx, window_cy);
-  ShowCursor(FALSE);
+  RECT WindowRect;
+  RECT ClientRect;
+  GetWindowRect(hWnd, &WindowRect);
+  GetClientRect(hWnd, &ClientRect);
+  m_window_coords = ClientRect;
+  m_outputWidth = static_cast<float>(m_window_coords.right - m_window_coords.left);
+  m_outputHeight = static_cast<float>(m_window_coords.bottom - m_window_coords.top);
 
+  window_cx = static_cast<int>(m_window_coords.left + WindowRect.left + (m_outputWidth / 2));
+  window_cy = static_cast<int>(m_window_coords.top + WindowRect.top + (m_outputHeight / 2));
+
+  CreateResources();
+  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.001f, 256.f);
+  m_effect->SetProjection(m_proj);
+}
+
+void Scene::PreInitialize(HWND window)
+{
+  m_window = window;  
   CreateDevice();
-  CreateResources();  
   m_position = Vector3(8.f, 3.f, 8.f);
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 40.f);
-
   m_effect->SetView(m_view);
-  m_effect->SetProjection(m_proj);  
+  UpdateWindow(window);
+  initialized = true;
+}
+void Scene::Initialize(MapTile* map_tiles)
+{
+  initialized = false; 
+  delete[] tiles;
+  delete[] sea_tiles;
+  fill_tiles.clear();
   tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
   sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
 
@@ -95,7 +109,7 @@ void Scene::Initialize(HWND window, MapTile* map_tiles, RECT window_coords)
 #endif
     }
   } 
-  FillTileEdges();
+  FillTileEdges();  
   render_scene = true;
 }
 
@@ -264,6 +278,10 @@ void Scene::Clear()
 
 void Scene::Tick()
 {
+  if (focused)
+  {
+    SetCursorPos(window_cx, window_cy);
+  }
   m_timer.Tick([&]()
   {
     Update(m_timer);
@@ -274,7 +292,6 @@ void Scene::Tick()
 
 void Scene::MouseLook(int x, int z, int y)
 {
-  SetCursorPos(window_cx, window_cy);
   float dx = static_cast<float>(x - window_cx) * 0.005f;
   float dy = static_cast<float>(y - window_cy) * 0.003f;
   yaw = atan2(sin((yaw + dx) - (float)M_PI), cos((yaw + dx) - (float)M_PI)) + (float)M_PI; // wrap angle between 0 and 2pi
@@ -293,12 +310,12 @@ void Scene::Update(DX::StepTimer const& timer)
     rotation_y -= 0.01f;
   else if (GetAsyncKeyState(VK_OEM_MINUS))
   {
-    base_move_speed = std::clamp(base_move_speed - 0.025f, 0.025f, 0.2f);
+    base_move_speed = std::clamp(base_move_speed - 0.005f, 0.025f, 0.2f);
     move_speed = base_move_speed * scale;
   }
   else if (GetAsyncKeyState(VK_OEM_PLUS))
   {
-    base_move_speed = std::clamp(base_move_speed + 0.025f, 0.025f, 0.2f);
+    base_move_speed = std::clamp(base_move_speed + 0.05f, 0.025f, 0.2f);
     move_speed = base_move_speed * scale;
   }
   else if (GetAsyncKeyState(VK_UP))
@@ -343,7 +360,9 @@ void Scene::Update(DX::StepTimer const& timer)
 
 void Scene::MouseClick()
 {
-  
+  if (!focused)
+    return;
+
   float ray_x = + cos(yaw - (float)M_PI_2);
   float ray_z = + sin(yaw - (float)M_PI_2);
   float ray_y = - sin(pitch); // TODO not accurate
@@ -377,10 +396,6 @@ void Scene::MultiplyMovementSpeed(float value)
 
 void Scene::Render()
 {
-  if (!render_scene)
-  {
-    return;
-  }
 
   Clear();
 
@@ -391,86 +406,89 @@ void Scene::Render()
     model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
   }
 #endif
-  m_d3dContext->RSSetState(m_states->CullNone());
-  m_effect->SetTextureEnabled(false);
-  m_effect->SetWorld(m_world);
-  m_effect->SetView(m_view);
-  m_effect->Apply(m_d3dContext.Get());
-  m_d3dContext->IASetInputLayout(m_inputLayout.Get());
+  if (render_scene)
+  {
+    m_d3dContext->RSSetState(m_states->CullNone());
+    m_effect->SetTextureEnabled(false);
+    m_effect->SetWorld(m_world);
+    m_effect->SetView(m_view);
+    m_effect->Apply(m_d3dContext.Get());
+    m_d3dContext->IASetInputLayout(m_inputLayout.Get());
 
-  m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
-  m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
-  
-  m_batch->Begin();   
-  for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
-  {
-    m_batch->DrawQuad(fill_tiles[quad_ix], fill_tiles[quad_ix + 1], fill_tiles[quad_ix + 2], fill_tiles[quad_ix + 3]);
-  }  
-  
-  for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
-  {
-    const SceneTile& t = tiles[i]; //object slice is ok
-    m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
-    m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
-  }
-  m_batch->End();
+    m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
+    m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 
-  //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
-  m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
-  m_batch->Begin();
-  for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
-  {
-    const SceneTile& w = sea_tiles[i];
-    if (w.height > -1.f)
+    m_batch->Begin();
+    for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
     {
-      m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
-      m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
+      m_batch->DrawQuad(fill_tiles[quad_ix], fill_tiles[quad_ix + 1], fill_tiles[quad_ix + 2], fill_tiles[quad_ix + 3]);
     }
-  }
-  m_batch->End(); 
- 
-#if USING_SPRITES_3D
-  m_effect->SetVertexColorEnabled(false);
-  m_effect->SetTextureEnabled(true);
-  m_d3dContext->OMSetBlendState(m_states->NonPremultiplied(), nullptr, 0xFFFFFFFF);
-  for (const Sprite3D* sprite3d : v_sprite3d)
-  {
-    m_effect->SetTexture(sprite3d->resource.Get());
-    m_effect->Apply(m_d3dContext.Get()); 
-    m_texbatch->Begin();
-    m_texbatch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
-    m_texbatch->End();
-  }
-  m_effect->SetVertexColorEnabled(true);
-  m_effect->SetTextureEnabled(false);
-#endif
-  
-#if USING_SPRITES_2D
-  m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
-  for (Sprite2D* sprite2d : v_sprite2d)
-  {
-    sprite2d->Update(this);
-    float distance = Vector3::Distance(sprite2d->position3d * scale, m_position);
-    float dscale = 1.f / distance;
-     m_spriteBatch->Draw(sprite2d->resource.Get(), sprite2d->position2d, nullptr, DirectX::Colors::White, 0.f,
-     sprite2d->origin2d, dscale);
-  }
-  m_spriteBatch->End();
-#endif  
-  
-  std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
-  std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
-  std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
-  Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3;
-  wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
-  wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
-  wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
 
-  device_context->BeginDraw();
-  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
-  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
-  device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
-  device_context->EndDraw();
+    for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
+    {
+      const SceneTile& t = tiles[i]; //object slice is ok
+      m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+      m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+    }
+    m_batch->End();
+
+    //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
+    m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
+    m_batch->Begin();
+    for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
+    {
+      const SceneTile& w = sea_tiles[i];
+      if (w.height > -1.f)
+      {
+        m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
+        m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
+      }
+    }
+    m_batch->End();
+
+#if USING_SPRITES_3D
+    m_effect->SetVertexColorEnabled(false);
+    m_effect->SetTextureEnabled(true);
+    m_d3dContext->OMSetBlendState(m_states->NonPremultiplied(), nullptr, 0xFFFFFFFF);
+    for (const Sprite3D* sprite3d : v_sprite3d)
+    {
+      m_effect->SetTexture(sprite3d->resource.Get());
+      m_effect->Apply(m_d3dContext.Get());
+      m_texbatch->Begin();
+      m_texbatch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
+      m_texbatch->End();
+    }
+    m_effect->SetVertexColorEnabled(true);
+    m_effect->SetTextureEnabled(false);
+#endif
+
+#if USING_SPRITES_2D
+    m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
+    for (Sprite2D* sprite2d : v_sprite2d)
+    {
+      sprite2d->Update(this);
+      float distance = Vector3::Distance(sprite2d->position3d * scale, m_position);
+      float dscale = 1.f / distance;
+      m_spriteBatch->Draw(sprite2d->resource.Get(), sprite2d->position2d, nullptr, DirectX::Colors::White, 0.f,
+        sprite2d->origin2d, dscale);
+    }
+    m_spriteBatch->End();
+#endif  
+
+    std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
+    std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
+    std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
+    Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3;
+    wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
+    wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
+    wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
+
+    device_context->BeginDraw();
+    device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
+    device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
+    device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
+    device_context->EndDraw();
+  }
 
   HRESULT hr = m_swapChain->Present(1, 0);
 
@@ -585,7 +603,7 @@ void Scene::FillTileEdges()
         FillEdgeSceneTile(index, Edge::LEFT);
       }
       else if (x > 0)
-      {
+      {//
         const MapSceneTile& cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
         if(x + 1 == TILES_DIMENSION)
