@@ -4,14 +4,15 @@
 #include <filesystem>
 #include <codecvt>
 #include <locale>
+#include <iostream>
 struct AssetLoader
 {
-  static void FindFiles(std::wstring directory, std::vector<std::wstring>& vector)
-  {
-    std::replace(directory.begin(), directory.end(), '/', '\\');
-    for (const std::filesystem::directory_entry& entry : 
+  static bool FindFiles(std::wstring directory, std::vector<std::wstring>& vector)
+  {     
+    std::cout << "Current Path: " << std::filesystem::current_path() << std::endl;
+    for (const std::filesystem::directory_entry& entry :
       std::filesystem::recursive_directory_iterator(directory))
-    {      
+    {
       if (entry.is_regular_file())
       {
         vector.push_back(entry.path().wstring());
@@ -24,9 +25,12 @@ struct AssetLoader
     const std::unique_ptr<DirectX::IEffectFactory>& effect,
     std::wstring directory)
   {
-    std::vector<std::wstring> files;
-    FindFiles(directory, files);
     mmodels = new std::map<std::wstring, std::shared_ptr<DirectX::Model>>();
+    if(!std::filesystem::is_directory(directory))
+      return;
+    std::vector<std::wstring> files;    
+    FindFiles(directory, files);
+    
     for (const std::wstring& wfilename : files)
     {
       std::wstring key(wfilename);
@@ -39,10 +43,12 @@ struct AssetLoader
 
   static void LoadSprites(Microsoft::WRL::ComPtr<ID3D11Device1> device, std::wstring directory)
   {
-    std::vector<std::wstring> files;
-    FindFiles(directory, files);
     mresources = new std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>();
     mdescriptions = new std::map<std::wstring, CD3D11_TEXTURE2D_DESC>();
+    if (!std::filesystem::is_directory(directory))
+      return;
+    std::vector<std::wstring> files;
+    FindFiles(directory, files);
 
     for (const std::wstring& wfilename : files)
     {

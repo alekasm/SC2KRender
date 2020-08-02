@@ -7,7 +7,6 @@ bzroom (GameDev.net Discord) - DirectX Help
 slicer4ever (GameDev.net Discord) - DirectX Help
 */
 
-
 #include <vector>
 #include <ctime>
 #include <thread>
@@ -19,6 +18,7 @@ slicer4ever (GameDev.net Discord) - DirectX Help
 #include "MapLoader.h"
 #include "Scene.h"
 #include <conio.h>
+#include <filesystem>
 #include "resource.h"
 
 #define MENU_LOAD_MAP 1
@@ -32,6 +32,7 @@ RECT WindowRect;
 RECT ClientRect = {0, 0, 1024, 768};
 MapTile* tiles = nullptr;
 std::unique_ptr<Scene> scene;
+HMENU Menu, FileMenu;
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
@@ -44,36 +45,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	freopen_s(&p_file, "CONIN$", "r", stdin);
 	freopen_s(&p_file, "CONOUT$", "w", stdout);
 	freopen_s(&p_file, "CONOUT$", "w", stderr);
-	std::cout << "SC2KRender (Version 0.1) by Aleksander Krimsky | www.krimsky.net" << std::endl;
-
-	int argc = 0;
-	LPWSTR* args = CommandLineToArgvW(GetCommandLineW(), &argc);	
-	std::wstring wfilename = L"";
-	if (argc == 2)
-	{
-		wfilename = std::wstring(args[1]);
-	}
-	LocalFree(args);
+	ShowWindow(GetConsoleWindow(), FALSE);
+	printf("SC2KRender (Version 0.2) by Aleksander Krimsky | www.krimsky.net\n");
+	printf("Written with DirectX 11 - Modified DirectXTK\n");
+	printf("GitHub: https://github.com/alekasm/SC2KRender \n");
+	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);	
 	scene = std::make_unique<Scene>();
-	
-	//std::string filename = "";
-	/*
-	do
-	{		
-		if (wfilename.empty())
-		{
-			std::cout << "Enter a SimCity 2000 Map to load: ";
-			std::wcin >> wfilename;
-		}		
-		int size = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wfilename[0], wfilename.size(), NULL, 0, NULL, NULL);
-		filename = std::string(size, 0);
-		WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, &wfilename[0], wfilename.size(), &filename[0], size, NULL, NULL);
-		wfilename = L"";
-	} while (!MapLoader::LoadMap(filename, tiles));
-	*/
-
-
-	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
 
 	DWORD grfStyle, grfExStyle;
 	grfStyle = WS_CLIPCHILDREN | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -101,21 +78,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		grfStyle,
 		0, 0, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top, NULL, NULL, hInstance, NULL);
 
-
-
-	HMENU Menu = CreateMenu();
-	HMENU FileMenu = CreateMenu();
-	HMENU AboutMenu = CreateMenu();
+	Menu = CreateMenu();
+	FileMenu = CreateMenu();
 
 	AppendMenu(Menu, MF_POPUP, (UINT_PTR)FileMenu, "File");
-	AppendMenu(Menu, MF_POPUP, (UINT_PTR)AboutMenu, "About");
+	//AppendMenu(Menu, MF_POPUP, (UINT_PTR)AboutMenu, "About");
 	AppendMenu(FileMenu, MF_STRING, MENU_LOAD_MAP, "Load Map");
-	AppendMenu(FileMenu, MF_CHECKED, MENU_SHOW_MODELS, "Show Debug");
-	AppendMenu(FileMenu, MF_CHECKED, MENU_SHOW_MODELS, "Render Models (Beta)");
-	AppendMenu(FileMenu, MF_UNCHECKED, MENU_SHOW_TREES, "Render Trees (Beta)");
+	AppendMenu(FileMenu, MF_UNCHECKED, MENU_SHOW_CONSOLE, "Show Debug");
+	AppendMenu(FileMenu, MF_UNCHECKED | MF_GRAYED, MENU_SHOW_MODELS, "Render Models (Beta)");
+	AppendMenu(FileMenu, MF_UNCHECKED | MF_GRAYED, MENU_SHOW_TREES, "Render Trees (Beta)");
 	SetMenu(hWndClient, Menu);
-
+		
 	scene->PreInitialize(hWndClient);
+
 	ShowWindow(hWndClient, TRUE);	
 
 	MSG msg;
@@ -125,6 +100,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
+		}
+		else
+		{
+			Sleep(10);
 		}
 	}
 
@@ -144,7 +123,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			scene->UpdateWindow(hWnd);
 		}
 		break;
-	case WM_COMMAND:
+	case WM_COMMAND:		
 		switch (LOWORD(wParam))
 		{
 		case MENU_LOAD_MAP:
@@ -166,7 +145,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 			GetOpenFileName(&ofn);
 			std::string filename(ofn.lpstrFile);
-			printf("Loading map: %s\n", filename.c_str());
 			if (!filename.empty() && MapLoader::LoadMap(filename, tiles))
 			{
 				scene->Initialize(tiles);
@@ -175,6 +153,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
+		case MENU_SHOW_CONSOLE:		
+			MENUITEMINFO mii;
+			mii.cbSize = sizeof(MENUITEMINFO);
+			mii.fMask = MIIM_STATE;
+			mii.fState = MFS_CHECKED | MFS_DISABLED;
+			SetMenuItemInfo(FileMenu, MENU_SHOW_CONSOLE, FALSE, &mii);
+			ShowWindow(GetConsoleWindow(), TRUE);			
+			break;
 		}
 		break;
 	case WM_ERASEBKGND:

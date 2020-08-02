@@ -24,10 +24,8 @@ void Scene::UpdateWindow(HWND hWnd)
   m_window_coords = ClientRect;
   m_outputWidth = static_cast<float>(m_window_coords.right - m_window_coords.left);
   m_outputHeight = static_cast<float>(m_window_coords.bottom - m_window_coords.top);
-
   window_cx = static_cast<int>(m_window_coords.left + WindowRect.left + (m_outputWidth / 2));
   window_cy = static_cast<int>(m_window_coords.top + WindowRect.top + (m_outputHeight / 2));
-
   CreateResources();
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.001f, 256.f);
   m_effect->SetProjection(m_proj);
@@ -42,25 +40,28 @@ void Scene::PreInitialize(HWND window)
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
   m_effect->SetView(m_view);
   UpdateWindow(window);
+
+#if USING_SPRITES_3D || USING_SPRITES_2D
+  AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
+#endif
+
+#if USING_MODELS
+  m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
+  AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
+#endif
+
   initialized = true;
 }
 void Scene::Initialize(MapTile* map_tiles)
 {
-  initialized = false; 
+  render_scene = false; 
   delete[] tiles;
   delete[] sea_tiles;
   fill_tiles.clear();
   tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
   sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
 
-#if USING_SPRITES_3D || USING_SPRITES_2D
-  AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
-#endif
-  
-#if USING_MODELS
-  m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
-  AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
-#endif
+
 
   for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
   {
@@ -100,17 +101,19 @@ void Scene::Initialize(MapTile* map_tiles)
 #if USING_MODELS
       if (xbld_map.count(map_tile->xbld))
       {
-        v_model3d.push_back(new Model3D(
-          AssetLoader::mmodels->at(xbld_map.at(map_tile->xbld)),
-          t.v_pos[VPos::TOP_LEFT]
-        ));
-        RotateModel(map_tile->xbld, v_model3d.back());
+        std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+        it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
+        if (it != AssetLoader::mmodels->end())
+        {
+          v_model3d.push_back(new Model3D(it->second, t.v_pos[VPos::TOP_LEFT]));
+          RotateModel(map_tile->xbld, v_model3d.back());
+        }
       }
-#endif
+#endif      
     }
   } 
   FillTileEdges();  
-  render_scene = true;
+  render_scene = true;  
 }
 
 void Scene::CreateDevice()

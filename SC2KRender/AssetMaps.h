@@ -16,8 +16,8 @@ namespace
     {XBLD_MIDDLE_CLASS_5, L"middleclass5"},
     {XBLD_UPPER_CLASS_1, L"upperclass1"},
     {XBLD_UPPER_CLASS_2, L"upperclass2"},
-    //{XBLD_UPPER_CLASS_3, L"upperclass3"},
-    //{XBLD_UPPER_CLASS_4, L"upperclass4"},
+    {XBLD_UPPER_CLASS_3, L"upperclass3"},
+    {XBLD_UPPER_CLASS_4, L"upperclass4"},
 
     {XBLD_ROAD_1, L"road"},
     {XBLD_ROAD_2, L"road"},
