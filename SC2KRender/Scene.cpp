@@ -8,7 +8,7 @@
 
 #define USING_SPRITES_3D FALSE
 #define USING_SPRITES_2D FALSE
-#define USING_MODELS FALSE
+#define USING_MODELS TRUE
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
@@ -29,7 +29,7 @@ void Scene::UpdateWindow(HWND hWnd)
   window_cx = static_cast<int>(m_window_coords.left + WindowRect.left + (m_outputWidth / 2));
   window_cy = static_cast<int>(m_window_coords.top + WindowRect.top + (m_outputHeight / 2));
   CreateResources();
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.001f, 256.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 256.f);
   m_effect->SetProjection(m_proj);
 }
 
