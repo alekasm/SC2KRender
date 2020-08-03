@@ -16,7 +16,9 @@ using DirectX::SimpleMath::Vector2;
 typedef SceneTile::VertexPos VPos;
 
 void Scene::UpdateWindow(HWND hWnd)
-{
+{  
+  if (m_d3dDevice.Get() == nullptr)
+    return; //Don't update window if not pre-initialized
   RECT WindowRect;
   RECT ClientRect;
   GetWindowRect(hWnd, &WindowRect);
@@ -49,19 +51,19 @@ void Scene::PreInitialize(HWND window)
   m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
 #endif
-
-  initialized = true;
 }
+
 void Scene::Initialize(MapTile* map_tiles)
 {
   render_scene = false; 
   delete[] tiles;
   delete[] sea_tiles;
   fill_tiles.clear();
+  v_sprite3d.clear();
+  v_sprite2d.clear();
+  v_model3d.clear();
   tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
   sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
-
-
 
   for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
   {
@@ -153,8 +155,6 @@ void Scene::CreateDevice()
   m_states = std::make_unique<DirectX::CommonStates>(m_d3dDevice.Get());
   m_effect = std::make_unique<DirectX::BasicEffect>(m_d3dDevice.Get());
   m_effect->SetVertexColorEnabled(true);
-  //m_effect->SetTextureEnabled(true);
-  //m_effect->SetVertexColorEnabled(true);
 
   void const* shaderByteCode;
   size_t byteCodeLength;
@@ -260,9 +260,6 @@ void Scene::CreateResources()
   m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf());
   CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
   m_d3dDevice->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, m_depthStencilView.ReleaseAndGetAddressOf());
-
-
-
 }
 
 void Scene::Clear()
@@ -280,7 +277,13 @@ void Scene::Clear()
 
 
 void Scene::Tick()
-{
+{  
+  if (GetActiveWindow() != m_window)
+  {
+    Sleep(10);
+    return;
+  }
+  
   if (focused)
   {
     SetCursorPos(window_cx, window_cy);
@@ -363,9 +366,6 @@ void Scene::Update(DX::StepTimer const& timer)
 
 void Scene::MouseClick()
 {
-  if (!focused)
-    return;
-
   float ray_x = + cos(yaw - (float)M_PI_2);
   float ray_z = + sin(yaw - (float)M_PI_2);
   float ray_y = - sin(pitch); // TODO not accurate

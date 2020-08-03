@@ -7,9 +7,8 @@
 #include <iostream>
 struct AssetLoader
 {
-  static bool FindFiles(std::wstring directory, std::vector<std::wstring>& vector)
+  static void FindFiles(std::wstring directory, std::vector<std::wstring>& vector)
   {     
-    std::cout << "Current Path: " << std::filesystem::current_path() << std::endl;
     for (const std::filesystem::directory_entry& entry :
       std::filesystem::recursive_directory_iterator(directory))
     {

@@ -81,10 +81,6 @@ public:
   {
     return focused;
   }
-  bool Initialized()
-  {
-    return initialized;
-  }
 
 private:
   void CreateDevice();
@@ -102,7 +98,6 @@ private:
   float m_outputHeight;
   bool render_scene = false;
   bool focused = false;
-  bool initialized = false;
 
   D3D_FEATURE_LEVEL m_featureLevel;
   Microsoft::WRL::ComPtr<ID3D11Device1> m_d3dDevice;

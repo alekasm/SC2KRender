@@ -45,10 +45,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	freopen_s(&p_file, "CONIN$", "r", stdin);
 	freopen_s(&p_file, "CONOUT$", "w", stdout);
 	freopen_s(&p_file, "CONOUT$", "w", stderr);
-	ShowWindow(GetConsoleWindow(), FALSE);
+
+	//Prevent Quick-Edit mode, issue with message passthrough
+	HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
+	DWORD dwMode;
+	GetConsoleMode(hInput, &dwMode);
+	SetConsoleMode(hInput, dwMode & ENABLE_EXTENDED_FLAGS);
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
+
 	printf("SC2KRender (Version 0.2) by Aleksander Krimsky | www.krimsky.net\n");
 	printf("Written with DirectX 11 - Modified DirectXTK\n");
 	printf("GitHub: https://github.com/alekasm/SC2KRender \n");
+	printf("\nControls:\nFree Cam: WASD\nStrafe Up/Down: RF\nScale: Up/Down Arrows\nAdjust Speed: +/-\n\n");
 	CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);	
 	scene = std::make_unique<Scene>();
 
@@ -95,16 +103,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 	MSG msg;
 	while (GetMessage(&msg, nullptr, 0, 0))
-	{
-		if (GetActiveWindow() == hWndClient)
-		{
+	{		
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
-		}
-		else
-		{
-			Sleep(10);
-		}
 	}
 
 	scene.reset();
@@ -117,11 +118,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
-	case WM_WINDOWPOSCHANGED:		
-		if (scene->Initialized())
-		{			
-			scene->UpdateWindow(hWnd);
-		}
+	case WM_WINDOWPOSCHANGED:	
+		scene->UpdateWindow(hWnd);
 		break;
 	case WM_COMMAND:		
 		switch (LOWORD(wParam))
@@ -147,9 +145,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			std::string filename(ofn.lpstrFile);
 			if (!filename.empty() && MapLoader::LoadMap(filename, tiles))
 			{
-				scene->Initialize(tiles);
-				scene->SetFocus(true);
 				SetWindowTextA(hWndClient, std::string("SC2KRender - " + filename).c_str());
+				scene->Initialize(tiles);
+				scene->SetFocus(true);				
 			}
 		}
 		break;
@@ -159,7 +157,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			mii.fMask = MIIM_STATE;
 			mii.fState = MFS_CHECKED | MFS_DISABLED;
 			SetMenuItemInfo(FileMenu, MENU_SHOW_CONSOLE, FALSE, &mii);
-			ShowWindow(GetConsoleWindow(), TRUE);			
+			ShowWindow(GetConsoleWindow(), SW_SHOWNOACTIVATE);
 			break;
 		}
 		break;
