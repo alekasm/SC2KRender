@@ -26,8 +26,10 @@ void Scene::UpdateWindow(HWND hWnd)
   m_window_coords = ClientRect;
   m_outputWidth = static_cast<float>(m_window_coords.right - m_window_coords.left);
   m_outputHeight = static_cast<float>(m_window_coords.bottom - m_window_coords.top);
-  window_cx = static_cast<int>(m_window_coords.left + WindowRect.left + (m_outputWidth / 2));
-  window_cy = static_cast<int>(m_window_coords.top + WindowRect.top + (m_outputHeight / 2));
+  client_cx = m_outputWidth / 2;
+  client_cy = m_outputHeight / 2;
+  window_cx = static_cast<int>(m_window_coords.left + WindowRect.left + client_cx);
+  window_cy = static_cast<int>(m_window_coords.top + WindowRect.top + client_cy);
   CreateResources();
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 256.f);
   m_effect->SetProjection(m_proj);
@@ -369,14 +371,15 @@ void Scene::MouseClick()
   float ray_x = + cos(yaw - (float)M_PI_2);
   float ray_z = + sin(yaw - (float)M_PI_2);
   float ray_y = - sin(pitch); // TODO not accurate
-
-  DirectX::SimpleMath::Ray ray(m_position, Vector3(ray_x, ray_y, ray_z));
-  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  Vector3 direction(ray_x, ray_y, ray_z);
+  DirectX::SimpleMath::Ray ray(m_position, direction);
+  //DirectX::XMVector3Unproject()
+  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
   {
-    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
-      float distance1, distance2;    
+      float distance1, distance2;  
       bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance1);
       bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance2);
       if(tri1 || tri2)
@@ -481,15 +484,17 @@ void Scene::Render()
     std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
     std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
     std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
-    Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3;
+    Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3, text_layout4;
     wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
     wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
     wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
+    wfactory->CreateTextLayout(L"+", 1, format, m_outputWidth, m_outputHeight, &text_layout4);
 
     device_context->BeginDraw();
     device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
     device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
     device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
+    device_context->DrawTextLayout(D2D1::Point2F(client_cx, client_cy), text_layout4.Get(), whiteBrush.Get());
     device_context->EndDraw();
   }
 

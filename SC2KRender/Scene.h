@@ -134,6 +134,7 @@ private:
   float base_move_speed = 0.2f;
   float move_speed = base_move_speed * scale;  
   int window_cx = 0, window_cy = 0;
+  int client_cx = 0, client_cy = 0;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
