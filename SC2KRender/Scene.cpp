@@ -52,6 +52,7 @@ void Scene::PreInitialize(HWND window)
 #if USING_MODELS
   m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
+  LoadCustomAssets(L"assets/assetmap.cfg");
 #endif
 }
 

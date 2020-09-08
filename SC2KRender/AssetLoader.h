@@ -25,8 +25,9 @@ struct AssetLoader
     std::wstring directory)
   {
     mmodels = new std::map<std::wstring, std::shared_ptr<DirectX::Model>>();
-    if(!std::filesystem::is_directory(directory))
+    if (!std::filesystem::is_directory(directory))    
       return;
+
     std::vector<std::wstring> files;    
     FindFiles(directory, files);
     
