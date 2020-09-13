@@ -15,6 +15,7 @@ struct MapTile
   int water_height;
   XTERType xter;
   XBLDType xbld;
+  XZONType xzon;
 };
 
 struct MapSegmentHeader

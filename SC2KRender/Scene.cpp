@@ -104,14 +104,20 @@ void Scene::Initialize(MapTile* map_tiles)
       }
 #endif
 #if USING_MODELS
-      if (xbld_map.count(map_tile->xbld))
+      //is building
+      bool render_tile = XBLD_IS_BUILDING(map_tile->xbld) ? 
+        (map_tile->xzon >> 4) & 0b0001 : true;
+      if (render_tile)
       {
-        std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
-        it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
-        if (it != AssetLoader::mmodels->end())
+        if (xbld_map.count(map_tile->xbld))
         {
-          v_model3d.push_back(new Model3D(it->second, t.v_pos[VPos::TOP_LEFT]));
-          RotateModel(map_tile->xbld, v_model3d.back());
+          std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+          it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
+          if (it != AssetLoader::mmodels->end())
+          {
+            v_model3d.push_back(new Model3D(it->second, t.v_pos[VPos::TOP_LEFT]));
+            RotateModel(map_tile->xbld, v_model3d.back());
+          }
         }
       }
 #endif      
@@ -386,8 +392,8 @@ void Scene::MouseClick()
       if(tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
-        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x\n", 
-          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld);
+        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x\n", 
+          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, (t.map_tile->xzon >> 4) & 0b0001);
         goto exit_loop;
       }
     }

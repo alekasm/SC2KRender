@@ -1,5 +1,6 @@
 #pragma once
 
+typedef BYTE XZONType;
 
 enum XTERType
 {
@@ -76,6 +77,7 @@ enum XTERType
 };
 
 #define XBLD_IS_TREE(v) (v >= XBLD_TREES_1 && v <= XBLD_TREES_7)
+#define XBLD_IS_BUILDING(v) (v >= XBLD_LOWER_CLASS_1)
 enum XBLDType
 {
   XBLD_CLEAR, // 0x00

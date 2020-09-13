@@ -81,6 +81,10 @@ void Assign(MapTile& tile, BYTE data)
   {
     tile.xbld = (XBLDType)data;
   }
+  else if (std::is_same<Type, XZONType>::value)
+  {
+    tile.xzon = (XZONType)data;
+  }
 }
 
 template <typename Type>
@@ -151,6 +155,12 @@ void ExtractXBLDFunction(FILE* file, uint32_t segment_size, Map& map)
   DecompressData<XBLDType>(file, segment_size, map);
 }
 
+void ExtractXZONFunction(FILE* file, uint32_t segment_size, Map& map)
+{
+  printf("Reading XZON(0x%x), Size: %d\n", ftell(file), segment_size);
+  DecompressData<XZONType>(file, segment_size, map);
+}
+
 #define NAME_VALUE(s) (strtol(s))
 namespace
 {
@@ -159,7 +169,8 @@ namespace
     {"CNAM", ExtractCNAMFunction},
     {"ALTM", ExtractALTMFunction},
     {"XTER", ExtractXTERFunction},
-    {"XBLD", ExtractXBLDFunction}
+    {"XBLD", ExtractXBLDFunction},
+    {"XZON", ExtractXZONFunction}
     //{"MISC", ExtractMISCFunction}
   };
 }
