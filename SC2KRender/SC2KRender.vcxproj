@@ -231,7 +231,6 @@
     <ResourceCompile Include="SC2KRender.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="cup.jpg" />
     <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

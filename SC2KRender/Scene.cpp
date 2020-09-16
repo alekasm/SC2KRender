@@ -62,15 +62,29 @@ void Scene::Initialize(MapTile* map_tiles)
   delete[] tiles;
   delete[] sea_tiles;
   fill_tiles.clear();
-  v_sprite3d.clear();
-  v_sprite2d.clear();
-  v_model3d.clear();
+  while (!v_sprite3d.empty())
+  {
+    delete v_sprite3d.at(0);
+    v_sprite3d.erase(v_sprite3d.begin());
+  }
+  while (!v_sprite2d.empty())
+  {
+    delete v_sprite2d.at(0);
+    v_sprite2d.erase(v_sprite2d.begin());
+  }
+  while (!v_model3d.empty())
+  {
+    delete v_model3d.at(0);
+    v_model3d.erase(v_model3d.begin());
+  }
+
+  BYTE map_orientation = 0b0000;
   tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
   sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
 
-  for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
   {
-    for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
       t.SetOrigin(x, y);
@@ -104,19 +118,29 @@ void Scene::Initialize(MapTile* map_tiles)
       }
 #endif
 #if USING_MODELS
-      //is building
-      bool render_tile = XBLD_IS_BUILDING(map_tile->xbld) ? 
-        (map_tile->xzon >> 4) & 0b0001 : true;
-      if (render_tile)
+      bool single_tile = (map_tile->xzon >> 4) == 0b1111;
+      bool no_xzon = map_tile->xzon == 0;
+      bool render_tile = single_tile || no_xzon;
+      if (!render_tile)
       {
+        if (map_orientation == 0b0000)
+        {
+          map_orientation = map_tile->xzon >> 4;
+        }
+        render_tile = (map_tile->xzon >> 4) == map_orientation;
+      }
+
+      if (render_tile)
+      {      
         if (xbld_map.count(map_tile->xbld))
         {
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
           it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
           {
-            v_model3d.push_back(new Model3D(it->second, t.v_pos[VPos::TOP_LEFT]));
-            RotateModel(map_tile->xbld, v_model3d.back());
+            Model3D* model = new Model3D(it->second, t.v_pos[VPos::TOP_LEFT]);
+            RotateModel(map_tile->xbld, model);
+            v_model3d.push_back(model);            
           }
         }
       }
@@ -393,7 +417,7 @@ void Scene::MouseClick()
       {
         t.ColorTile(DirectX::Colors::Crimson);
         printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x\n", 
-          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, (t.map_tile->xzon >> 4) & 0b0001);
+          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon);
         goto exit_loop;
       }
     }
@@ -686,6 +710,5 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_RAIL_6:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
     break;
-
   }
 }
