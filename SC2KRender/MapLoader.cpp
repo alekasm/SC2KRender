@@ -85,6 +85,14 @@ void Assign(MapTile& tile, BYTE data)
   {
     tile.xzon = (XZONType)data;
   }
+  else if (std::is_same<Type, XUNDType>::value)
+  {
+    tile.xund = (XUNDType)data;
+  }
+  else if (std::is_same<Type, XBITType>::value)
+  {
+    tile.xbit = (XBITType)data;
+  }
 }
 
 template <typename Type>
@@ -161,6 +169,20 @@ void ExtractXZONFunction(FILE* file, uint32_t segment_size, Map& map)
   DecompressData<XZONType>(file, segment_size, map);
 }
 
+
+void ExtractXUNDFunction(FILE* file, uint32_t segment_size, Map& map)
+{
+  printf("Reading XUND(0x%x), Size: %d\n", ftell(file), segment_size);
+  DecompressData<XUNDType>(file, segment_size, map);
+}
+
+
+void ExtractXBITFunction(FILE* file, uint32_t segment_size, Map& map)
+{
+  printf("Reading XBIT(0x%x), Size: %d\n", ftell(file), segment_size);
+  DecompressData<XBITType>(file, segment_size, map);
+}
+
 #define NAME_VALUE(s) (strtol(s))
 namespace
 {
@@ -170,8 +192,9 @@ namespace
     {"ALTM", ExtractALTMFunction},
     {"XTER", ExtractXTERFunction},
     {"XBLD", ExtractXBLDFunction},
-    {"XZON", ExtractXZONFunction}
-    //{"MISC", ExtractMISCFunction}
+    {"XZON", ExtractXZONFunction},
+    {"XUND", ExtractXUNDFunction},
+    {"XBIT", ExtractXBITFunction}
   };
 }
 

@@ -138,7 +138,18 @@ void Scene::Initialize(MapTile* map_tiles)
           it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
           {
-            Model3D* model = new Model3D(it->second, t.v_pos[VPos::TOP_LEFT]);
+            
+            DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
+            Model3D* model = new Model3D(it->second, position);
+            if (XBLD_IS_BRIDGE(map_tile->xbld))
+            {
+              model->origin.y = map_tile->water_height;
+              if (map_tile->xbit == 0x6)
+              {
+                model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+                model->origin.z += 1.f;
+              }
+            }
             RotateModel(map_tile->xbld, model);
             v_model3d.push_back(model);            
           }
@@ -147,7 +158,8 @@ void Scene::Initialize(MapTile* map_tiles)
 #endif      
     }
   } 
-  FillTileEdges();  
+  FillTileEdges();
+  printf("Rendering %d 3d models\n", v_model3d.size());
   render_scene = true;  
 }
 
@@ -416,8 +428,9 @@ void Scene::MouseClick()
       if(tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
-        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x\n", 
-          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon);
+        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n", 
+          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon, 
+          t.map_tile->xund, t.map_tile->xbit);
         goto exit_loop;
       }
     }

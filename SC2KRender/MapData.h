@@ -16,6 +16,8 @@ struct MapTile
   XTERType xter;
   XBLDType xbld;
   XZONType xzon;
+  XUNDType xund;
+  XBITType xbit;
 };
 
 struct MapSegmentHeader
