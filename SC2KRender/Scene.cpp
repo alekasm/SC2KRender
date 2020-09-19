@@ -137,10 +137,8 @@ void Scene::Initialize(MapTile* map_tiles)
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
           it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
-          {
-            
-            DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
-            
+          {            
+            DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];            
             Model3D* model = new Model3D(it->second, position);
             if (XBLD_IS_BRIDGE(map_tile->xbld))
             {
@@ -154,6 +152,7 @@ void Scene::Initialize(MapTile* map_tiles)
             else if (XBLD_IS_TUNNEL(map_tile->xbld))
             {
               model->origin.y = t.height;
+              t.render = false;
             }
             RotateModel(map_tile->xbld, model);
             v_model3d.push_back(model);            
@@ -164,6 +163,7 @@ void Scene::Initialize(MapTile* map_tiles)
     }
   } 
   FillTileEdges();
+  FillTunnels();
   printf("Rendering %d 3d models\n", v_model3d.size());
   render_scene = true;  
 }
@@ -482,8 +482,11 @@ void Scene::Render()
     for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
     {
       const SceneTile& t = tiles[i]; //object slice is ok
-      m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
-      m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+      if (t.render)
+      {
+        m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+        m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+      }
     }
     m_batch->End();
 
@@ -493,7 +496,7 @@ void Scene::Render()
     for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
     {
       const SceneTile& w = sea_tiles[i];
-      if (w.height > -1.f)
+      if (w.height > -1.f && w.render)
       {
         m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
         m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
@@ -681,6 +684,68 @@ void Scene::FillTileEdges()
     }    
   }
 }
+
+void Scene::FillTunnels()
+{
+  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+  {
+    for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+    {
+      unsigned int start_index = x + TILES_DIMENSION * y;
+      const MapSceneTile& start_tile = tiles[start_index];
+
+      if (start_tile.map_tile->xbld == XBLD_TUNNEL_3)
+      {
+        std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+        it = AssetLoader::mmodels->find(xbld_map.at(start_tile.map_tile->xbld));
+        if (it == AssetLoader::mmodels->end())
+        {
+          continue; //TODO - this should never happen
+        }
+
+        for (unsigned int x2 = x; x2 < TILES_DIMENSION; ++x2)
+        {
+          unsigned int end_index = x2 + TILES_DIMENSION * y;
+          const MapSceneTile& end_tile = tiles[end_index];
+          if (end_tile.map_tile->xbld == XBLD_TUNNEL_1)
+          {
+            break;
+          }
+          DirectX::SimpleMath::Vector3 position = end_tile.v_pos[VPos::TOP_LEFT];
+          Model3D* model = new Model3D(it->second, position);
+          model->origin.y = start_tile.height;
+          RotateModel(start_tile.map_tile->xbld, model);
+          v_model3d.push_back(model);
+        }
+      }
+      else if (start_tile.map_tile->xbld == XBLD_TUNNEL_4)
+      {
+        std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+        it = AssetLoader::mmodels->find(xbld_map.at(start_tile.map_tile->xbld));
+        if (it == AssetLoader::mmodels->end())
+        {
+          continue; //TODO - this should never happen
+        }
+
+        for (unsigned int y2 = y; y2 < TILES_DIMENSION; ++y2)
+        {
+          unsigned int end_index = x + TILES_DIMENSION * y2;
+          const MapSceneTile& end_tile = tiles[end_index];
+          if (end_tile.map_tile->xbld == XBLD_TUNNEL_2)
+          {
+            break;
+          }
+          DirectX::SimpleMath::Vector3 position = end_tile.v_pos[VPos::TOP_LEFT];
+          Model3D* model = new Model3D(it->second, position);
+          model->origin.y = start_tile.height;
+          RotateModel(start_tile.map_tile->xbld, model);
+          v_model3d.push_back(model);
+        }
+      }
+    }
+  }
+}
+
 
 void Scene::RotateModel(XBLDType type, Model3D* model)
 {

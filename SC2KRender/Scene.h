@@ -87,6 +87,7 @@ private:
   void CreateResources();
   void Clear();  
   void FillTileEdges();
+  void FillTunnels();
   void RotateModel(XBLDType, Model3D*);
   
   BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);

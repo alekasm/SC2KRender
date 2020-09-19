@@ -9,6 +9,7 @@ struct SceneTile
   DirectX::XMVECTORF32 c_pos[4];
   DirectX::VertexPositionColor vpc_pos[4];
   float height = -1.f;
+  bool render = true;
   SceneTile();
   
   void CreateVertexPositionColors();
