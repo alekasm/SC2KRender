@@ -140,6 +140,7 @@ void Scene::Initialize(MapTile* map_tiles)
           {
             
             DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
+            
             Model3D* model = new Model3D(it->second, position);
             if (XBLD_IS_BRIDGE(map_tile->xbld))
             {
@@ -149,6 +150,10 @@ void Scene::Initialize(MapTile* map_tiles)
                 model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
                 model->origin.z += 1.f;
               }
+            }
+            else if (XBLD_IS_TUNNEL(map_tile->xbld))
+            {
+              model->origin.y = t.height;
             }
             RotateModel(map_tile->xbld, model);
             v_model3d.push_back(model);            
@@ -681,6 +686,17 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
 {
   switch (type)
   {
+ 
+  case XBLD_TUNNEL_2:
+  case XBLD_TUNNEL_4:  
+    //model->origin.y -= 1.f;
+    break;
+  case XBLD_TUNNEL_1:
+  case XBLD_TUNNEL_3:
+    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+    model->origin.z += 1.f;
+    //model->origin.y -= 1.f;
+    break;  
   case XBLD_ROAD_2:
   case XBLD_RAIL_2:
   case XBLD_CROSSOVER_ROAD_RAIL_1:
