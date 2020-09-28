@@ -140,20 +140,44 @@ void Scene::Initialize(MapTile* map_tiles)
           {            
             DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];            
             Model3D* model = new Model3D(it->second, position);
-            if (XBLD_IS_BRIDGE(map_tile->xbld))
+            if (map_tile->xbit & 0b0100) //appears to be a "water tile"
             {
               model->origin.y = map_tile->water_height;
-              if (map_tile->xbit == 0x6)
-              {
-                model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
-                model->origin.z += 1.f;
+            }             
+            
+            if (XBLD_IS_HIGHWAY_ONRAMP(map_tile->xbld))
+            {
+              TransformHighwayOnRamp(map_tile, model);
+              if (map_tile->xbit & 0b0010) //perhaps some sort of rotation
+              {                
+               // model->m_world_identity *= DirectX::XMMatrixRotationNormal(Vector3::UnitY, -M_PI_2);
+              //  model->origin.z += 1.f;
+                model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+                model->m_world_identity *= DirectX::XMMatrixTranslation(1 * scale, 0.f, 0.f);
+                //model->origin.x += 1.f;
               }
             }
+
+            else if (XBLD_IS_BRIDGE(map_tile->xbld))
+            {
+              if (map_tile->xbit & 0b0010) //perhaps some sort of rotation
+              {
+                model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+                model->origin.x += 1.f;
+              }
+            }
+            
             else if (XBLD_IS_TUNNEL(map_tile->xbld))
             {
               model->origin.y = t.height;
               t.render = false;
             }
+
+            else if (XBLD_IS_HIGHWAY_CROSSOVER(map_tile->xbld))
+            {              
+              FillHighwayCrossover(t);
+            }
+
             RotateModel(map_tile->xbld, model);
             v_model3d.push_back(model);            
           }
@@ -663,7 +687,7 @@ void Scene::FillTileEdges()
         FillEdgeSceneTile(index, Edge::LEFT);
       }
       else if (x > 0)
-      {//
+      {
         const MapSceneTile& cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
         if(x + 1 == TILES_DIMENSION)
@@ -685,6 +709,71 @@ void Scene::FillTileEdges()
   }
 }
 
+void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
+{
+  switch (map_tile->xbld)
+  {  
+  case XBLD_HIGHWAY_ONRAMP_1:
+  case XBLD_HIGHWAY_ONRAMP_4:
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1 * scale, 0.f, 0.f);
+    break;
+  case XBLD_HIGHWAY_ONRAMP_2:
+  case XBLD_HIGHWAY_ONRAMP_3:
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1 * scale);
+    break;
+  }
+}
+
+/*
+* Instead of creating separate models for crossovers, we can overlap two
+* existing models. Separate models may look better, or be more appropriate in
+* the future.
+*/
+
+void Scene::FillHighwayCrossover(const MapSceneTile& t)
+{
+  if (!XBLD_IS_HIGHWAY_CROSSOVER(t.map_tile->xbld))
+  {
+    return;
+  }
+  XBLDType under_highway;
+  switch (t.map_tile->xbld)
+  {
+  case XBLD_HIGHWAY_CROSSOVER_1:
+    under_highway = XBLD_ROAD_2;
+    break;
+  case XBLD_HIGHWAY_CROSSOVER_2:
+    under_highway = XBLD_ROAD_1;
+    break;
+  case XBLD_HIGHWAY_CROSSOVER_3:
+    under_highway = XBLD_RAIL_2;
+    break;
+  case XBLD_HIGHWAY_CROSSOVER_4:
+    under_highway = XBLD_RAIL_1;
+    break;
+  case XBLD_HIGHWAY_CROSSOVER_5:
+  case XBLD_HIGHWAY_CROSSOVER_6:
+    return; //Do nothing for powerlines
+  }
+  std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+  it = AssetLoader::mmodels->find(xbld_map.at(under_highway));
+  if (it == AssetLoader::mmodels->end())
+  {
+    return; //TODO this is an error
+  }
+  DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
+  Model3D* model = new Model3D(it->second, position);
+  RotateModel(under_highway, model);
+  v_model3d.push_back(model);
+}
+
+/*
+ * SimCity 2000 maps do not have data for tunnel pieces besides the entry/exit. This
+ * function fills in the missing data by finding an entry, then iterating until it finds
+ * the exit - adding tunnel pieces in between.
+ */
 void Scene::FillTunnels()
 {
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
@@ -750,18 +839,9 @@ void Scene::FillTunnels()
 void Scene::RotateModel(XBLDType type, Model3D* model)
 {
   switch (type)
-  {
- 
-  case XBLD_TUNNEL_2:
-  case XBLD_TUNNEL_4:  
-    //model->origin.y -= 1.f;
-    break;
+  { 
   case XBLD_TUNNEL_1:
   case XBLD_TUNNEL_3:
-    model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
-    model->origin.z += 1.f;
-    //model->origin.y -= 1.f;
-    break;  
   case XBLD_ROAD_2:
   case XBLD_RAIL_2:
   case XBLD_CROSSOVER_ROAD_RAIL_1:
@@ -770,17 +850,22 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_RAIL_9:
   case XBLD_RAIL_SLOPE_1:
   case XBLD_RAIL_SLOPE_3:
+  case XBLD_HIGHWAY_2:
+  case XBLD_HIGHWAY_CROSSOVER_2:
+  case XBLD_HIGHWAY_CROSSOVER_4:  
+  //case XBLD_HIGHWAY_ONRAMP_2:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->origin.z += 1.f;
     break;
   case XBLD_ROAD_8:
-  case XBLD_RAIL_8:
+  case XBLD_RAIL_8:   
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->origin.z += 1.f;
     model->origin.x += 1.f;
     break;
   case XBLD_ROAD_7:
-  case XBLD_RAIL_7:
+  case XBLD_RAIL_7: 
+  //case XBLD_HIGHWAY_ONRAMP_1: //GOOD    
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
     model->origin.x += 1.f;
     break;

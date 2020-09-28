@@ -88,6 +88,8 @@ private:
   void Clear();  
   void FillTileEdges();
   void FillTunnels();
+  void FillHighwayCrossover(const MapSceneTile&);
+  void TransformHighwayOnRamp(const MapTile*, Model3D*);
   void RotateModel(XBLDType, Model3D*);
   
   BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
