@@ -46,6 +46,7 @@ public:
   void MouseClick();
   void Tick();
   void Render();
+  void SetRenderModels(bool);
   void Update(DX::StepTimer const& timer);
   void MultiplyMovementSpeed(float value);
   DirectX::SimpleMath::Matrix GetViewMatrix()
@@ -100,6 +101,7 @@ private:
   float m_outputWidth;
   float m_outputHeight;
   bool render_scene = false;
+  bool render_models = true;
   bool focused = false;
 
   D3D_FEATURE_LEVEL m_featureLevel;

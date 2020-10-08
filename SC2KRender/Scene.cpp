@@ -470,16 +470,24 @@ void Scene::MultiplyMovementSpeed(float value)
   move_speed *= value;
 }
 
+void Scene::SetRenderModels(bool value)
+{
+  render_models = value;
+}
+
 void Scene::Render()
 {
 
   Clear();
 
 #if USING_MODELS
-  for (Model3D* model3d : v_model3d)
+  if (render_models)
   {
-    model3d->Update(this);
-    model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+    for (Model3D* model3d : v_model3d)
+    {
+      model3d->Update(this);
+      model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+    }
   }
 #endif
   if (render_scene)

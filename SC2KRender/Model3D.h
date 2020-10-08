@@ -7,14 +7,13 @@ struct Model3D
 {
   std::shared_ptr<DirectX::Model> model;
   Matrix m_world, m_world_identity;
-  Vector3 origin, offset;
+  Vector3 origin;
 
   Model3D(std::shared_ptr<DirectX::Model> model, Vector3 origin)
   {
     this->model = model;
     this->origin = origin;
     m_world_identity = Matrix::Identity; 
-    offset = Vector3::Zero;
   }
 
    void Update(Scene* scene)
