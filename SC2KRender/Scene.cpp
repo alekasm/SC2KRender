@@ -150,11 +150,8 @@ void Scene::Initialize(MapTile* map_tiles)
               TransformHighwayOnRamp(map_tile, model);
               if (map_tile->xbit & 0b0010) //perhaps some sort of rotation
               {                
-               // model->m_world_identity *= DirectX::XMMatrixRotationNormal(Vector3::UnitY, -M_PI_2);
-              //  model->origin.z += 1.f;
                 model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-                model->m_world_identity *= DirectX::XMMatrixTranslation(1 * scale, 0.f, 0.f);
-                //model->origin.x += 1.f;
+                model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);             
               }
             }
 
@@ -163,7 +160,7 @@ void Scene::Initialize(MapTile* map_tiles)
               if (map_tile->xbit & 0b0010) //perhaps some sort of rotation
               {
                 model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-                model->origin.x += 1.f;
+                model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
               }
             }
             
@@ -716,12 +713,12 @@ void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
   case XBLD_HIGHWAY_ONRAMP_1:
   case XBLD_HIGHWAY_ONRAMP_4:
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-    model->m_world_identity *= DirectX::XMMatrixTranslation(1 * scale, 0.f, 0.f);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);    
     break;
   case XBLD_HIGHWAY_ONRAMP_2:
   case XBLD_HIGHWAY_ONRAMP_3:
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
-    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1 * scale);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   }
 }
@@ -853,27 +850,24 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_HIGHWAY_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
   case XBLD_HIGHWAY_CROSSOVER_4:  
-  //case XBLD_HIGHWAY_ONRAMP_2:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
-    model->origin.z += 1.f;
+    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_8:
   case XBLD_RAIL_8:   
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
-    model->origin.z += 1.f;
-    model->origin.x += 1.f;
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_7:
-  case XBLD_RAIL_7: 
-  //case XBLD_HIGHWAY_ONRAMP_1: //GOOD    
+  case XBLD_RAIL_7:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-    model->origin.x += 1.f;
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
     break;
   case XBLD_ROAD_3:
   case XBLD_RAIL_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitZ, -M_PI_4);
-    model->origin.z += 1.f;
+    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_4:
   case XBLD_RAIL_4:
@@ -883,7 +877,7 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_RAIL_5:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitZ, M_PI_4);
-    model->origin.z += 1.f;
+    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_6:
   case XBLD_RAIL_6:
