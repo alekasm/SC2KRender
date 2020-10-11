@@ -19,17 +19,21 @@ void Scene::UpdateWindow(HWND hWnd)
 {  
   if (m_d3dDevice.Get() == nullptr)
     return; //Don't update window if not pre-initialized
+
   RECT WindowRect;
+  GetClientRect(hWnd, (LPRECT)&WindowRect);
+  ClientToScreen(hWnd, (LPPOINT)&WindowRect.left);
+  ClientToScreen(hWnd, (LPPOINT)&WindowRect.right);
+
   RECT ClientRect;
-  GetWindowRect(hWnd, &WindowRect);
   GetClientRect(hWnd, &ClientRect);
   m_window_coords = ClientRect;
   m_outputWidth = static_cast<float>(m_window_coords.right - m_window_coords.left);
   m_outputHeight = static_cast<float>(m_window_coords.bottom - m_window_coords.top);
   client_cx = m_outputWidth / 2;
   client_cy = m_outputHeight / 2;
-  window_cx = static_cast<int>(m_window_coords.left + WindowRect.left + client_cx);
-  window_cy = static_cast<int>(m_window_coords.top + WindowRect.top + client_cy);
+  window_cx = static_cast<int>(WindowRect.left + client_cx);
+  window_cy = static_cast<int>(WindowRect.top + client_cy);
   CreateResources();
   m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 256.f);
   m_effect->SetProjection(m_proj);
@@ -436,18 +440,21 @@ void Scene::Update(DX::StepTimer const& timer)
 }
 
 void Scene::MouseClick()
-{
+{  
   float ray_x = + cos(yaw - (float)M_PI_2);
   float ray_z = + sin(yaw - (float)M_PI_2);
-  float ray_y = - sin(pitch); // TODO not accurate
-  Vector3 direction(ray_x, ray_y, ray_z);
+  float ray_y = - sin(pitch);  
+
+   Vector3 direction(ray_x, ray_y, ray_z);
   DirectX::SimpleMath::Ray ray(m_position, direction);
+
   //DirectX::XMVector3Unproject()
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
+ 
       float distance1, distance2;  
       bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance1);
       bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance2);
@@ -511,7 +518,7 @@ void Scene::Render()
     for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
     {
       const SceneTile& t = tiles[i]; //object slice is ok
-      if (t.render)
+      if (t.render || !render_models)
       {
         m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
         m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
@@ -575,7 +582,8 @@ void Scene::Render()
     device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
     device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
     device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
-    device_context->DrawTextLayout(D2D1::Point2F(client_cx, client_cy), text_layout4.Get(), whiteBrush.Get());
+    //Account for text size, currently set to size of 10.f
+    device_context->DrawTextLayout(D2D1::Point2F(client_cx - 2.5f, client_cy - 5.f), text_layout4.Get(), whiteBrush.Get());
     device_context->EndDraw();
   }
 
@@ -598,7 +606,7 @@ BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge 
     a1 = a.v_pos[VPos::TOP_LEFT];
     a2 = a.v_pos[VPos::BOTTOM_LEFT];
     b1 = b.v_pos[VPos::TOP_RIGHT];
-    b2 = b.v_pos[VPos::BOTTOM_RIGHT];    
+    b2 = b.v_pos[VPos::BOTTOM_RIGHT];
     break;
   case RIGHT:
     a1 = a.v_pos[VPos::TOP_RIGHT];
@@ -695,7 +703,7 @@ void Scene::FillTileEdges()
       {
         const MapSceneTile& cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
-        if(x + 1 == TILES_DIMENSION)
+        if (x + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::RIGHT);
       }
 
@@ -707,21 +715,21 @@ void Scene::FillTileEdges()
       {
         const MapSceneTile& cmp_top = tiles[x + TILES_DIMENSION * (y - 1)];
         FillMapSceneTile(this_tile, cmp_top, Edge::TOP);
-        if(y + 1 == TILES_DIMENSION)
+        if (y + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::BOTTOM);
       }
-    }    
+    }
   }
 }
 
 void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
 {
   switch (map_tile->xbld)
-  {  
+  {
   case XBLD_HIGHWAY_ONRAMP_1:
   case XBLD_HIGHWAY_ONRAMP_4:
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);    
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
     break;
   case XBLD_HIGHWAY_ONRAMP_2:
   case XBLD_HIGHWAY_ONRAMP_3:
@@ -844,7 +852,7 @@ void Scene::FillTunnels()
 void Scene::RotateModel(XBLDType type, Model3D* model)
 {
   switch (type)
-  { 
+  {
   case XBLD_TUNNEL_1:
   case XBLD_TUNNEL_3:
   case XBLD_ROAD_2:
@@ -857,12 +865,12 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_RAIL_SLOPE_3:
   case XBLD_HIGHWAY_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
-  case XBLD_HIGHWAY_CROSSOVER_4:  
+  case XBLD_HIGHWAY_CROSSOVER_4:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_8:
-  case XBLD_RAIL_8:   
+  case XBLD_RAIL_8:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
     break;

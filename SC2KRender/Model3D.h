@@ -18,13 +18,13 @@ struct Model3D
 
    void Update(Scene* scene)
   { 
-    float s = scene->GetScale();
+    float scale = scene->GetScale();
     m_world = Matrix::Identity;
     m_world *= m_world_identity;  
     m_world *= DirectX::XMMatrixTranslation(origin.x, origin.y, origin.z);    
-    m_world.m[3][0] *= s;
-    m_world.m[3][1] *= s;
-    m_world.m[3][2] *= s;
+    m_world.m[3][0] *= scale;
+    m_world.m[3][1] *= scale;
+    m_world.m[3][2] *= scale;
     m_world = XMMatrixMultiply(scene->GetWorldMatrix(), m_world); 
   }
 };
