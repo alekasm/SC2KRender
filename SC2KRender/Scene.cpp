@@ -183,6 +183,14 @@ void Scene::Initialize(MapTile* map_tiles)
               FillHighwayCrossover(t);
             }
 
+            else if (XBLD_IS_HYDROELECTRIC(map_tile->xbld))
+            {
+              if (map_tile->xter == XTER_WATERFALL)
+              {
+                t.SetHeight(map_tile->height);
+              }
+            }
+
             SetDrawTileWithModel(t);
             RotateModel(map_tile->xbld, model);
             v_model3d.push_back(model);            
@@ -916,8 +924,8 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
  case XBLD_TUNNEL_2:
  case XBLD_TUNNEL_3:
  case XBLD_TUNNEL_4:
- //case HYDROELECTRIC_1:
- //case HYDROELECTRIC_2:
+ case HYDROELECTRIC_1:
+ case HYDROELECTRIC_2:
    tile.render = false;
    break;
  }
