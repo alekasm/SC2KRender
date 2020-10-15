@@ -11,8 +11,8 @@
 struct MapTile
 {
   uint16_t altm;
-  int height;
-  int water_height;
+  int height; //derived from altm
+  int water_height; //derived from altm
   XTERType xter;
   XBLDType xbld;
   XZONType xzon;

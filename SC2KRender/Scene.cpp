@@ -124,14 +124,19 @@ void Scene::Initialize(MapTile* map_tiles)
 #if USING_MODELS
       bool single_tile = (map_tile->xzon >> 4) == 0b1111;
       bool no_xzon = map_tile->xzon == 0;
-      bool render_tile = single_tile || no_xzon;
+      //Only have seen 0xF0 and 0xE0 (0b0011) for 'multi tile'
+      //0x80 (0b1000) has been seen for various raised objects ie highways and bridges
+      uint8_t mask = 0b10100000;
+      bool is_multi_tile = (map_tile->xbit & mask) == mask;
+      bool render_tile = single_tile || (no_xzon && !is_multi_tile);
+
       if (!render_tile)
       {
         if (map_orientation == 0b0000)
         {
           map_orientation = map_tile->xzon >> 4;
         }
-        render_tile = (map_tile->xzon >> 4) == map_orientation;
+        render_tile = ((map_tile->xzon >> 4) == map_orientation);
       }
 
       if (render_tile)
@@ -170,8 +175,7 @@ void Scene::Initialize(MapTile* map_tiles)
             
             else if (XBLD_IS_TUNNEL(map_tile->xbld))
             {
-              model->origin.y = t.height;
-              t.render = false;
+              model->origin.y = t.height;              
             }
 
             else if (XBLD_IS_HIGHWAY_CROSSOVER(map_tile->xbld))
@@ -179,6 +183,7 @@ void Scene::Initialize(MapTile* map_tiles)
               FillHighwayCrossover(t);
             }
 
+            SetDrawTileWithModel(t);
             RotateModel(map_tile->xbld, model);
             v_model3d.push_back(model);            
           }
@@ -186,7 +191,8 @@ void Scene::Initialize(MapTile* map_tiles)
       }
 #endif      
     }
-  } 
+  }
+  printf("Map XZON Object Origin (bits 4 - 7): 0x%x\n", map_orientation);
   FillTileEdges();
   FillTunnels();
   printf("Rendering %d 3d models\n", v_model3d.size());
@@ -606,7 +612,7 @@ BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge 
     a1 = a.v_pos[VPos::TOP_LEFT];
     a2 = a.v_pos[VPos::BOTTOM_LEFT];
     b1 = b.v_pos[VPos::TOP_RIGHT];
-    b2 = b.v_pos[VPos::BOTTOM_RIGHT];
+    b2 = b.v_pos[VPos::BOTTOM_RIGHT];    
     break;
   case RIGHT:
     a1 = a.v_pos[VPos::TOP_RIGHT];
@@ -703,7 +709,7 @@ void Scene::FillTileEdges()
       {
         const MapSceneTile& cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
-        if (x + 1 == TILES_DIMENSION)
+        if(x + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::RIGHT);
       }
 
@@ -715,21 +721,21 @@ void Scene::FillTileEdges()
       {
         const MapSceneTile& cmp_top = tiles[x + TILES_DIMENSION * (y - 1)];
         FillMapSceneTile(this_tile, cmp_top, Edge::TOP);
-        if (y + 1 == TILES_DIMENSION)
+        if(y + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::BOTTOM);
       }
-    }
+    }    
   }
 }
 
 void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
 {
   switch (map_tile->xbld)
-  {
+  {  
   case XBLD_HIGHWAY_ONRAMP_1:
   case XBLD_HIGHWAY_ONRAMP_4:
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);    
     break;
   case XBLD_HIGHWAY_ONRAMP_2:
   case XBLD_HIGHWAY_ONRAMP_3:
@@ -852,7 +858,7 @@ void Scene::FillTunnels()
 void Scene::RotateModel(XBLDType type, Model3D* model)
 {
   switch (type)
-  {
+  { 
   case XBLD_TUNNEL_1:
   case XBLD_TUNNEL_3:
   case XBLD_ROAD_2:
@@ -865,12 +871,12 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
   case XBLD_RAIL_SLOPE_3:
   case XBLD_HIGHWAY_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
-  case XBLD_HIGHWAY_CROSSOVER_4:
+  case XBLD_HIGHWAY_CROSSOVER_4:  
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_8:
-  case XBLD_RAIL_8:
+  case XBLD_RAIL_8:   
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
     break;
@@ -900,4 +906,19 @@ void Scene::RotateModel(XBLDType type, Model3D* model)
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
     break;
   }
+}
+
+void Scene::SetDrawTileWithModel(MapSceneTile& tile)
+{
+ switch(tile.map_tile->xbld)
+ {
+ case XBLD_TUNNEL_1:
+ case XBLD_TUNNEL_2:
+ case XBLD_TUNNEL_3:
+ case XBLD_TUNNEL_4:
+ case HYDROELECTRIC_1:
+ case HYDROELECTRIC_2:
+   tile.render = false;
+   break;
+ }
 }

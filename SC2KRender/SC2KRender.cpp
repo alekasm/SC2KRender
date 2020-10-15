@@ -149,7 +149,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       GetOpenFileName(&ofn);
       std::string filename(ofn.lpstrFile);
       if (!filename.empty() && MapLoader::LoadMap(filename, tiles))
-      {
+      {       
         SetWindowTextA(hWndClient, std::string("SC2KRender - " + filename).c_str());
         scene->Initialize(tiles);
         scene->SetFocus(true);

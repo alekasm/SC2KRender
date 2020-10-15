@@ -92,6 +92,7 @@ private:
   void FillHighwayCrossover(const MapSceneTile&);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
   void RotateModel(XBLDType, Model3D*);
+  void SetDrawTileWithModel(MapSceneTile&);
   
   BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
   BOOL FillEdgeSceneTile(unsigned int, Edge);
