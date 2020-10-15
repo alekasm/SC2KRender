@@ -916,8 +916,8 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
  case XBLD_TUNNEL_2:
  case XBLD_TUNNEL_3:
  case XBLD_TUNNEL_4:
- case HYDROELECTRIC_1:
- case HYDROELECTRIC_2:
+ //case HYDROELECTRIC_1:
+ //case HYDROELECTRIC_2:
    tile.render = false;
    break;
  }
