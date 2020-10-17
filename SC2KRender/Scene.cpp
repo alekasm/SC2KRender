@@ -178,10 +178,11 @@ void Scene::Initialize(MapTile* map_tiles)
               model->origin.y = t.height;              
             }
 
+            /*
             else if (XBLD_IS_HIGHWAY_CROSSOVER(map_tile->xbld))
             {              
-              FillHighwayCrossover(t);
-            }
+              AddSecondaryModel(t);
+            }*/
 
             else if (XBLD_IS_HYDROELECTRIC(map_tile->xbld))
             {
@@ -190,10 +191,11 @@ void Scene::Initialize(MapTile* map_tiles)
                 t.SetHeight(map_tile->height);
               }
             }
-
+            
             SetDrawTileWithModel(t);
             RotateModel(map_tile->xbld, model);
-            v_model3d.push_back(model);            
+            v_model3d.push_back(model);   
+            AddSecondaryModel(t, model);
           }
         }
       }
@@ -760,41 +762,53 @@ void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
 * the future.
 */
 
-void Scene::FillHighwayCrossover(const MapSceneTile& t)
+void Scene::AddSecondaryModel(const MapSceneTile& t, const Model3D* rmodel)
 {
-  if (!XBLD_IS_HIGHWAY_CROSSOVER(t.map_tile->xbld))
-  {
-    return;
-  }
-  XBLDType under_highway;
+  int32_t model_id = 0;
+  bool repeat_y = false;
   switch (t.map_tile->xbld)
   {
   case XBLD_HIGHWAY_CROSSOVER_1:
-    under_highway = XBLD_ROAD_2;
+    model_id = XBLD_ROAD_2;
     break;
   case XBLD_HIGHWAY_CROSSOVER_2:
-    under_highway = XBLD_ROAD_1;
+    model_id = XBLD_ROAD_1;
     break;
   case XBLD_HIGHWAY_CROSSOVER_3:
-    under_highway = XBLD_RAIL_2;
+    model_id = XBLD_RAIL_2;
     break;
   case XBLD_HIGHWAY_CROSSOVER_4:
-    under_highway = XBLD_RAIL_1;
+    model_id = XBLD_RAIL_1;
+    break;
+  case XBLD_HIGHWAY_1:
+  case XBLD_HIGHWAY_2:
+    model_id = SceneryObject::PILLAR;
+    repeat_y = true;
     break;
   case XBLD_HIGHWAY_CROSSOVER_5:
   case XBLD_HIGHWAY_CROSSOVER_6:
     return; //Do nothing for powerlines
   }
+  if (model_id == 0) return;
+  if (repeat_y && rmodel == nullptr) return;
   std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
-  it = AssetLoader::mmodels->find(xbld_map.at(under_highway));
+  it = AssetLoader::mmodels->find(xbld_map.at(model_id));
   if (it == AssetLoader::mmodels->end())
   {
     return; //TODO this is an error
   }
-  DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
-  Model3D* model = new Model3D(it->second, position);
-  RotateModel(under_highway, model);
-  v_model3d.push_back(model);
+  float height = t.map_tile->height * HEIGHT_INCREMENT;
+  //float end_height = repeat_y ? rmodel->origin.y : height;
+  float end_height = height;
+  do
+  {
+    Vector3 reference_tile(t.v_pos[VPos::TOP_LEFT]);
+    reference_tile.y = height;
+    Model3D* model = new Model3D(it->second, reference_tile);
+    RotateModel(model_id, model);
+    v_model3d.push_back(model);
+    height += HEIGHT_INCREMENT;
+  } while (height < end_height);
 }
 
 /*
@@ -864,9 +878,9 @@ void Scene::FillTunnels()
 }
 
 
-void Scene::RotateModel(XBLDType type, Model3D* model)
+void Scene::RotateModel(int32_t model_id, Model3D* model)
 {
-  switch (type)
+  switch (model_id)
   { 
   case XBLD_TUNNEL_1:
   case XBLD_TUNNEL_3:
@@ -925,8 +939,8 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
  case XBLD_TUNNEL_2:
  case XBLD_TUNNEL_3:
  case XBLD_TUNNEL_4:
- case HYDROELECTRIC_1:
- case HYDROELECTRIC_2:
+ case XBLD_HYDROELECTRIC_1:
+ case XBLD_HYDROELECTRIC_2:
    tile.render = false;
    break;
  }

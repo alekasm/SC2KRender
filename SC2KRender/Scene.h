@@ -93,9 +93,9 @@ private:
   void Clear();  
   void FillTileEdges();
   void FillTunnels();
-  void FillHighwayCrossover(const MapSceneTile&);
+  void AddSecondaryModel(const MapSceneTile&, const Model3D*);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
-  void RotateModel(XBLDType, Model3D*);
+  void RotateModel(int32_t, Model3D*);
   void SetDrawTileWithModel(MapSceneTile&);
   
   BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
