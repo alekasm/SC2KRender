@@ -24,9 +24,6 @@ Thomas Nelson - Models
 #include "menus/MenuContext.h"
 #include "menus/Menus.h"
 
-//#include "menus/ClientMenu.h"
-//#include "menus/SettingsMenu.h"
-
 MapTile* tiles = nullptr;
 std::unique_ptr<Scene> scene;
 
@@ -48,7 +45,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   SetConsoleMode(hInput, dwMode & ENABLE_EXTENDED_FLAGS);
   ShowWindow(GetConsoleWindow(), SW_HIDE);
 
-  printf("SC2KRender (Version 0.2c)\n");
+  printf("SC2KRender (Version 0.3)\n");
   printf("Written by Aleksander Krimsky | www.krimsky.net\n");
   printf("3D Models by Thomas Nelson\n");
   printf("Written with DirectX 11 - Modified DirectXTK\n");

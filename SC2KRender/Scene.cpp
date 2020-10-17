@@ -761,7 +761,6 @@ void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
 * existing models. Separate models may look better, or be more appropriate in
 * the future.
 */
-
 void Scene::AddSecondaryModel(const MapSceneTile& t, const Model3D* rmodel)
 {
   int32_t model_id = 0;
@@ -798,17 +797,19 @@ void Scene::AddSecondaryModel(const MapSceneTile& t, const Model3D* rmodel)
     return; //TODO this is an error
   }
   float height = t.map_tile->height * HEIGHT_INCREMENT;
-  //float end_height = repeat_y ? rmodel->origin.y : height;
-  float end_height = height;
-  do
+
+  add_model:
+  Vector3 reference_tile(t.v_pos[VPos::TOP_LEFT]);
+  reference_tile.y = height;
+  Model3D* model = new Model3D(it->second, reference_tile);
+  RotateModel(model_id, model);
+  v_model3d.push_back(model);
+
+  if (repeat_y && height < rmodel->origin.y)
   {
-    Vector3 reference_tile(t.v_pos[VPos::TOP_LEFT]);
-    reference_tile.y = height;
-    Model3D* model = new Model3D(it->second, reference_tile);
-    RotateModel(model_id, model);
-    v_model3d.push_back(model);
     height += HEIGHT_INCREMENT;
-  } while (height < end_height);
+    goto add_model;
+  }
 }
 
 /*
