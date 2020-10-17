@@ -42,13 +42,17 @@ public:
   void Initialize(MapTile* tiles);
   void PreInitialize(HWND window);
   void UpdateWindow(HWND window);
-  void MouseLook(int x, int z, int y);
+  void MouseLook(int x, int y);
   void MouseClick();
   void Tick();
   void Render();
   void SetRenderModels(bool);
   void Update(DX::StepTimer const& timer);
   void MultiplyMovementSpeed(float value);
+  void SetScale(float);
+  void SetRenderDebugUI(bool);
+  void SetMovementSpeed(float);
+  void SetMouseSpeed(float);
   DirectX::SimpleMath::Matrix GetViewMatrix()
   {
     return m_view;
@@ -103,7 +107,8 @@ private:
   float m_outputHeight;
   bool render_scene = false;
   bool render_models = true;
-  bool focused = false;
+  bool render_debug_ui = true;
+  bool focused = false;  
 
   D3D_FEATURE_LEVEL m_featureLevel;
   Microsoft::WRL::ComPtr<ID3D11Device1> m_d3dDevice;
@@ -138,6 +143,7 @@ private:
   float pitch = 0.f;
   float scale = 0.1f;
   float base_move_speed = 0.2f;
+  float mouse_move_speed = 0.003f;
   float move_speed = base_move_speed * scale;  
   int window_cx = 0, window_cy = 0;
   int client_cx = 0, client_cy = 0;

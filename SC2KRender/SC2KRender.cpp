@@ -20,21 +20,15 @@ Thomas Nelson - Models
 #include "Scene.h"
 #include <conio.h>
 #include <filesystem>
-#include "resource.h"
+#include <CommCtrl.h> 
+#include "menus/MenuContext.h"
+#include "menus/Menus.h"
 
-#define MENU_LOAD_MAP 1
-#define MENU_SHOW_CONSOLE 2
-#define MENU_SHOW_MODELS 3
-#define MENU_SHOW_SETTINGS 4
+//#include "menus/ClientMenu.h"
+//#include "menus/SettingsMenu.h"
 
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
-HWND hWndClient;
-RECT WindowRect;
-RECT ClientRect = { 0, 0, 1024, 768 };
 MapTile* tiles = nullptr;
 std::unique_ptr<Scene> scene;
-HMENU Menu, FileMenu, OptionsMenu;
-
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -63,47 +57,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
   scene = std::make_unique<Scene>();
 
-  DWORD grfStyle, grfExStyle;
-  grfStyle = WS_CLIPCHILDREN | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-  grfExStyle = WS_EX_STATICEDGE;
-  AdjustWindowRectEx(&ClientRect, grfStyle, TRUE, grfExStyle);
+  Menus::InitializeClientMenu(hInstance);
+  Menus::InitializeSettingsMenu(hInstance);
 
-  WNDCLASSEX MainClass = {};
-  MainClass.cbClsExtra = NULL;
-  MainClass.cbWndExtra = NULL;
-  MainClass.lpszMenuName = NULL;
-  MainClass.hCursor = LoadCursor(NULL, IDC_ARROW);
-  MainClass.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
-  MainClass.cbSize = sizeof(WNDCLASSEX);
-  MainClass.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-  MainClass.hIconSm = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-  MainClass.hInstance = hInstance;
-  MainClass.lpfnWndProc = WndProc;
-  MainClass.lpszClassName = "WindowClassName";
-  MainClass.style = CS_HREDRAW | CS_VREDRAW;
-  RegisterClassEx(&MainClass);
+  scene->PreInitialize(MenuContext::hWndClient);
 
-  hWndClient = CreateWindowEx(
-    grfExStyle,
-    MainClass.lpszClassName, std::string("SC2KRender").c_str(),
-    grfStyle,
-    0, 0, ClientRect.right - ClientRect.left, ClientRect.bottom - ClientRect.top, NULL, NULL, hInstance, NULL);
-
-  Menu = CreateMenu();
-  FileMenu = CreateMenu();
-  OptionsMenu = CreateMenu();
-
-  AppendMenu(Menu, MF_POPUP, (UINT_PTR)FileMenu, "File");
-  AppendMenu(FileMenu, MF_STRING, MENU_LOAD_MAP, "Load Map");
-  AppendMenu(FileMenu, MF_UNCHECKED, MENU_SHOW_CONSOLE, "Show Debug");
-  AppendMenu(Menu, MF_POPUP, (UINT_PTR)OptionsMenu, "Options");
-  AppendMenu(OptionsMenu, MF_CHECKED, MENU_SHOW_MODELS, "Render Models");
-  AppendMenu(OptionsMenu, MF_UNCHECKED | MF_GRAYED, MENU_SHOW_SETTINGS, "Settings...");
-  SetMenu(hWndClient, Menu);
-
-  scene->PreInitialize(hWndClient);
-
-  ShowWindow(hWndClient, TRUE);
+  ShowWindow(MenuContext::hWndClient, TRUE);
 
   MSG msg;
   while (GetMessage(&msg, nullptr, 0, 0))
@@ -122,16 +81,44 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
   {
+
+  case WM_KEYDOWN:
+    if (wParam == VK_ESCAPE)
+    {
+      if (scene->HasFocus())
+      {
+        scene->SetFocus(false);
+      }
+      else
+      {
+        PostQuitMessage(0);
+      }
+    }
+    break;
+
   case WM_WINDOWPOSCHANGED:
     scene->UpdateWindow(hWnd);
     break;
 
   case WM_COMMAND:
+    if (hWnd == MenuContext::hWndSettings)
+    {
+      if (MenuContext::IsTextHWND((HWND)lParam))
+      {
+        ::SetFocus(NULL);
+      }
+      else if ((HWND)lParam == MenuContext::ShowDebugUICheckbox)
+      {
+        LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+        scene->SetRenderDebugUI(chkState == BST_CHECKED);
+      }
+      break;
+    }
+    //Assume hWndClient
     switch (LOWORD(wParam))
     {
     case MENU_LOAD_MAP:
     {
-      ::SetFocus(NULL);
       char szFile[256];
       OPENFILENAME ofn;
       ZeroMemory(&ofn, sizeof(ofn));
@@ -149,8 +136,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       GetOpenFileName(&ofn);
       std::string filename(ofn.lpstrFile);
       if (!filename.empty() && MapLoader::LoadMap(filename, tiles))
-      {       
-        SetWindowTextA(hWndClient, std::string("SC2KRender - " + filename).c_str());
+      {
+        SetWindowTextA(MenuContext::hWndClient, std::string("SC2KRender - " + filename).c_str());
         scene->Initialize(tiles);
         scene->SetFocus(true);
       }
@@ -161,8 +148,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       mii.cbSize = sizeof(MENUITEMINFO);
       mii.fMask = MIIM_STATE;
       mii.fState = MFS_CHECKED | MFS_DISABLED;
-      SetMenuItemInfo(FileMenu, MENU_SHOW_CONSOLE, FALSE, &mii);
+      SetMenuItemInfo(MenuContext::FileMenu, MENU_SHOW_CONSOLE, FALSE, &mii);
       ShowWindow(GetConsoleWindow(), SW_SHOWNOACTIVATE);
+      break;
+
+    case MENU_SHOW_SETTINGS:
+      ShowWindow(MenuContext::hWndSettings, TRUE);
       break;
 
     case MENU_SHOW_MODELS:
@@ -170,8 +161,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       MENUITEMINFO mii;
       mii.cbSize = sizeof(MENUITEMINFO);
       mii.fMask = MIIM_STATE;
-      GetMenuItemInfo(OptionsMenu, MENU_SHOW_MODELS, FALSE, &mii);      
-      if(mii.fState & MFS_CHECKED)
+      GetMenuItemInfo(MenuContext::OptionsMenu, MENU_SHOW_MODELS, FALSE, &mii);
+      if (mii.fState & MFS_CHECKED)
       {
         scene->SetRenderModels(false);
         mii.fState = MFS_UNCHECKED;
@@ -180,13 +171,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       {
         scene->SetRenderModels(true);
         mii.fState = MFS_CHECKED;
-      }      
-      SetMenuItemInfo(OptionsMenu, MENU_SHOW_MODELS, FALSE, &mii);
+      }
+      SetMenuItemInfo(MenuContext::OptionsMenu, MENU_SHOW_MODELS, FALSE, &mii);
     }
     break;
 
     }
     break;
+
+  case WM_ACTIVATE:
+    if (hWnd == MenuContext::hWndSettings)
+      MenuContext::UpdateWindows();
+    break;
+
+  case WM_HSCROLL:
+  {
+    int slider_value = SendMessage((HWND)lParam, (UINT)TBM_GETPOS, (WPARAM)0, (LPARAM)0);
+    if ((HWND)lParam == MenuContext::MouseSensBar)
+    {
+      Menus::UpdateMouseSpeedBar(slider_value);
+      scene->SetMouseSpeed(Menus::GetMouseSpeed());
+    }
+    else if ((HWND)lParam == MenuContext::MoveSpeedBar)
+    {
+      Menus::UpdateMoveSpeedBar(slider_value);
+      scene->SetMovementSpeed(Menus::GetMoveSpeed());
+    }
+    else if ((HWND)lParam == MenuContext::ZoomBar)
+    {
+      Menus::UpdateZoomBar(slider_value);
+      scene->SetScale(Menus::GetZoom());
+    }
+  }
+  break;
 
   case WM_ERASEBKGND:
     break;
@@ -200,24 +217,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
       POINT p;
       GetCursorPos(&p);
-      scene->MouseLook(p.x, 0, p.y);
+      scene->MouseLook(p.x, p.y);
     }
     break;
 
-
-  case WM_KEYDOWN:
-    if (wParam == VK_ESCAPE)
-    {
-      if (scene->HasFocus())
-      {
-        scene->SetFocus(false);
-      }
-      else
-      {
-        PostQuitMessage(0);
-      }
-    }
-    break;
   case WM_LBUTTONDOWN:
     if (wParam == MK_LBUTTON)
     {
@@ -230,7 +233,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         POINT p;
         GetCursorPos(&p);
         RECT rc;
-        GetWindowRect(hWndClient, &rc);
+        GetWindowRect(MenuContext::hWndClient, &rc);
         if (PtInRect(&rc, p))
         {
           scene->SetFocus(true);
@@ -239,10 +242,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
   case WM_DESTROY:
-    PostQuitMessage(0);
+    if (hWnd == MenuContext::hWndClient)
+      PostQuitMessage(0);
     break;
   default:
     return DefWindowProc(hWnd, message, wParam, lParam);
   }
-  return 0;
+  return hWnd == MenuContext::hWndClient ? 0 : DefWindowProc(hWnd, message, wParam, lParam);
 }

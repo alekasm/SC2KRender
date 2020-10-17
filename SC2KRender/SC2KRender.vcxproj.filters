@@ -126,6 +126,9 @@
     <ClCompile Include="MapSceneTile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="menus\ClientMenu.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MapData.h">
@@ -252,6 +255,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="AssetMaps.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menus\SettingsMenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menus\Menus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="menus\MenuContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

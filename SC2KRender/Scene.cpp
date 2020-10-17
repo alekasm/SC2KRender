@@ -384,48 +384,46 @@ void Scene::Tick()
 
   Render();
 }
-
-void Scene::MouseLook(int x, int z, int y)
+#define M_PI_3 1.04719755119659774615
+void Scene::MouseLook(int x, int y)
 {
-  float dx = static_cast<float>(x - window_cx) * 0.005f;
-  float dy = static_cast<float>(y - window_cy) * 0.003f;
+  float dx = static_cast<float>(x - window_cx) * mouse_move_speed;
+  float dy = static_cast<float>(y - window_cy) * mouse_move_speed;
   yaw = atan2(sin((yaw + dx) - (float)M_PI), cos((yaw + dx) - (float)M_PI)) + (float)M_PI; // wrap angle between 0 and 2pi
-  pitch = std::clamp(pitch + dy,  (float)-M_PI_4, (float)M_PI_4);
+  pitch = std::clamp(pitch + dy,  (float)-M_PI_3, (float)M_PI_3);
   m_view = Matrix::CreateTranslation(-m_position);
   m_view *= Matrix::CreateFromYawPitchRoll(yaw, 0, 0); 
   m_view *= Matrix::CreateFromYawPitchRoll(0, pitch, 0);
 }
 
+void Scene::SetScale(float value)
+{
+  scale = std::clamp(value, 0.1f, 1.f);
+  move_speed = base_move_speed * scale;
+  m_world = Matrix::CreateScale(scale);
+  //m_position *= scale;
+}
+
+void Scene::SetMovementSpeed(float value)
+{
+  base_move_speed = std::clamp(value, 0.025f, 0.4f);
+  move_speed = base_move_speed * scale;
+}
+
+void Scene::SetMouseSpeed(float value)
+{
+  mouse_move_speed = value;
+}
+
+void Scene::SetRenderDebugUI(bool value)
+{
+  render_debug_ui = value;
+}
+
 void Scene::Update(DX::StepTimer const& timer)
 {
   float elapsedTime = float(timer.GetElapsedSeconds());
-  if (GetAsyncKeyState(VK_RIGHT))
-    rotation_y += 0.01f;
-  else if (GetAsyncKeyState(VK_LEFT))
-    rotation_y -= 0.01f;
-  else if (GetAsyncKeyState(VK_OEM_MINUS))
-  {
-    base_move_speed = std::clamp(base_move_speed - 0.005f, 0.025f, 0.2f);
-    move_speed = base_move_speed * scale;
-  }
-  else if (GetAsyncKeyState(VK_OEM_PLUS))
-  {
-    base_move_speed = std::clamp(base_move_speed + 0.05f, 0.025f, 0.2f);
-    move_speed = base_move_speed * scale;
-  }
-  else if (GetAsyncKeyState(VK_UP))
-  {
-    scale = std::clamp(scale + 0.0005f, 0.05f, 1.f);
-    move_speed = base_move_speed * scale;
-    m_world = Matrix::CreateScale(scale);
-  }
-  else if (GetAsyncKeyState(VK_DOWN))
-  {
-    scale = std::clamp(scale - 0.0005f, 0.05f, 1.f);
-    move_speed = base_move_speed * scale;
-    m_world = Matrix::CreateScale(scale);
-  }
-  else if (GetAsyncKeyState(0x57)) //W (move forward)
+  if (GetAsyncKeyState(0x57)) //W (move forward)
   {
     m_position.x += cos(yaw - (float)M_PI_2) * move_speed;
     m_position.z += sin(yaw - (float)M_PI_2) * move_speed;
@@ -583,22 +581,25 @@ void Scene::Render()
     m_spriteBatch->End();
 #endif  
 
-    std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
-    std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
-    std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
-    Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3, text_layout4;
-    wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
-    wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
-    wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
-    wfactory->CreateTextLayout(L"+", 1, format, m_outputWidth, m_outputHeight, &text_layout4);
+    if (render_debug_ui)
+    {
+      std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
+      std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
+      std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
+      Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3, text_layout4;
+      wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
+      wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
+      wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
+      wfactory->CreateTextLayout(L"+", 1, format, m_outputWidth, m_outputHeight, &text_layout4);
 
-    device_context->BeginDraw();
-    device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
-    device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
-    device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
-    //Account for text size, currently set to size of 10.f
-    device_context->DrawTextLayout(D2D1::Point2F(client_cx - 2.5f, client_cy - 5.f), text_layout4.Get(), whiteBrush.Get());
-    device_context->EndDraw();
+      device_context->BeginDraw();
+      device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
+      device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
+      device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
+      //Account for text size, currently set to size of 10.f
+      device_context->DrawTextLayout(D2D1::Point2F(client_cx - 2.5f, client_cy - 5.f), text_layout4.Get(), whiteBrush.Get());
+      device_context->EndDraw();
+    }
   }
 
   HRESULT hr = m_swapChain->Present(1, 0);
