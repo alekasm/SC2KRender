@@ -7,7 +7,7 @@ struct Model3D
 {
   std::shared_ptr<DirectX::Model> model;
   Matrix m_world, m_world_identity;
-  Vector3 origin;
+  Vector3 origin, origin_scaled;
 
   Model3D(std::shared_ptr<DirectX::Model> model, Vector3 origin)
   {
@@ -16,7 +16,7 @@ struct Model3D
     m_world_identity = Matrix::Identity; 
   }
 
-   void Update(Scene* scene)
+  void Update(Scene* scene)
   { 
     float scale = scene->GetScale();
     m_world = Matrix::Identity;
@@ -25,6 +25,14 @@ struct Model3D
     m_world.m[3][0] *= scale;
     m_world.m[3][1] *= scale;
     m_world.m[3][2] *= scale;
+    origin_scaled = origin * scale;
     m_world = XMMatrixMultiply(scene->GetWorldMatrix(), m_world); 
   }
+
+  bool visible()
+  {
+
+  }
+
+
 };

@@ -199,6 +199,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       Menus::UpdateZoomBar(slider_value);
       scene->SetScale(Menus::GetZoom());
     }
+    else if ((HWND)lParam == MenuContext::RenderDistBar)
+    {
+      Menus::UpdateRenderDistBar(slider_value);
+      scene->SetRenderDistance(Menus::GetRenderDist());
+    }
   }
   break;
 

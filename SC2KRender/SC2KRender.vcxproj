@@ -177,7 +177,7 @@
     <ClCompile Include="MapLoader.cpp" />
     <ClCompile Include="MapSceneTile.cpp" />
     <ClCompile Include="menus\ClientMenu.h" />
-	<ClCompile Include="menus\SettingsMenu.h" />
+    <ClCompile Include="menus\SettingsMenu.h" />
     <ClCompile Include="SC2KRender.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneTile.cpp" />
@@ -219,7 +219,7 @@
     <ClInclude Include="MapLoader.h" />
     <ClInclude Include="MapSceneTile.h" />
     <ClInclude Include="menus\MenuContext.h" />
-    <ClInclude Include="menus\Menus.h" />    
+    <ClInclude Include="menus\Menus.h" />
     <ClInclude Include="Model3D.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
@@ -227,6 +227,7 @@
     <ClInclude Include="Sprite2D.h" />
     <ClInclude Include="Sprite3D.h" />
     <ClInclude Include="Types.h" />
+    <ClInclude Include="utility\RenderThread.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl" />

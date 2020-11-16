@@ -6,6 +6,10 @@
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 #include <wrl/client.h>
+#include <shared_mutex>
+#include <condition_variable>
+#include <future>
+
 #pragma comment(lib, "D3D11")
 
 #include "DirectXTK.h"
@@ -53,6 +57,7 @@ public:
   void SetRenderDebugUI(bool);
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
+  void SetRenderDistance(float);
   DirectX::SimpleMath::Matrix GetViewMatrix()
   {
     return m_view;
@@ -96,10 +101,12 @@ private:
   void AddSecondaryModel(const MapSceneTile&, const Model3D*);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
   void RotateModel(int32_t, Model3D*);
-  void SetDrawTileWithModel(MapSceneTile&);
+  void SetDrawTileWithModel(MapSceneTile&);  
   
   BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
   BOOL FillEdgeSceneTile(unsigned int, Edge);
+
+  //void DrawModel(Model3D*);
 
   HWND m_window;
   RECT m_window_coords;
@@ -122,6 +129,10 @@ private:
   Microsoft::WRL::ComPtr<IDWriteFactory> wfactory;
   Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> whiteBrush;
   IDWriteTextFormat* format = NULL;
+
+  //Deferred Context
+  ID3D11CommandList* pd3dCommandList = NULL;
+  ID3D11DeviceContext* pd3dDeferredContext = NULL;
 
   std::unique_ptr<DirectX::CommonStates> m_states;
   std::unique_ptr<DirectX::BasicEffect> m_effect;
@@ -147,6 +158,9 @@ private:
   float move_speed = base_move_speed * scale;  
   int window_cx = 0, window_cy = 0;
   int client_cx = 0, client_cy = 0;
+  float render_distance = 128.f;
+  float scaled_render_distance = render_distance * scale;
+  bool use_render_distance;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
@@ -155,4 +169,18 @@ private:
   std::vector<Sprite3D*> v_sprite3d;
   std::vector<Sprite2D*> v_sprite2d;
   std::vector<Model3D*> v_model3d;
+
+  //std::vector<std::thread> thread_pool;
+  //std::atomic<uint16_t> threads_working;
+
+  //std::vector<std::packaged_task<bool()>> tasks;
+  //unsigned int thread_count;
+  //bool render_cycle = false;
+  //std::condition_variable cv_render_cycle;
+  //std::shared_mutex mlock;
+  //std::lock_guard<std::mutex> lock;
+  //std::condition_variable cv_models;
+
   };
+
+  

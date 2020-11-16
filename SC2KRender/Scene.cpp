@@ -16,7 +16,7 @@ using DirectX::SimpleMath::Vector2;
 typedef SceneTile::VertexPos VPos;
 
 void Scene::UpdateWindow(HWND hWnd)
-{  
+{
   if (m_d3dDevice.Get() == nullptr)
     return; //Don't update window if not pre-initialized
 
@@ -41,12 +41,13 @@ void Scene::UpdateWindow(HWND hWnd)
 
 void Scene::PreInitialize(HWND window)
 {
-  m_window = window;  
+  m_window = window;
   CreateDevice();
-  m_position = Vector3(8.f, 3.f, 8.f);
+  m_position = Vector3(96.f, 12.f, 96.f);
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
   m_effect->SetView(m_view);
+  SetRenderDistance(render_distance);
   UpdateWindow(window);
 
 #if USING_SPRITES_3D || USING_SPRITES_2D
@@ -60,9 +61,53 @@ void Scene::PreInitialize(HWND window)
 #endif
 }
 
+void Scene::SetScale(float value)
+{
+  float scale_clamp = std::clamp(value, 0.1f, 1.f);
+  float scale_multiplier = value / scale;
+  scale = scale_clamp;
+  move_speed = base_move_speed * scale;
+  m_world = Matrix::CreateScale(scale);
+  for (Model3D* model3d : v_model3d)
+  {
+    model3d->Update(this);
+  }
+  SetRenderDistance(render_distance);
+  m_position *= scale_multiplier;
+}
+
+void Scene::SetRenderDistance(float value)
+{
+  render_distance = value;
+  use_render_distance = value > 0.f;
+  scaled_render_distance = render_distance * scale;
+  
+  float scaled_render_start = scaled_render_distance - (16.f * scale);
+  m_effect->SetFogEnabled(use_render_distance);
+  m_effect->SetFogStart(scaled_render_start);
+  m_effect->SetFogEnd(scaled_render_distance);
+  m_effect->SetFogColor(DirectX::Colors::CornflowerBlue);
+
+  for (Model3D* model3d : v_model3d)
+  {
+    model3d->model->UpdateEffects(
+      [&](DirectX::IEffect* effect)
+    {
+      auto fog = dynamic_cast<DirectX::IEffectFog*>(effect);
+      if (fog)
+      {
+        fog->SetFogEnabled(use_render_distance);
+        fog->SetFogColor(DirectX::Colors::CornflowerBlue);
+        fog->SetFogStart(scaled_render_start);
+        fog->SetFogEnd(scaled_render_distance);
+      }
+    });
+  }
+}
+
 void Scene::Initialize(MapTile* map_tiles)
 {
-  render_scene = false; 
+  render_scene = false;
   delete[] tiles;
   delete[] sea_tiles;
   fill_tiles.clear();
@@ -122,45 +167,50 @@ void Scene::Initialize(MapTile* map_tiles)
       }
 #endif
 #if USING_MODELS
-      bool single_tile = (map_tile->xzon >> 4) == 0b1111;
-      bool no_xzon = map_tile->xzon == 0;
-      //Only have seen 0xF0 and 0xE0 (0b0011) for 'multi tile'
-      //0x80 (0b1000) has been seen for various raised objects ie highways and bridges
-      uint8_t mask = 0b10100000;
-      bool is_multi_tile = (map_tile->xbit & mask) == mask;
-      bool render_tile = single_tile || (no_xzon && !is_multi_tile);
 
-      if (!render_tile)
+      bool no_xzon = map_tile->xzon == 0;
+      bool single_tile = (map_tile->xzon >> 4) == 0b1111;
+
+      //if (map_orientation == 0b0000 && !no_xzon && !single_tile)
+      if (map_orientation == 0b0000 && !single_tile && 
+        XBLD_IS_BUILDING(map_tile->xbld))
       {
-        if (map_orientation == 0b0000)
-        {
-          map_orientation = map_tile->xzon >> 4;
-        }
-        render_tile = ((map_tile->xzon >> 4) == map_orientation);
-      }
+        map_orientation = map_tile->xzon >> 4;
+      }      
+
+      bool render_tile = single_tile ||
+        (!no_xzon && (map_tile->xzon >> 4) == map_orientation) ||
+        (no_xzon && (map_tile->xbit >> 4) == 0) ||
+        (!XBLD_IS_BUILDING(map_tile->xbld));
 
       if (render_tile)
-      {      
+      {
         if (xbld_map.count(map_tile->xbld))
         {
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
           it = AssetLoader::mmodels->find(xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
-          {            
-            DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];            
+          {
+            DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
             Model3D* model = new Model3D(it->second, position);
+
             if (map_tile->xbit & 0b0100) //appears to be a "water tile"
             {
               model->origin.y = map_tile->water_height;
-            }             
-            
+            }
+            else if (map_tile->xter >= XTER_UNDERWATER_FLAT)
+            {
+              model->origin.y = map_tile->water_height;
+            }
+            //else if (map_tile->water_height == map_tile->height)           
+
             if (XBLD_IS_HIGHWAY_ONRAMP(map_tile->xbld))
             {
               TransformHighwayOnRamp(map_tile, model);
               if (map_tile->xbit & 0b0010) //perhaps some sort of rotation
-              {                
+              {
                 model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-                model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);             
+                model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
               }
             }
 
@@ -172,17 +222,11 @@ void Scene::Initialize(MapTile* map_tiles)
                 model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
               }
             }
-            
+
             else if (XBLD_IS_TUNNEL(map_tile->xbld))
             {
-              model->origin.y = t.height;              
+              model->origin.y = t.height;
             }
-
-            /*
-            else if (XBLD_IS_HIGHWAY_CROSSOVER(map_tile->xbld))
-            {              
-              AddSecondaryModel(t);
-            }*/
 
             else if (XBLD_IS_HYDROELECTRIC(map_tile->xbld))
             {
@@ -191,10 +235,11 @@ void Scene::Initialize(MapTile* map_tiles)
                 t.SetHeight(map_tile->height);
               }
             }
-            
+
             SetDrawTileWithModel(t);
             RotateModel(map_tile->xbld, model);
-            v_model3d.push_back(model);   
+
+            v_model3d.push_back(model);
             AddSecondaryModel(t, model);
           }
         }
@@ -202,11 +247,15 @@ void Scene::Initialize(MapTile* map_tiles)
 #endif      
     }
   }
+
   printf("Map XZON Object Origin (bits 4 - 7): 0x%x\n", map_orientation);
   FillTileEdges();
   FillTunnels();
+  m_position *= scale;
+  SetScale(scale);  
+
   printf("Rendering %d 3d models\n", v_model3d.size());
-  render_scene = true;  
+  render_scene = true;
 }
 
 void Scene::CreateDevice()
@@ -224,7 +273,8 @@ void Scene::CreateDevice()
   };
 
   Microsoft::WRL::ComPtr<ID3D11Device> device;
-  Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
+  Microsoft::WRL::ComPtr<ID3D11DeviceContext> context; 
+  
   HRESULT hResult =
     D3D11CreateDevice(
       nullptr,                            // specify nullptr to use the default adapter
@@ -238,6 +288,10 @@ void Scene::CreateDevice()
       &m_featureLevel,                    // returns feature level of device created
       context.ReleaseAndGetAddressOf()    // returns the device immediate context
     );
+    
+
+  //device->CreateDeferredContext(0, &pd3dDeferredContext);
+
 
   device.As(&m_d3dDevice);
   context.As(&m_d3dContext);
@@ -256,7 +310,7 @@ void Scene::CreateDevice()
     shaderByteCode, byteCodeLength,
     m_inputLayout.ReleaseAndGetAddressOf());
 
-  m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());  
+  m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
 }
@@ -266,9 +320,11 @@ void Scene::CreateResources()
   // Clear the previous window size specific context.
   ID3D11RenderTargetView* nullViews[] = { nullptr };
   m_d3dContext->OMSetRenderTargets(_countof(nullViews), nullViews, nullptr);
+  //pd3dDeferredContext->OMSetRenderTargets(_countof(nullViews), nullViews, nullptr);
   m_renderTargetView.Reset();
   m_depthStencilView.Reset();
   m_d3dContext->Flush();
+  //pd3dDeferredContext->Flush();
 
   const UINT backBufferWidth = static_cast<UINT>(m_outputWidth);
   const UINT backBufferHeight = static_cast<UINT>(m_outputHeight);
@@ -288,7 +344,8 @@ void Scene::CreateResources()
     Microsoft::WRL::ComPtr<IDXGIAdapter> dxgiAdapter;
     dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf());
     Microsoft::WRL::ComPtr<IDXGIFactory2> dxgiFactory;
-    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.GetAddressOf()));  
+    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.GetAddressOf()));
+    dxgiAdapter->GetParent(IID_PPV_ARGS(dxgiFactory.GetAddressOf()));
 
     // Create a descriptor for the swap chain.
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -304,14 +361,14 @@ void Scene::CreateResources()
 
     // Create a SwapChain from a Win32 window.
     HRESULT hr_dxgifactory =
-    dxgiFactory->CreateSwapChainForHwnd(
-      m_d3dDevice.Get(),
-      m_window,
-      &swapChainDesc,
-      &fsSwapChainDesc,
-      nullptr,
-      m_swapChain.ReleaseAndGetAddressOf()
-    );
+      dxgiFactory->CreateSwapChainForHwnd(
+        m_d3dDevice.Get(),
+        m_window,
+        &swapChainDesc,
+        &fsSwapChainDesc,
+        nullptr,
+        m_swapChain.ReleaseAndGetAddressOf()
+      );
 
     dxgiFactory->MakeWindowAssociation(m_window, DXGI_MWA_NO_ALT_ENTER);
 
@@ -340,7 +397,7 @@ void Scene::CreateResources()
     Microsoft::WRL::ComPtr<ID2D1Bitmap1> targetBitmap;
     device_context->CreateBitmapFromDxgiSurface(dxgiBuffer.Get(), &bp, &targetBitmap);
     device_context->SetTarget(targetBitmap.Get());
-    device_context->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &whiteBrush);   
+    device_context->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::White), &whiteBrush);
   }
   // Obtain the backbuffer for this window which will be the final 3D rendertarget.
   Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
@@ -354,27 +411,30 @@ void Scene::CreateResources()
 }
 
 void Scene::Clear()
-{
-  // Clear the views.
+{  
+  CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
+
   m_d3dContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
   m_d3dContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-
-  m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
-
-  // Set the viewport.
-  CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
+  m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());  
   m_d3dContext->RSSetViewports(1, &viewport);
+
+  //pd3dDeferredContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
+  //pd3dDeferredContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+  //pd3dDeferredContext->RSSetViewports(1, &viewport);
+  //pd3dDeferredContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());   
+  //pd3dDeferredContext->ClearState();
 }
 
 
 void Scene::Tick()
-{  
+{
   if (GetActiveWindow() != m_window)
   {
     Sleep(10);
     return;
   }
-  
+
   if (focused)
   {
     SetCursorPos(window_cx, window_cy);
@@ -392,18 +452,10 @@ void Scene::MouseLook(int x, int y)
   float dx = static_cast<float>(x - window_cx) * mouse_move_speed;
   float dy = static_cast<float>(y - window_cy) * mouse_move_speed;
   yaw = atan2(sin((yaw + dx) - (float)M_PI), cos((yaw + dx) - (float)M_PI)) + (float)M_PI; // wrap angle between 0 and 2pi
-  pitch = std::clamp(pitch + dy,  (float)-M_PI_3, (float)M_PI_3);
+  pitch = std::clamp(pitch + dy, (float)-M_PI_3, (float)M_PI_3);
   m_view = Matrix::CreateTranslation(-m_position);
-  m_view *= Matrix::CreateFromYawPitchRoll(yaw, 0, 0); 
+  m_view *= Matrix::CreateFromYawPitchRoll(yaw, 0, 0);
   m_view *= Matrix::CreateFromYawPitchRoll(0, pitch, 0);
-}
-
-void Scene::SetScale(float value)
-{
-  scale = std::clamp(value, 0.1f, 1.f);
-  move_speed = base_move_speed * scale;
-  m_world = Matrix::CreateScale(scale);
-  //m_position *= scale;
 }
 
 void Scene::SetMovementSpeed(float value)
@@ -424,42 +476,45 @@ void Scene::SetRenderDebugUI(bool value)
 
 void Scene::Update(DX::StepTimer const& timer)
 {
-  float elapsedTime = float(timer.GetElapsedSeconds());
+  float fps = timer.GetFramesPerSecond();
+  float delta_fps = fps ? 100 / fps : 1;
+  float fps_move_speed = move_speed * delta_fps;
+
   if (GetAsyncKeyState(0x57)) //W (move forward)
   {
-    m_position.x += cos(yaw - (float)M_PI_2) * move_speed;
-    m_position.z += sin(yaw - (float)M_PI_2) * move_speed;
-    m_position.y -= sin(pitch) * move_speed;
+    m_position.x += cos(yaw - (float)M_PI_2) * fps_move_speed;
+    m_position.z += sin(yaw - (float)M_PI_2) * fps_move_speed;
+    m_position.y -= sin(pitch) * fps_move_speed;
   }
   else if (GetAsyncKeyState(0x53)) //S (move backwards)
   {
-    m_position.x -= cos(yaw - (float)M_PI_2) * move_speed;
-    m_position.z -= sin(yaw - (float)M_PI_2) * move_speed;
-    m_position.y += sin(pitch) * move_speed;
+    m_position.x -= cos(yaw - (float)M_PI_2) * fps_move_speed;
+    m_position.z -= sin(yaw - (float)M_PI_2) * fps_move_speed;
+    m_position.y += sin(pitch) * fps_move_speed;
   }
   else if (GetAsyncKeyState(0x41)) //A (strafe left)
   {
-    m_position.x -= cos(yaw) * move_speed;
-    m_position.z -= sin(yaw) * move_speed;
+    m_position.x -= cos(yaw) * fps_move_speed;
+    m_position.z -= sin(yaw) * fps_move_speed;
   }
   else if (GetAsyncKeyState(0x44)) //D (strafe right)
   {
-    m_position.x += cos(yaw) * move_speed;
-    m_position.z += sin(yaw) * move_speed;
+    m_position.x += cos(yaw) * fps_move_speed;
+    m_position.z += sin(yaw) * fps_move_speed;
   }
   else if (GetAsyncKeyState(0x52)) //R (strafe up)
-    m_position.y += move_speed;
+    m_position.y += fps_move_speed;
   else if (GetAsyncKeyState(0x46)) //F (strafe down)
-    m_position.y -= move_speed;
+    m_position.y -= fps_move_speed;
 }
 
 void Scene::MouseClick()
-{  
-  float ray_x = + cos(yaw - (float)M_PI_2);
-  float ray_z = + sin(yaw - (float)M_PI_2);
-  float ray_y = - sin(pitch);  
+{
+  float ray_x = +cos(yaw - (float)M_PI_2);
+  float ray_z = +sin(yaw - (float)M_PI_2);
+  float ray_y = -sin(pitch);
 
-   Vector3 direction(ray_x, ray_y, ray_z);
+  Vector3 direction(ray_x, ray_y, ray_z);
   DirectX::SimpleMath::Ray ray(m_position, direction);
 
   //DirectX::XMVector3Unproject()
@@ -468,22 +523,32 @@ void Scene::MouseClick()
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
- 
-      float distance1, distance2;  
+
+      float distance1, distance2;
       bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance1);
       bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance2);
-      if(tri1 || tri2)
+      if (tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
-        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n", 
-          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon, 
+        printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n",
+          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon,
           t.map_tile->xund, t.map_tile->xbit);
+
+        uint8_t mask = 0b10101111;
+        bool single_tile = (t.map_tile->xzon >> 4) == 0b1111;
+        bool no_xzon = t.map_tile->xzon == 0;
+        bool is_multi_tile = (t.map_tile->xbit & mask) == mask;
+        bool render_tile = single_tile || (no_xzon && !is_multi_tile);
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "Single Tile: %d, No XZON: %d, Multi Tile: %d, Render Tile: %d\n",
+          single_tile, no_xzon, is_multi_tile, render_tile);       
+        OutputDebugString(buffer);
         goto exit_loop;
       }
     }
   }
 exit_loop:
-  return;  
+  return;
 }
 
 void Scene::MultiplyMovementSpeed(float value)
@@ -496,30 +561,61 @@ void Scene::SetRenderModels(bool value)
   render_models = value;
 }
 
+
 void Scene::Render()
 {
+  
+  CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
+  m_d3dContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
+  m_d3dContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+  m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
+  m_d3dContext->RSSetViewports(1, &viewport);  
 
-  Clear();
-
-#if USING_MODELS
-  if (render_models)
-  {
-    for (Model3D* model3d : v_model3d)
-    {
-      model3d->Update(this);
-      model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
-    }
-  }
-#endif
   if (render_scene)
   {
+
+    if (render_models)
+    {
+      for (Model3D* model3d : v_model3d)
+      {   
+        if (!use_render_distance || Vector3::Distance(m_position, model3d->origin_scaled) < scaled_render_distance)
+        {
+          model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);         
+        }       
+
+        /*
+        for (auto mesh_it = model3d->model->meshes.cbegin();
+          mesh_it != model3d->model->meshes.cend(); ++mesh_it)
+        { 
+          for (auto mesh_part_it = mesh_it->get()->meshParts.cbegin();
+            mesh_part_it != mesh_it->get()->meshParts.cend(); ++mesh_part_it)
+          {
+            auto part = (*mesh_part_it).get();
+            if (part->isAlpha != false)
+            {
+              continue;
+            }            
+            auto imatrices = dynamic_cast<DirectX::IEffectMatrices*>(part->effect.get());
+            if (imatrices)
+            {
+              imatrices->SetMatrices(model3d->m_world, m_view, m_proj);
+            }          
+            part->DrawInstanced(m_d3dContext.Get(), m_effect.get(), m_inputLayout.Get(), 1, 0);
+          }
+        }
+        */
+      }
+
+      //pd3dDeferredContext->FinishCommandList(FALSE, &pd3dCommandList);
+      //m_d3dContext->ExecuteCommandList(pd3dCommandList, FALSE);
+    }
+
     m_d3dContext->RSSetState(m_states->CullNone());
     m_effect->SetTextureEnabled(false);
     m_effect->SetWorld(m_world);
     m_effect->SetView(m_view);
     m_effect->Apply(m_d3dContext.Get());
     m_d3dContext->IASetInputLayout(m_inputLayout.Get());
-
     m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
     m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 
@@ -588,16 +684,19 @@ void Scene::Render()
       std::wstring translation = L"Yaw: " + std::to_wstring(yaw) + L", Pitch: " + std::to_wstring(pitch);
       std::wstring position = L"Position: <" + std::to_wstring(m_position.x) + L", " + std::to_wstring(m_position.y) + L", " + std::to_wstring(m_position.z) + L">";
       std::wstring extra = L"Scale: " + std::to_wstring(scale) + L", Speed: " + std::to_wstring(move_speed);
-      Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3, text_layout4;
+      std::wstring fps = L"FPS: " + std::to_wstring(m_timer.GetFramesPerSecond());
+      Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout1, text_layout2, text_layout3, text_layout4, text_layout5;
       wfactory->CreateTextLayout(translation.c_str(), translation.size(), format, m_outputWidth, m_outputHeight, &text_layout1);
       wfactory->CreateTextLayout(position.c_str(), position.size(), format, m_outputWidth, m_outputHeight, &text_layout2);
       wfactory->CreateTextLayout(extra.c_str(), extra.size(), format, m_outputWidth, m_outputHeight, &text_layout3);
       wfactory->CreateTextLayout(L"+", 1, format, m_outputWidth, m_outputHeight, &text_layout4);
+      wfactory->CreateTextLayout(fps.c_str(), fps.size(), format, m_outputWidth, m_outputHeight, &text_layout5);
 
       device_context->BeginDraw();
       device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f), text_layout1.Get(), whiteBrush.Get());
       device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 10.f), text_layout2.Get(), whiteBrush.Get());
       device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 20.f), text_layout3.Get(), whiteBrush.Get());
+      device_context->DrawTextLayout(D2D1::Point2F(2.0f, 2.0f + 30.f), text_layout5.Get(), whiteBrush.Get());
       //Account for text size, currently set to size of 10.f
       device_context->DrawTextLayout(D2D1::Point2F(client_cx - 2.5f, client_cy - 5.f), text_layout4.Get(), whiteBrush.Get());
       device_context->EndDraw();
@@ -612,6 +711,7 @@ void Scene::Render()
     //CreateDevice();
     //CreateResources();
   }
+
 }
 
 BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge edge)
@@ -623,7 +723,7 @@ BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge 
     a1 = a.v_pos[VPos::TOP_LEFT];
     a2 = a.v_pos[VPos::BOTTOM_LEFT];
     b1 = b.v_pos[VPos::TOP_RIGHT];
-    b2 = b.v_pos[VPos::BOTTOM_RIGHT];    
+    b2 = b.v_pos[VPos::BOTTOM_RIGHT];
     break;
   case RIGHT:
     a1 = a.v_pos[VPos::TOP_RIGHT];
@@ -720,7 +820,7 @@ void Scene::FillTileEdges()
       {
         const MapSceneTile& cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
-        if(x + 1 == TILES_DIMENSION)
+        if (x + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::RIGHT);
       }
 
@@ -732,21 +832,21 @@ void Scene::FillTileEdges()
       {
         const MapSceneTile& cmp_top = tiles[x + TILES_DIMENSION * (y - 1)];
         FillMapSceneTile(this_tile, cmp_top, Edge::TOP);
-        if(y + 1 == TILES_DIMENSION)
+        if (y + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::BOTTOM);
       }
-    }    
+    }
   }
 }
 
 void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
 {
   switch (map_tile->xbld)
-  {  
+  {
   case XBLD_HIGHWAY_ONRAMP_1:
   case XBLD_HIGHWAY_ONRAMP_4:
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
-    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);    
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
     break;
   case XBLD_HIGHWAY_ONRAMP_2:
   case XBLD_HIGHWAY_ONRAMP_3:
@@ -798,7 +898,7 @@ void Scene::AddSecondaryModel(const MapSceneTile& t, const Model3D* rmodel)
   }
   float height = t.map_tile->height * HEIGHT_INCREMENT;
 
-  add_model:
+add_model:
   Vector3 reference_tile(t.v_pos[VPos::TOP_LEFT]);
   reference_tile.y = height;
   Model3D* model = new Model3D(it->second, reference_tile);
@@ -882,7 +982,7 @@ void Scene::FillTunnels()
 void Scene::RotateModel(int32_t model_id, Model3D* model)
 {
   switch (model_id)
-  { 
+  {
   case XBLD_TUNNEL_1:
   case XBLD_TUNNEL_3:
   case XBLD_ROAD_2:
@@ -895,12 +995,12 @@ void Scene::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_RAIL_SLOPE_3:
   case XBLD_HIGHWAY_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
-  case XBLD_HIGHWAY_CROSSOVER_4:  
+  case XBLD_HIGHWAY_CROSSOVER_4:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_8:
-  case XBLD_RAIL_8:   
+  case XBLD_RAIL_8:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
     break;
@@ -934,15 +1034,15 @@ void Scene::RotateModel(int32_t model_id, Model3D* model)
 
 void Scene::SetDrawTileWithModel(MapSceneTile& tile)
 {
- switch(tile.map_tile->xbld)
- {
- case XBLD_TUNNEL_1:
- case XBLD_TUNNEL_2:
- case XBLD_TUNNEL_3:
- case XBLD_TUNNEL_4:
- case XBLD_HYDROELECTRIC_1:
- case XBLD_HYDROELECTRIC_2:
-   tile.render = false;
-   break;
- }
+  switch (tile.map_tile->xbld)
+  {
+  case XBLD_TUNNEL_1:
+  case XBLD_TUNNEL_2:
+  case XBLD_TUNNEL_3:
+  case XBLD_TUNNEL_4:
+  case XBLD_HYDROELECTRIC_1:
+  case XBLD_HYDROELECTRIC_2:
+    tile.render = false;
+    break;
+  }
 }

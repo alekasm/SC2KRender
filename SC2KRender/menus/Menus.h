@@ -8,7 +8,9 @@ struct Menus
   static void UpdateMoveSpeedBar(int);
   static void UpdateMouseSpeedBar(int);
   static void UpdateZoomBar(int);
+  static void UpdateRenderDistBar(int);
   static float GetMoveSpeed();
   static float GetMouseSpeed();
-  static float GetZoom();
+  static float GetZoom();  
+  static float GetRenderDist();
 };

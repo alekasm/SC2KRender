@@ -6,26 +6,31 @@
 #include <Windowsx.h> //Button_SetCheck
 #include <string>
 
-RECT MenuContext::SettingsRect = { 0, 0, 420, 220 };
+RECT MenuContext::SettingsRect = { 0, 0, 420, 240 };
 HWND MenuContext::MouseSensText = NULL;
 HWND MenuContext::MoveSpeedText = NULL;
 HWND MenuContext::ZoomText = NULL;
 HWND MenuContext::MouseSensBar = NULL;
 HWND MenuContext::MoveSpeedBar = NULL;
+HWND MenuContext::RenderDistBar = NULL;
+HWND MenuContext::RenderDistText = NULL;
+
 HWND MenuContext::ZoomBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
 HWND MenuContext::hWndSettings = NULL;
-const std::string speed_text_values[5] = { "Very Slow", "Slow", "Normal", "Fast", "Very Fast" };
-const float move_speed_values[5] = {0.05f, 0.1f, 0.2f, 0.3f, 0.35f};
-const float mouse_speed_values[5] = {0.001f, 0.002f, 0.003f, 0.004f, 0.005f};
+const std::string speed_text_values[7] = { "Slowest", "Slower", "Slow", "Normal", "Fast", "Faster", "Fastest" };
+const float move_speed_values[7] = {0.01f, 0.05f, 0.1f, 0.2f, 0.3f, 0.35f, 0.75f};
+const float mouse_speed_values[7] = {0.00025f, 0.001f, 0.002f, 0.003f, 0.004f, 0.005f, 0.01f};
+const float render_dist_values[7] = { 16.f, 32.f, 48.f, 64.f, 96.f, 128.f, 0.f };
 
 float mouse_speed_value;
 float move_speed_value;
 float zoom_value;
+float render_dist_value; //each tile is .5f, so 2 tiles = 1.f, each 0.5m = 50m
 
 void Menus::UpdateMouseSpeedBar(int slider_value)
 {
-  if (slider_value < 1 || slider_value > 5) return;
+  if (slider_value < 1 || slider_value > 7) return;
   mouse_speed_value = mouse_speed_values[slider_value - 1];
 
   std::string mouse_speed_text("Mouse Sensitivity: ");
@@ -36,7 +41,7 @@ void Menus::UpdateMouseSpeedBar(int slider_value)
 
 void Menus::UpdateMoveSpeedBar(int slider_value)
 {
-  if (slider_value < 1 || slider_value > 5) return;
+  if (slider_value < 1 || slider_value > 7) return;
   move_speed_value = move_speed_values[slider_value - 1];
 
   std::string move_speed_text("Movement Speed: ");
@@ -57,6 +62,18 @@ void Menus::UpdateZoomBar(int slider_value)
   UpdateWindow(MenuContext::ZoomText);
 }
 
+void Menus::UpdateRenderDistBar(int slider_value)
+{
+  if (slider_value < 1 || slider_value > 7) return;
+  render_dist_value = render_dist_values[slider_value - 1];
+
+  std::string render_dist_text("Render Distance: ");
+  render_dist_text.append(render_dist_value ? 
+    std::to_string((int)render_dist_value * 50).append("m") : "Maximum");
+  SetWindowText(MenuContext::RenderDistText, render_dist_text.c_str());
+  UpdateWindow(MenuContext::RenderDistText);
+}
+
 float Menus::GetMoveSpeed()
 {
   return move_speed_value;
@@ -70,6 +87,11 @@ float Menus::GetMouseSpeed()
 float Menus::GetZoom()
 {
   return zoom_value;
+}
+
+float Menus::GetRenderDist()
+{
+  return render_dist_value;
 }
 
 void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
@@ -105,8 +127,8 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     10, 10, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
 
   SendMessage(MenuContext::MouseSensBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
-  SendMessage(MenuContext::MouseSensBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(5));
-  SendMessage(MenuContext::MouseSensBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(3));
+  SendMessage(MenuContext::MouseSensBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
+  SendMessage(MenuContext::MouseSensBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(4));
   SendMessage(MenuContext::MouseSensBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
   UpdateWindow(MenuContext::MouseSensBar);
 
@@ -120,8 +142,8 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     10, 50, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
 
   SendMessage(MenuContext::MoveSpeedBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
-  SendMessage(MenuContext::MoveSpeedBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(5));
-  SendMessage(MenuContext::MoveSpeedBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(3));
+  SendMessage(MenuContext::MoveSpeedBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
+  SendMessage(MenuContext::MoveSpeedBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(4));
   SendMessage(MenuContext::MoveSpeedBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
   UpdateWindow(MenuContext::MoveSpeedBar);
 
@@ -145,13 +167,29 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     190, 90, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
   UpdateWindow(MenuContext::ZoomText);
 
+  MenuContext::RenderDistBar = CreateWindow(
+    TRACKBAR_CLASS, "RenderDistBar", WS_VISIBLE | WS_CHILD | TBS_HORZ | TBS_AUTOTICKS,
+    10, 130, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
+
+  SendMessage(MenuContext::RenderDistBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
+  SendMessage(MenuContext::RenderDistBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
+  SendMessage(MenuContext::RenderDistBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(6));
+  SendMessage(MenuContext::RenderDistBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
+  UpdateWindow(MenuContext::RenderDistBar);
+
+  MenuContext::RenderDistText = CreateWindow("EDIT", "Render Distance:",
+    WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE,
+    190, 130, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
+  UpdateWindow(MenuContext::RenderDistText);
+
   MenuContext::ShowDebugUICheckbox = CreateWindow(
     "Button", "Show Debug UI", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    10, 130, 200, 25, MenuContext::hWndSettings, NULL,
+    10, 170, 200, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_CHECKED);
 
-  UpdateMoveSpeedBar(3);
-  UpdateMouseSpeedBar(3);
+  UpdateMoveSpeedBar(4);
+  UpdateMouseSpeedBar(4);
+  UpdateRenderDistBar(6);
   UpdateZoomBar(1);
 }
