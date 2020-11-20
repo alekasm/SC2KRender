@@ -31,7 +31,7 @@ struct Model3D
 
   bool visible()
   {
-
+    
   }
 
 

@@ -266,9 +266,6 @@
     <ClInclude Include="menus\MenuContext.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="utility\RenderThread.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl">

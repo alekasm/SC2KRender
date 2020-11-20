@@ -147,6 +147,7 @@ private:
   DirectX::SimpleMath::Matrix m_world;
   DirectX::SimpleMath::Matrix m_view;
   DirectX::SimpleMath::Matrix m_proj;
+  DirectX::SimpleMath::Viewport m_viewport;
   DX::StepTimer m_timer;
   float rotation_x = 0.0f;
   float rotation_y = 0.8f;

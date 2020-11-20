@@ -88,6 +88,7 @@ enum XTERType
 #define XBLD_IS_HYDROELECTRIC(v) (v >= XBLD_HYDROELECTRIC_1 && v <= XBLD_HYDROELECTRIC_2)
 #define XBLD_IS_NON_BUILDING(v) (v >= XBLD_CLEAR && v <= 0x6F)
 #define XBLD_IS_BUILDING(v) (v >= XBLD_LOWER_CLASS_1)
+#define XBLD_IS_TREES(v) (v >= XBLD_TREES_1 && v <= XBLD_TREES_7)
 
 enum XBLDType
 {
@@ -231,5 +232,12 @@ enum XBLDType
 
 enum SceneryObject
 {
-  PILLAR = 300
+  PILLAR = 300,
+  TREE_TRUNKS_1 = 306,
+  TREE_TRUNKS_2 = 307,
+  TREE_TRUNKS_3 = 308,
+  TREE_TRUNKS_4 = 309,
+  TREE_TRUNKS_5 = 310,
+  TREE_TRUNKS_6 = 311,
+  TREE_TRUNKS_7 = 312
 };

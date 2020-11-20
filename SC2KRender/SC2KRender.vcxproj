@@ -227,7 +227,6 @@
     <ClInclude Include="Sprite2D.h" />
     <ClInclude Include="Sprite3D.h" />
     <ClInclude Include="Types.h" />
-    <ClInclude Include="utility\RenderThread.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl" />
