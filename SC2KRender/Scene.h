@@ -55,6 +55,7 @@ public:
   void MultiplyMovementSpeed(float value);
   void SetScale(float);
   void SetRenderDebugUI(bool);
+  void SetAABBFrustumCulling(bool);
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
   void SetRenderDistance(float);
@@ -115,6 +116,7 @@ private:
   bool render_scene = false;
   bool render_models = true;
   bool render_debug_ui = true;
+  bool use_aabb_frustum_culling = true;
   bool focused = false;  
 
   D3D_FEATURE_LEVEL m_featureLevel;

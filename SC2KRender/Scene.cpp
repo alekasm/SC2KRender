@@ -490,6 +490,11 @@ void Scene::SetRenderDebugUI(bool value)
   render_debug_ui = value;
 }
 
+void Scene::SetAABBFrustumCulling(bool value)
+{
+  use_aabb_frustum_culling = value;
+}
+
 void Scene::Update(DX::StepTimer const& timer)
 {
   float fps = timer.GetFramesPerSecond();
@@ -581,21 +586,11 @@ void Scene::Render()
   if (render_scene)
   {
 
-
     if (render_models)
     {
-      Vector3 near_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 0.01f), m_proj, m_view, m_world);
-      Vector3 far_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 256.f), m_proj, m_view, m_world);
 
       Matrix view_proj = m_view * m_proj;
       Plane frustum_planes[6];
-      /*
-
-            float _11, _12, _13, _14;
-            float _21, _22, _23, _24;
-            float _31, _32, _33, _34;
-            float _41, _42, _43, _44;
-      */
 
       // left
       frustum_planes[0].x = view_proj.m[0][3] + view_proj.m[0][0];
@@ -641,6 +636,11 @@ void Scene::Render()
       {
         if (!use_render_distance || Vector3::Distance(m_position, model3d->origin_scaled) < scaled_render_distance)
         {
+          if (!use_aabb_frustum_culling)
+          {
+            model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+            continue;
+          }
           bool frustum_test = true;
           auto mesh_it = model3d->model->meshes.cbegin();
           if (mesh_it == model3d->model->meshes.cend()) continue;
@@ -754,22 +754,12 @@ void Scene::Render()
       //Account for text size, currently set to size of 10.f
       device_context->DrawTextLayout(D2D1::Point2F(client_cx - 2.5f, client_cy - 5.f), text_layout4.Get(), whiteBrush.Get());
 
-
-      Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout6;
-      wfactory->CreateTextLayout(L"X", 1, format, m_outputWidth, m_outputHeight, &text_layout6);
+      //Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout6;
+      //wfactory->CreateTextLayout(L"X", 1, format, m_outputWidth, m_outputHeight, &text_layout6);
       //Vector3 v = m_viewport.Project(v_model3d.at(0)->origin, m_proj, m_view, m_world);
-      Vector3 v1 = v_model3d.at(0)->model->meshes.at(0)->boundingSphere.Center + v_model3d.at(0)->origin;
-      Vector3 v = m_viewport.Project(v1, m_proj, m_view, m_world);
-      device_context->DrawTextLayout(D2D1::Point2F(v.x, v.y), text_layout6.Get(), whiteBrush.Get());
-
-
-
-
-
-
-
-
-
+      //Vector3 v1 = v_model3d.at(0)->model->meshes.at(0)->boundingSphere.Center + v_model3d.at(0)->origin;
+      //Vector3 v = m_viewport.Project(v1, m_proj, m_view, m_world);
+      //device_context->DrawTextLayout(D2D1::Point2F(v.x, v.y), text_layout6.Get(), whiteBrush.Get());
 
       device_context->EndDraw();
     }

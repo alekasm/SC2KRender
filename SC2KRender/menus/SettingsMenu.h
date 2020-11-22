@@ -17,7 +17,9 @@ HWND MenuContext::RenderDistText = NULL;
 
 HWND MenuContext::ZoomBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
+HWND MenuContext::AABBFrustumCullingCheckbox = NULL;
 HWND MenuContext::hWndSettings = NULL;
+
 const std::string speed_text_values[7] = { "Slowest", "Slower", "Slow", "Normal", "Fast", "Faster", "Fastest" };
 const float move_speed_values[7] = {0.01f, 0.05f, 0.1f, 0.2f, 0.3f, 0.35f, 0.75f};
 const float mouse_speed_values[7] = {0.00025f, 0.001f, 0.002f, 0.003f, 0.004f, 0.005f, 0.01f};
@@ -184,9 +186,15 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
 
   MenuContext::ShowDebugUICheckbox = CreateWindow(
     "Button", "Show Debug UI", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    10, 170, 200, 25, MenuContext::hWndSettings, NULL,
+    10, 170, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_CHECKED);
+
+  MenuContext::AABBFrustumCullingCheckbox = CreateWindow(
+    "Button", "AABB Frustum Culling", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
+    170, 170, 200, 25, MenuContext::hWndSettings, NULL,
+    NULL, NULL);
+  Button_SetCheck(MenuContext::AABBFrustumCullingCheckbox, BST_CHECKED);
 
   UpdateMoveSpeedBar(4);
   UpdateMouseSpeedBar(4);
