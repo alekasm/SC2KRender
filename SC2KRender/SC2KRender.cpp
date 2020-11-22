@@ -6,6 +6,8 @@ fr0zi - https://github.com/fr0zi/sccopter
 bzroom (GameDev.net Discord) - DirectX Help
 slicer4ever (GameDev.net Discord) - DirectX Help
 Thomas Nelson - Models
+Frustum Culling: Chris Serson 
+http://thedemonthrone.ca/projects/rendering-terrain/rendering-terrain-part-10-view-frustum-culling/
 */
 
 #include <vector>

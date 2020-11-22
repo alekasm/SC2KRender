@@ -13,6 +13,7 @@
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector2;
+using DirectX::SimpleMath::Plane;
 typedef SceneTile::VertexPos VPos;
 
 void Scene::UpdateWindow(HWND hWnd)
@@ -81,7 +82,7 @@ void Scene::SetRenderDistance(float value)
   render_distance = value;
   use_render_distance = value > 0.f;
   scaled_render_distance = render_distance * scale;
-  
+
   float scaled_render_start = scaled_render_distance - (16.f * scale);
   m_effect->SetFogEnabled(use_render_distance);
   m_effect->SetFogStart(scaled_render_start);
@@ -172,11 +173,11 @@ void Scene::Initialize(MapTile* map_tiles)
       bool single_tile = (map_tile->xzon >> 4) == 0b1111;
 
       //if (map_orientation == 0b0000 && !no_xzon && !single_tile)
-      if (map_orientation == 0b0000 && !single_tile && 
+      if (map_orientation == 0b0000 && !single_tile &&
         XBLD_IS_BUILDING(map_tile->xbld))
       {
         map_orientation = map_tile->xzon >> 4;
-      }      
+      }
 
       bool render_tile = single_tile ||
         (!no_xzon && (map_tile->xzon >> 4) == map_orientation) ||
@@ -237,7 +238,7 @@ void Scene::Initialize(MapTile* map_tiles)
               else
               {
                 model->origin.y = t.height;
-              }              
+              }
             }
 
             else if (XBLD_IS_HYDROELECTRIC(map_tile->xbld))
@@ -264,10 +265,9 @@ void Scene::Initialize(MapTile* map_tiles)
   FillTileEdges();
   FillTunnels();
   m_position *= scale;
-  SetScale(scale);  
+  SetScale(scale);
 
   printf("Rendering %d 3d models\n", v_model3d.size());
-
   render_scene = true;
 }
 
@@ -286,8 +286,8 @@ void Scene::CreateDevice()
   };
 
   Microsoft::WRL::ComPtr<ID3D11Device> device;
-  Microsoft::WRL::ComPtr<ID3D11DeviceContext> context; 
-  
+  Microsoft::WRL::ComPtr<ID3D11DeviceContext> context;
+
   HRESULT hResult =
     D3D11CreateDevice(
       nullptr,                            // specify nullptr to use the default adapter
@@ -301,7 +301,7 @@ void Scene::CreateDevice()
       &m_featureLevel,                    // returns feature level of device created
       context.ReleaseAndGetAddressOf()    // returns the device immediate context
     );
-    
+
 
   //device->CreateDeferredContext(0, &pd3dDeferredContext);
 
@@ -343,7 +343,7 @@ void Scene::CreateResources()
   const UINT backBufferHeight = static_cast<UINT>(m_outputHeight);
   m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
   //m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight, 0.01f, 256.f);
-  
+
   const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
   const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
   constexpr UINT backBufferCount = 2;
@@ -427,12 +427,12 @@ void Scene::CreateResources()
 }
 
 void Scene::Clear()
-{  
+{
   CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
 
   m_d3dContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
   m_d3dContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-  m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());  
+  m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
   m_d3dContext->RSSetViewports(1, &viewport);
 
   //pd3dDeferredContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
@@ -536,10 +536,10 @@ void Scene::MouseClick()
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
-      MapSceneTile& t = tiles[x + TILES_DIMENSION * y];    
+      MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
       float distance1, distance2;
       bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance1);
-      bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance2);      
+      bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance2);
       if (tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
@@ -555,7 +555,7 @@ void Scene::MouseClick()
         return;
       }
     }
-  } 
+  }
 }
 
 void Scene::MultiplyMovementSpeed(float value)
@@ -571,66 +571,97 @@ void Scene::SetRenderModels(bool value)
 
 void Scene::Render()
 {
-  
+
   CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
   m_d3dContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
   m_d3dContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
   m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
-  m_d3dContext->RSSetViewports(1, &viewport); 
+  m_d3dContext->RSSetViewports(1, &viewport);
 
   if (render_scene)
   {
 
-    if (render_models)
-    {    
-      for (Model3D* model3d : v_model3d)
-      {   
-        if (!use_render_distance || Vector3::Distance(m_position, model3d->origin_scaled) < scaled_render_distance)
-        {
-          //model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
-          /*
-          for (std::shared_ptr<DirectX::ModelMesh> mesh : model3d->model->meshes)
-          {
-            Vector3 test = m_viewport.Project(mesh->boundingBox.Center, m_proj, m_view, m_world);
-            if (test.x > 0 && test.x < m_outputWidth && test.y > 0 && test.y < m_outputHeight)
-            {
-              model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
-              break;
-            }
-          }
-          */
-          
-          //Vector3 test = m_viewport.Project(model3d->origin, m_proj, m_view, m_world);
-          //if (test.x > -64 && test.x < m_outputWidth + 64 && test.y > -48 && test.y < m_outputHeight + 48)          
-            model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
-          
-        }       
 
-        /*
-        for (auto mesh_it = model3d->model->meshes.cbegin();
-          mesh_it != model3d->model->meshes.cend(); ++mesh_it)
-        { 
-          for (auto mesh_part_it = mesh_it->get()->meshParts.cbegin();
-            mesh_part_it != mesh_it->get()->meshParts.cend(); ++mesh_part_it)
-          {
-            auto part = (*mesh_part_it).get();
-            if (part->isAlpha != false)
-            {
-              continue;
-            }            
-            auto imatrices = dynamic_cast<DirectX::IEffectMatrices*>(part->effect.get());
-            if (imatrices)
-            {
-              imatrices->SetMatrices(model3d->m_world, m_view, m_proj);
-            }          
-            part->DrawInstanced(m_d3dContext.Get(), m_effect.get(), m_inputLayout.Get(), 1, 0);
-          }
-        }
-        */
+    if (render_models)
+    {
+      Vector3 near_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 0.01f), m_proj, m_view, m_world);
+      Vector3 far_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 256.f), m_proj, m_view, m_world);
+
+      Matrix view_proj = m_view * m_proj;
+      Plane frustum_planes[6];
+      /*
+
+            float _11, _12, _13, _14;
+            float _21, _22, _23, _24;
+            float _31, _32, _33, _34;
+            float _41, _42, _43, _44;
+      */
+
+      // left
+      frustum_planes[0].x = view_proj.m[0][3] + view_proj.m[0][0];
+      frustum_planes[0].y = view_proj.m[1][3] + view_proj.m[1][0];
+      frustum_planes[0].z = view_proj.m[2][3] + view_proj.m[2][0];
+      frustum_planes[0].w = view_proj.m[3][3] + view_proj.m[3][0];
+
+      // right
+      frustum_planes[1].x = view_proj.m[0][3] - view_proj.m[0][0];
+      frustum_planes[1].y = view_proj.m[1][3] - view_proj.m[1][0];
+      frustum_planes[1].z = view_proj.m[2][3] - view_proj.m[2][0];
+      frustum_planes[1].w = view_proj.m[3][3] - view_proj.m[3][0];
+
+      // bottom
+      frustum_planes[2].x = view_proj.m[0][3] + view_proj.m[0][1];
+      frustum_planes[2].y = view_proj.m[1][3] + view_proj.m[1][1];
+      frustum_planes[2].z = view_proj.m[2][3] + view_proj.m[2][1];
+      frustum_planes[2].w = view_proj.m[3][3] + view_proj.m[3][1];
+
+      // top
+      frustum_planes[3].x = view_proj.m[0][3] - view_proj.m[0][1];
+      frustum_planes[3].y = view_proj.m[1][3] - view_proj.m[1][1];
+      frustum_planes[3].z = view_proj.m[2][3] - view_proj.m[2][1];
+      frustum_planes[3].w = view_proj.m[3][3] - view_proj.m[3][1];
+
+      // near
+      frustum_planes[4].x = view_proj.m[0][2];
+      frustum_planes[4].y = view_proj.m[1][2];
+      frustum_planes[4].z = view_proj.m[2][2];
+      frustum_planes[4].w = view_proj.m[3][2];
+
+      // far
+      frustum_planes[5].x = view_proj.m[0][3] - view_proj.m[0][2];
+      frustum_planes[5].y = view_proj.m[1][3] - view_proj.m[1][2];
+      frustum_planes[5].z = view_proj.m[2][3] - view_proj.m[2][2];
+      frustum_planes[5].w = view_proj.m[3][3] - view_proj.m[3][2];
+      for (unsigned int i = 0; i < 6; ++i)
+      {
+        frustum_planes[i].Normalize();
       }
 
-      //pd3dDeferredContext->FinishCommandList(FALSE, &pd3dCommandList);
-      //m_d3dContext->ExecuteCommandList(pd3dCommandList, FALSE);
+      for (Model3D* model3d : v_model3d)
+      {
+        if (!use_render_distance || Vector3::Distance(m_position, model3d->origin_scaled) < scaled_render_distance)
+        {
+          bool frustum_test = true;
+          auto mesh_it = model3d->model->meshes.cbegin();
+          if (mesh_it == model3d->model->meshes.cend()) continue;
+          Vector3 center = (Vector3(mesh_it->get()->boundingBox.Center) * scale) + model3d->origin_scaled;
+          for (int i = 0; i < 6; ++i)
+          {
+            Vector3 n = Vector3(fabs(frustum_planes[i].x), fabs(frustum_planes[i].y), fabs(frustum_planes[i].z));
+            DirectX::SimpleMath::Vector4 v4(center.x, center.y, center.z, 1.f);
+            float e = n.Dot(mesh_it->get()->boundingBox.Extents);
+            float s = frustum_planes[i].Dot(v4);
+            if (s + e < 0.f)
+            {
+              frustum_test = false;
+              break;
+            }            
+          }
+          if (frustum_test)
+            model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+        }
+      }
+
     }
 
     m_d3dContext->RSSetState(m_states->CullNone());
@@ -723,14 +754,20 @@ void Scene::Render()
       //Account for text size, currently set to size of 10.f
       device_context->DrawTextLayout(D2D1::Point2F(client_cx - 2.5f, client_cy - 5.f), text_layout4.Get(), whiteBrush.Get());
 
-      /*
+
       Microsoft::WRL::ComPtr<IDWriteTextLayout> text_layout6;
       wfactory->CreateTextLayout(L"X", 1, format, m_outputWidth, m_outputHeight, &text_layout6);
-      Vector3 v = m_viewport.Project(v_model3d.at(0)->origin, m_proj, m_view, m_world);
+      //Vector3 v = m_viewport.Project(v_model3d.at(0)->origin, m_proj, m_view, m_world);
+      Vector3 v1 = v_model3d.at(0)->model->meshes.at(0)->boundingSphere.Center + v_model3d.at(0)->origin;
+      Vector3 v = m_viewport.Project(v1, m_proj, m_view, m_world);
       device_context->DrawTextLayout(D2D1::Point2F(v.x, v.y), text_layout6.Get(), whiteBrush.Get());
-      */
-      
-      
+
+
+
+
+
+
+
 
 
 
