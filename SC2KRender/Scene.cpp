@@ -267,6 +267,7 @@ void Scene::Initialize(MapTile* map_tiles)
   SetScale(scale);  
 
   printf("Rendering %d 3d models\n", v_model3d.size());
+
   render_scene = true;
 }
 
@@ -341,6 +342,8 @@ void Scene::CreateResources()
   const UINT backBufferWidth = static_cast<UINT>(m_outputWidth);
   const UINT backBufferHeight = static_cast<UINT>(m_outputHeight);
   m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
+  //m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight, 0.01f, 256.f);
+  
   const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
   const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
   constexpr UINT backBufferCount = 2;
@@ -523,58 +526,21 @@ void Scene::Update(DX::StepTimer const& timer)
 
 void Scene::MouseClick()
 {
-  float ray_x = +cos(yaw - (float)M_PI_2);
-  float ray_z = +sin(yaw - (float)M_PI_2);
-  float ray_y = -sin(pitch);
-
-  Vector3 test = m_viewport.Unproject(Vector3(client_cx, client_cy, 0.f), m_proj, m_view, m_world);
-  if (test.x < 0 || test.x > 127 || test.z < 0 || test.z > 127)
-    return;
-
-  unsigned int x = static_cast<unsigned int>(test.x);
-  unsigned int y = static_cast<unsigned int>(test.z);
-  MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
-  printf("Unprojected Vector: %f %f %f\n", test.x, test.y, test.z);
-  printf("Unprojected Tile: %d, %d\n", x, y);
-
-  t.ColorTile(DirectX::Colors::Crimson);
-  printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n",
-    x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon,
-    t.map_tile->xund, t.map_tile->xbit);
-
-  uint8_t mask = 0b10101111;
-  bool single_tile = (t.map_tile->xzon >> 4) == 0b1111;
-  bool no_xzon = t.map_tile->xzon == 0;
-  bool is_multi_tile = (t.map_tile->xbit & mask) == mask;
-  bool render_tile = single_tile || (no_xzon && !is_multi_tile);
-  char buffer[256];
-  snprintf(buffer, sizeof(buffer), "Single Tile: %d, No XZON: %d, Multi Tile: %d, Render Tile: %d\n",
-    single_tile, no_xzon, is_multi_tile, render_tile);
-  OutputDebugString(buffer);
- 
-
-  //test *= scale;
- 
-
-  /*
-
-  Vector3 direction(ray_x, ray_y, ray_z);
-  DirectX::SimpleMath::Ray ray(m_position, direction);
+  Vector3 near_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 0.f), m_proj, m_view, m_world);
+  Vector3 far_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 1.f), m_proj, m_view, m_world);
+  Vector3 normalized = far_plane - near_plane;
+  normalized.Normalize();
+  DirectX::SimpleMath::Ray ray(near_plane, normalized);
 
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
-      MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
-      bool contains = test.x >= t.v_pos[VPos::TOP_LEFT].x && test.x <= t.v_pos[VPos::BOTTOM_RIGHT].x &&
-        test.z >= t.v_pos[VPos::TOP_LEFT].z && test.z <= t.v_pos[VPos::BOTTOM_RIGHT].z;
-     
-
-      //float distance1, distance2;
-      //bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance1);
-      //bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT] * scale, t.v_pos[VPos::BOTTOM_LEFT] * scale, t.v_pos[VPos::TOP_RIGHT] * scale, distance2);
-      //if (tri1 || tri2)
-      if(contains)
+      MapSceneTile& t = tiles[x + TILES_DIMENSION * y];    
+      float distance1, distance2;
+      bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance1);
+      bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance2);      
+      if (tri1 || tri2)
       {
         t.ColorTile(DirectX::Colors::Crimson);
         printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n",
@@ -586,17 +552,10 @@ void Scene::MouseClick()
         bool no_xzon = t.map_tile->xzon == 0;
         bool is_multi_tile = (t.map_tile->xbit & mask) == mask;
         bool render_tile = single_tile || (no_xzon && !is_multi_tile);
-        char buffer[256];
-        snprintf(buffer, sizeof(buffer), "Single Tile: %d, No XZON: %d, Multi Tile: %d, Render Tile: %d\n",
-          single_tile, no_xzon, is_multi_tile, render_tile);       
-        OutputDebugString(buffer);
-        goto exit_loop;
+        return;
       }
     }
-  }
-exit_loop:
-  return;
-  */
+  } 
 }
 
 void Scene::MultiplyMovementSpeed(float value)
