@@ -10,14 +10,12 @@ RECT MenuContext::WindowRect = {};
 HMENU MenuContext::Menu = NULL;
 HMENU MenuContext::FileMenu = NULL;
 HMENU MenuContext::OptionsMenu = NULL;
+//DWORD grfStyle = WS_CLIPCHILDREN | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+//DWORD grfExStyle = WS_EX_STATICEDGE;
 
 void Menus::InitializeClientMenu(HINSTANCE hInstance)
 {
-  DWORD grfStyle, grfExStyle;
-  grfStyle = WS_CLIPCHILDREN | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX;
-  grfExStyle = WS_EX_STATICEDGE;
-  AdjustWindowRectEx(&MenuContext::ClientRect, grfStyle, TRUE, grfExStyle);
-
+  AdjustWindowRectEx(&MenuContext::ClientRect, WS_OVERLAPPEDWINDOW, TRUE, 0);
   WNDCLASSEX MainClass = {};
   MainClass.cbClsExtra = NULL;
   MainClass.cbWndExtra = NULL;
@@ -34,9 +32,9 @@ void Menus::InitializeClientMenu(HINSTANCE hInstance)
   RegisterClassEx(&MainClass);
 
   MenuContext::hWndClient = CreateWindowEx(
-    grfExStyle,
+    0,
     MainClass.lpszClassName, std::string("SC2KRender").c_str(),
-    grfStyle,
+    WS_OVERLAPPEDWINDOW,
     0, 0,
     MenuContext::ClientRect.right - MenuContext::ClientRect.left,
     MenuContext::ClientRect.bottom - MenuContext::ClientRect.top,

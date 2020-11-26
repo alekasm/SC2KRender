@@ -172,18 +172,6 @@ private:
   std::vector<Sprite3D*> v_sprite3d;
   std::vector<Sprite2D*> v_sprite2d;
   std::vector<Model3D*> v_model3d;
-
-  //std::vector<std::thread> thread_pool;
-  //std::atomic<uint16_t> threads_working;
-
-  //std::vector<std::packaged_task<bool()>> tasks;
-  //unsigned int thread_count;
-  //bool render_cycle = false;
-  //std::condition_variable cv_render_cycle;
-  //std::shared_mutex mlock;
-  //std::lock_guard<std::mutex> lock;
-  //std::condition_variable cv_models;
-
   };
 
   

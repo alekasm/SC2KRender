@@ -29,15 +29,24 @@ void Scene::UpdateWindow(HWND hWnd)
   RECT ClientRect;
   GetClientRect(hWnd, &ClientRect);
   m_window_coords = ClientRect;
-  m_outputWidth = static_cast<float>(m_window_coords.right - m_window_coords.left);
-  m_outputHeight = static_cast<float>(m_window_coords.bottom - m_window_coords.top);
+
+  float m_outputWidth_ = static_cast<float>(m_window_coords.right - m_window_coords.left);
+  float m_outputHeight_ = static_cast<float>(m_window_coords.bottom - m_window_coords.top);
+  bool window_resized = m_outputWidth_ != m_outputWidth || m_outputHeight_ != m_outputHeight;
+  m_outputWidth = m_outputWidth_;
+  m_outputHeight = m_outputHeight_;
+
   client_cx = m_outputWidth / 2;
   client_cy = m_outputHeight / 2;
   window_cx = static_cast<int>(WindowRect.left + client_cx);
   window_cy = static_cast<int>(WindowRect.top + client_cy);
-  CreateResources();
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 256.f);
-  m_effect->SetProjection(m_proj);
+
+  if (window_resized)
+  {
+    m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 256.f);
+    m_effect->SetProjection(m_proj);
+    CreateResources();
+  }
 }
 
 void Scene::PreInitialize(HWND window)
@@ -248,15 +257,14 @@ void Scene::Initialize(MapTile* map_tiles)
                 t.SetHeight(map_tile->height);
               }
             }
-
-            SetDrawTileWithModel(t);
+            
             RotateModel(map_tile->xbld, model);
-
             v_model3d.push_back(model);
             AddSecondaryModel(t, model);
           }
         }
       }
+      SetDrawTileWithModel(t);
 #endif      
     }
   }
@@ -326,6 +334,14 @@ void Scene::CreateDevice()
   m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
+
+
+  /*
+  CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
+    D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
+    D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
+  */
+
 }
 
 void Scene::CreateResources()
@@ -342,7 +358,6 @@ void Scene::CreateResources()
   const UINT backBufferWidth = static_cast<UINT>(m_outputWidth);
   const UINT backBufferHeight = static_cast<UINT>(m_outputHeight);
   m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
-  //m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight, 0.01f, 256.f);
 
   const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
   const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -351,9 +366,10 @@ void Scene::CreateResources()
   // If the swap chain already exists, resize it, otherwise create one.
   if (m_swapChain)
   {
-    m_swapChain->ResizeBuffers(backBufferCount, backBufferWidth, backBufferHeight, backBufferFormat, 0);
+    //m_swapChain->ResizeBuffers(backBufferCount, backBufferWidth, backBufferHeight, backBufferFormat, 0);
+    m_swapChain.Reset();
   }
-  else
+  //else
   {
     Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
     m_d3dDevice.As(&dxgiDevice);
@@ -551,12 +567,6 @@ void Scene::MouseClick()
         printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n",
           x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon,
           t.map_tile->xund, t.map_tile->xbit);
-
-        uint8_t mask = 0b10101111;
-        bool single_tile = (t.map_tile->xzon >> 4) == 0b1111;
-        bool no_xzon = t.map_tile->xzon == 0;
-        bool is_multi_tile = (t.map_tile->xbit & mask) == mask;
-        bool render_tile = single_tile || (no_xzon && !is_multi_tile);
         return;
       }
     }
@@ -764,7 +774,7 @@ void Scene::Render()
       device_context->EndDraw();
     }
   }
-
+  //1 = VSync on
   HRESULT hr = m_swapChain->Present(1, 0);
 
   if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
@@ -1130,6 +1140,7 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
   case XBLD_TUNNEL_4:
   case XBLD_HYDROELECTRIC_1:
   case XBLD_HYDROELECTRIC_2:
+  case XBLD_ZOO:
     tile.render = false;
     break;
   }

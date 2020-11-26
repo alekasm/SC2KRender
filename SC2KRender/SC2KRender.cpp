@@ -23,16 +23,25 @@ http://thedemonthrone.ca/projects/rendering-terrain/rendering-terrain-part-10-vi
 #include <conio.h>
 #include <filesystem>
 #include <CommCtrl.h> 
+
 #include "menus/MenuContext.h"
 #include "menus/Menus.h"
 
+
 MapTile* tiles = nullptr;
 std::unique_ptr<Scene> scene;
+
+extern "C"
+{
+  __declspec(dllexport) DWORD NvOptimusEnablement = 0x00000001;
+  __declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
   UNREFERENCED_PARAMETER(hPrevInstance);
   UNREFERENCED_PARAMETER(lpCmdLine);
+
 
   AllocConsole();
   FILE* p_file;
@@ -94,9 +103,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       }
     }
     break;
+    
 
   case WM_WINDOWPOSCHANGED:
-    scene->UpdateWindow(hWnd);
+    if (hWnd == MenuContext::hWndClient)
+    {
+      scene->UpdateWindow(hWnd);
+    }
     break;
 
   case WM_COMMAND:
