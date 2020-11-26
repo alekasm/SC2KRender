@@ -129,6 +129,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
         scene->SetAABBFrustumCulling(chkState == BST_CHECKED);
       }
+      else if ((HWND)lParam == MenuContext::MSAA4XCheckbox)
+      {
+        LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+        scene->SetMSAA(chkState == BST_CHECKED);
+      }
+      else if ((HWND)lParam == MenuContext::VSyncCheckbox)
+      {
+        LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
+        scene->SetEnableVSync(chkState == BST_CHECKED);
+      }
       break;
     }
     //Assume hWndClient

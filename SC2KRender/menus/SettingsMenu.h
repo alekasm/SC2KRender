@@ -6,7 +6,7 @@
 #include <Windowsx.h> //Button_SetCheck
 #include <string>
 
-RECT MenuContext::SettingsRect = { 0, 0, 420, 240 };
+RECT MenuContext::SettingsRect = { 0, 0, 420, 270 };
 HWND MenuContext::MouseSensText = NULL;
 HWND MenuContext::MoveSpeedText = NULL;
 HWND MenuContext::ZoomText = NULL;
@@ -18,6 +18,8 @@ HWND MenuContext::RenderDistText = NULL;
 HWND MenuContext::ZoomBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
 HWND MenuContext::AABBFrustumCullingCheckbox = NULL;
+HWND MenuContext::MSAA4XCheckbox = NULL;
+HWND MenuContext::VSyncCheckbox = NULL;
 HWND MenuContext::hWndSettings = NULL;
 
 const std::string speed_text_values[7] = { "Slowest", "Slower", "Slow", "Normal", "Fast", "Faster", "Fastest" };
@@ -184,17 +186,30 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     190, 130, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
   UpdateWindow(MenuContext::RenderDistText);
 
-  MenuContext::ShowDebugUICheckbox = CreateWindow(
-    "Button", "Show Debug UI", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
+  MenuContext::MSAA4XCheckbox = CreateWindow(
+    "Button", "4x MSAA", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
     10, 170, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
-  Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_CHECKED);
+  Button_SetCheck(MenuContext::MSAA4XCheckbox, BST_CHECKED);
 
   MenuContext::AABBFrustumCullingCheckbox = CreateWindow(
     "Button", "AABB Frustum Culling", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
     170, 170, 200, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::AABBFrustumCullingCheckbox, BST_CHECKED);
+
+  MenuContext::ShowDebugUICheckbox = CreateWindow(
+    "Button", "Show Debug UI", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
+    10, 195, 150, 25, MenuContext::hWndSettings, NULL,
+    NULL, NULL);
+  Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_CHECKED);
+
+  MenuContext::VSyncCheckbox = CreateWindow(
+    "Button", "Enable VSync", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
+    170, 195, 150, 25, MenuContext::hWndSettings, NULL,
+    NULL, NULL);
+  Button_SetCheck(MenuContext::VSyncCheckbox, BST_CHECKED);
+
 
   UpdateMoveSpeedBar(4);
   UpdateMouseSpeedBar(4);

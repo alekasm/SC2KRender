@@ -59,6 +59,9 @@ public:
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
   void SetRenderDistance(float);
+  void SetMSAA(bool);
+  void SetEnableVSync(bool);
+
   DirectX::SimpleMath::Matrix GetViewMatrix()
   {
     return m_view;
@@ -117,7 +120,10 @@ private:
   bool render_models = true;
   bool render_debug_ui = true;
   bool use_aabb_frustum_culling = true;
-  bool focused = false;  
+  bool use_vsync = true;
+  bool use_render_distance;
+  bool use_4x_msaa = true;
+  bool focused = false;
 
   D3D_FEATURE_LEVEL m_featureLevel;
   Microsoft::WRL::ComPtr<ID3D11Device1> m_d3dDevice;
@@ -125,6 +131,7 @@ private:
   Microsoft::WRL::ComPtr<IDXGISwapChain1> m_swapChain;
   Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_renderTargetView;
   Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_depthStencilView;
+  Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_raster;
 
   //Text Drawing
   Microsoft::WRL::ComPtr<ID2D1DeviceContext> device_context;
@@ -163,7 +170,6 @@ private:
   int client_cx = 0, client_cy = 0;
   float render_distance = 128.f;
   float scaled_render_distance = render_distance * scale;
-  bool use_render_distance;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;

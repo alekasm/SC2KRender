@@ -88,6 +88,17 @@ void Scene::SetScale(float value)
   m_effect->SetProjection(m_proj);
 }
 
+void Scene::SetEnableVSync(bool value)
+{
+  use_vsync = value;
+}
+
+void Scene::SetMSAA(bool value)
+{
+  use_4x_msaa = value;
+  CreateResources();
+}
+
 void Scene::SetRenderDistance(float value)
 {
   render_distance = value;
@@ -336,14 +347,19 @@ void Scene::CreateDevice()
   m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
-
-
+  
+  
+  CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
+    D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
+    D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
   /*
   CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
     D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
     D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
-  */
+    */
 
+
+  m_d3dDevice->CreateRasterizerState(&rastDesc, m_raster.ReleaseAndGetAddressOf());
 }
 
 void Scene::CreateResources()
@@ -386,7 +402,8 @@ void Scene::CreateResources()
     swapChainDesc.Width = backBufferWidth;
     swapChainDesc.Height = backBufferHeight;
     swapChainDesc.Format = backBufferFormat;
-    swapChainDesc.SampleDesc.Count = 1;
+    //swapChainDesc.SampleDesc.Count = 1;
+    swapChainDesc.SampleDesc.Count = use_4x_msaa ? 4 : 1;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = backBufferCount;
@@ -437,10 +454,23 @@ void Scene::CreateResources()
   Microsoft::WRL::ComPtr<ID3D11Texture2D> backBuffer;
   m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf()));
   m_d3dDevice->CreateRenderTargetView(backBuffer.Get(), nullptr, m_renderTargetView.ReleaseAndGetAddressOf());
-  CD3D11_TEXTURE2D_DESC depthStencilDesc(depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1, D3D11_BIND_DEPTH_STENCIL);
+
+  CD3D11_TEXTURE2D_DESC depthStencilDesc;
+  CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+  if (use_4x_msaa)
+  {
+    depthStencilDesc = CD3D11_TEXTURE2D_DESC(depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1, 
+      D3D11_BIND_DEPTH_STENCIL, D3D11_USAGE_DEFAULT, 0, 4, 0);
+    depthStencilViewDesc = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2DMS);
+  }
+  else
+  {
+    depthStencilDesc = CD3D11_TEXTURE2D_DESC(depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1, D3D11_BIND_DEPTH_STENCIL);
+    depthStencilViewDesc = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2D);
+  }
+
   Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
-  m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf());
-  CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc(D3D11_DSV_DIMENSION_TEXTURE2D);
+  m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf());  
   m_d3dDevice->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, m_depthStencilView.ReleaseAndGetAddressOf());
 }
 
@@ -677,6 +707,7 @@ void Scene::Render()
     }
 
     m_d3dContext->RSSetState(m_states->CullNone());
+    //m_d3dContext->RSSetState(m_raster.Get());
     m_effect->SetTextureEnabled(false);
     m_effect->SetWorld(m_world);
     m_effect->SetView(m_view);
@@ -776,8 +807,8 @@ void Scene::Render()
       device_context->EndDraw();
     }
   }
-  //1 = VSync on
-  HRESULT hr = m_swapChain->Present(1, 0);
+
+  HRESULT hr = m_swapChain->Present(use_vsync, 0);
 
   if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
   {

@@ -16,7 +16,8 @@ struct MenuContext
   static RECT WindowRect;
   static RECT ClientRect;
   static RECT SettingsRect;
-  static HWND ShowDebugUICheckbox, AABBFrustumCullingCheckbox;
+  static HWND ShowDebugUICheckbox, AABBFrustumCullingCheckbox, MSAA4XCheckbox,
+              VSyncCheckbox;
 
   static void UpdateWindows()
   {
@@ -30,6 +31,7 @@ struct MenuContext
     UpdateWindow(RenderDistBar);
     UpdateWindow(RenderDistText);
     UpdateWindow(AABBFrustumCullingCheckbox);
+    UpdateWindow(MSAA4XCheckbox);
   }
 
   static BOOL IsTextHWND(HWND hWnd)
