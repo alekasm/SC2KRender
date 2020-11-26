@@ -13,4 +13,5 @@ struct Menus
   static float GetMouseSpeed();
   static float GetZoom();  
   static float GetRenderDist();
+  static void SetMaxSamples(unsigned int);
 };

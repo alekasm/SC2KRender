@@ -61,6 +61,7 @@ public:
   void SetRenderDistance(float);
   void SetMSAA(bool);
   void SetEnableVSync(bool);
+  unsigned int GetMaxSampleCount();
 
   DirectX::SimpleMath::Matrix GetViewMatrix()
   {
@@ -125,6 +126,7 @@ private:
   bool use_4x_msaa = true;
   bool focused = false;
 
+
   D3D_FEATURE_LEVEL m_featureLevel;
   Microsoft::WRL::ComPtr<ID3D11Device1> m_d3dDevice;
   Microsoft::WRL::ComPtr<ID3D11DeviceContext1> m_d3dContext;
@@ -165,7 +167,10 @@ private:
   float scale = 0.1f;
   float base_move_speed = 0.2f;
   float mouse_move_speed = 0.003f;
-  float move_speed = base_move_speed * scale;  
+  float move_speed = base_move_speed * scale;
+  unsigned int max_supported_sample_count = 0;
+  //float fov = DirectX::XM_PI / 4.f;
+  float fov = DirectX::XM_PI / 3.f;
   int window_cx = 0, window_cy = 0;
   int client_cx = 0, client_cy = 0;
   float render_distance = 128.f;

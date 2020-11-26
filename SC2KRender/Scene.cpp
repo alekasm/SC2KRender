@@ -43,7 +43,7 @@ void Scene::UpdateWindow(HWND hWnd)
 
   if (window_resized)
   {
-    m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
+    m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
     m_effect->SetProjection(m_proj);
     CreateResources();
   }
@@ -84,7 +84,7 @@ void Scene::SetScale(float value)
   }
   SetRenderDistance(render_distance);
   m_position *= scale_multiplier;
-  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
   m_effect->SetProjection(m_proj);
 }
 
@@ -381,6 +381,34 @@ void Scene::CreateResources()
   const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
   constexpr UINT backBufferCount = 2;
 
+  //TODO clean this up, multiple sample counts
+  if (max_supported_sample_count == 0)
+  {
+    max_supported_sample_count = 1;
+    for (unsigned int s = 1; s < 5; ++s)
+    {
+      UINT num_qual_levels;
+      unsigned int sample_count = std::pow(2, s);
+      HRESULT multi_sample_hr = m_d3dDevice->CheckMultisampleQualityLevels(
+        DXGI_FORMAT_B8G8R8A8_UNORM,
+        sample_count, &num_qual_levels);
+
+      if (multi_sample_hr != S_OK || num_qual_levels == 0)
+      {
+        break;
+      }
+      max_supported_sample_count = sample_count;
+    }    
+
+    if (max_supported_sample_count < 4)
+    {
+      use_4x_msaa = false;
+    }
+    printf("Max MSAA Sample Count: %d. Using 4x MSAA: %d\n", max_supported_sample_count, use_4x_msaa);
+  }
+
+
+
   // If the swap chain already exists, resize it, otherwise create one.
   if (m_swapChain)
   {
@@ -520,6 +548,11 @@ void Scene::MouseLook(int x, int y)
   m_view = Matrix::CreateTranslation(-m_position);
   m_view *= Matrix::CreateFromYawPitchRoll(yaw, 0, 0);
   m_view *= Matrix::CreateFromYawPitchRoll(0, pitch, 0);
+}
+
+unsigned int Scene::GetMaxSampleCount()
+{
+  return max_supported_sample_count;
 }
 
 void Scene::SetMovementSpeed(float value)

@@ -4,6 +4,7 @@
 #include "../resource.h"
 #include <CommCtrl.h> //CommCtrl includes sliders
 #include <Windowsx.h> //Button_SetCheck
+#include <d3d11_1.h>
 #include <string>
 
 RECT MenuContext::SettingsRect = { 0, 0, 420, 270 };
@@ -31,6 +32,15 @@ float mouse_speed_value;
 float move_speed_value;
 float zoom_value;
 float render_dist_value; //each tile is .5f, so 2 tiles = 1.f, each 0.5m = 50m
+
+void Menus::SetMaxSamples(unsigned int count)
+{
+  if (count <= 1)
+  {
+    EnableWindow(MenuContext::MSAA4XCheckbox, FALSE);
+    Button_SetCheck(MenuContext::MSAA4XCheckbox, BST_UNCHECKED);
+  }
+}
 
 void Menus::UpdateMouseSpeedBar(int slider_value)
 {

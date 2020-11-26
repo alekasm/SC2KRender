@@ -69,6 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   Menus::InitializeSettingsMenu(hInstance);
 
   scene->PreInitialize(MenuContext::hWndClient);
+  Menus::SetMaxSamples(scene->GetMaxSampleCount());
 
   ShowWindow(MenuContext::hWndClient, TRUE);
 
