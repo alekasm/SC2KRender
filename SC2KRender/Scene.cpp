@@ -43,7 +43,7 @@ void Scene::UpdateWindow(HWND hWnd)
 
   if (window_resized)
   {
-    m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, 0.01f, 256.f);
+    m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
     m_effect->SetProjection(m_proj);
     CreateResources();
   }
@@ -84,6 +84,8 @@ void Scene::SetScale(float value)
   }
   SetRenderDistance(render_distance);
   m_position *= scale_multiplier;
+  m_proj = Matrix::CreatePerspectiveFieldOfView(DirectX::XM_PI / 4.f, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
+  m_effect->SetProjection(m_proj);
 }
 
 void Scene::SetRenderDistance(float value)
