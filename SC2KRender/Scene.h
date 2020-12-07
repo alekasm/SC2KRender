@@ -1,5 +1,6 @@
 #pragma once
-
+#define HEIGHT_INCREMENT 1.f
+#define HIGHWAY_HEIGHT 0.75f
 #include <Windows.h>
 #include <memory>
 #include <d3d11_1.h>
@@ -103,8 +104,9 @@ private:
   void Clear();  
   void FillTileEdges();
   void FillTunnels();
-  void AddSecondaryModel(const MapSceneTile&, const Model3D*);
+  void AddSecondaryModel(const MapSceneTile&, const Model3D*, const XBLDType);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
+  void TransformHighwayCorner(const MapTile*, Model3D*);
   void RotateModel(int32_t, Model3D*);
   void SetDrawTileWithModel(MapSceneTile&);  
   

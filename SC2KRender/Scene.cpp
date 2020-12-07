@@ -192,17 +192,20 @@ void Scene::Initialize(MapTile* map_tiles)
 #if USING_MODELS
 
       bool no_xzon = map_tile->xzon == 0;
-      bool single_tile = (map_tile->xzon >> 4) == 0b1111;
+      BYTE orientation = (map_tile->xzon >> 4);
 
+      bool single_tile = orientation == 0b1111;
       //if (map_orientation == 0b0000 && !no_xzon && !single_tile)
       if (map_orientation == 0b0000 && !single_tile &&
         XBLD_IS_BUILDING(map_tile->xbld))
       {
-        map_orientation = map_tile->xzon >> 4;
+        map_orientation = orientation;
       }
 
+     
+
       bool render_tile = single_tile ||
-        (!no_xzon && (map_tile->xzon >> 4) == map_orientation) ||
+        (!no_xzon && orientation == map_orientation) ||
         (no_xzon && (map_tile->xbit >> 4) == 0) ||
         (!XBLD_IS_BUILDING(map_tile->xbld));
 
@@ -226,6 +229,8 @@ void Scene::Initialize(MapTile* map_tiles)
               model->origin.y = map_tile->water_height;
             }
             //else if (map_tile->water_height == map_tile->height)           
+
+            XBLDType xbld_value = map_tile->xbld;
 
             if (XBLD_IS_HIGHWAY_ONRAMP(map_tile->xbld))
             {
@@ -270,10 +275,41 @@ void Scene::Initialize(MapTile* map_tiles)
                 t.SetHeight(map_tile->height);
               }
             }
+
+            else if (XBLD_IS_HIGHWAY(map_tile->xbld))
+            {
+              model->origin.y += HIGHWAY_HEIGHT;
+              
+              if (XBLD_IS_HIGHWAY_SLOPE(map_tile->xbld) &&
+                  map_tile->xter == XTER_HIGHGROUND)
+              {
+                //XBLDType convert;
+                switch (map_tile->xbld)
+                {
+                case XBLD_HIGHWAY_SLOPE_1:
+                case XBLD_HIGHWAY_SLOPE_3:
+                  xbld_value = XBLD_HIGHWAY_2;
+                  break;
+                case XBLD_HIGHWAY_SLOPE_2:
+                case XBLD_HIGHWAY_SLOPE_4:
+                  xbld_value = XBLD_HIGHWAY_1;
+                  break;
+                }
+                std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+                it = AssetLoader::mmodels->find(xbld_map.at(xbld_value));
+                model->model = it->second;
+              }
+
+              if (XBLD_IS_HIGHWAY_CORNER(map_tile->xbld))
+              {
+                TransformHighwayCorner(map_tile, model);                
+              }
+              
+            }
             
-            RotateModel(map_tile->xbld, model);
+            RotateModel(xbld_value, model);
             v_model3d.push_back(model);
-            AddSecondaryModel(t, model);
+            AddSecondaryModel(t, model, xbld_value);
           }
         }
       }
@@ -994,21 +1030,63 @@ void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
   }
 }
 
+void Scene::TransformHighwayCorner(const MapTile* map_tile, Model3D* model)
+{
+  BYTE orientation = (map_tile->xzon >> 4);
+  switch (map_tile->xbld)
+  {
+  case XBLD_HIGHWAY_CORNER_4:
+    if (orientation & 0b0010)
+    {
+      model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+    }
+    break;
+
+  case XBLD_HIGHWAY_CORNER_1:  
+    if (orientation & 0b0100)
+    {
+      model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+    }
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+    break;
+  case XBLD_HIGHWAY_CORNER_2:
+    if (orientation & 0b1000)
+    {
+      model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+    }
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
+    break;
+  case XBLD_HIGHWAY_CORNER_3:
+    if (orientation & 0b0001)
+    {
+      model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+    }
+    model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+    model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
+    break;
+  }
+}
+
 /*
 * Instead of creating separate models for crossovers, we can overlap two
 * existing models. Separate models may look better, or be more appropriate in
 * the future.
 */
-void Scene::AddSecondaryModel(const MapSceneTile& t, const Model3D* rmodel)
+void Scene::AddSecondaryModel(const MapSceneTile& t, 
+                              const Model3D* rmodel,
+                              const XBLDType xbld)
 {
-  if (t.map_tile->xter == XTER_FLAT && XBLD_IS_TREE(t.map_tile->xbld))
+  if (t.map_tile->xter == XTER_FLAT && XBLD_IS_TREE(xbld))
   { //only add trunks if on a slope
     return;
   }
 
   int32_t model_id = 0;
   bool repeat_y = false;
-  switch (t.map_tile->xbld)
+  //Do not use t.map_tile->xbld
+  switch (xbld)
   {
   case XBLD_TREES_1:
     model_id = SceneryObject::TREE_TRUNKS_1;
@@ -1069,7 +1147,7 @@ add_model:
   RotateModel(model_id, model);
   v_model3d.push_back(model);
 
-  if (repeat_y && height < rmodel->origin.y)
+  if (repeat_y && (height + HEIGHT_INCREMENT) <= rmodel->origin.y)
   {
     height += HEIGHT_INCREMENT;
     goto add_model;
@@ -1160,37 +1238,44 @@ void Scene::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_HIGHWAY_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
   case XBLD_HIGHWAY_CROSSOVER_4:
+  //case XBLD_HIGHWAY_CORNER_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_8:
   case XBLD_RAIL_8:
+  //case XBLD_HIGHWAY_CORNER_2:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
     break;
-  case XBLD_ROAD_7:
+  case XBLD_ROAD_7:  
   case XBLD_RAIL_7:
+  //case XBLD_HIGHWAY_CORNER_1:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
     break;
   case XBLD_ROAD_3:
   case XBLD_RAIL_3:
+  case XBLD_HIGHWAY_SLOPE_1:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitZ, -M_PI_4);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_4:
   case XBLD_RAIL_4:
+  case XBLD_HIGHWAY_SLOPE_2:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, M_PI_4);
     break;
   case XBLD_ROAD_5:
   case XBLD_RAIL_5:
+  case XBLD_HIGHWAY_SLOPE_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitZ, M_PI_4);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_6:
   case XBLD_RAIL_6:
+  case XBLD_HIGHWAY_SLOPE_4:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
     break;
   }

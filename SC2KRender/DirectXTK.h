@@ -1,5 +1,4 @@
 #pragma once
-#define HEIGHT_INCREMENT 1.f
 #define NOMINMAX
 #include "DirectXTK/pch.h"
 #include "DirectXTK/AlignedNew.h"
