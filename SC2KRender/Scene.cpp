@@ -43,7 +43,7 @@ void Scene::UpdateWindow(HWND hWnd)
 
   if (window_resized)
   {
-    m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
+    m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
     m_effect->SetProjection(m_proj);
     CreateResources();
   }
@@ -84,7 +84,7 @@ void Scene::SetScale(float value)
   }
   SetRenderDistance(render_distance);
   m_position *= scale_multiplier;
-  m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 128.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
   m_effect->SetProjection(m_proj);
 }
 
@@ -268,6 +268,18 @@ void Scene::Initialize(MapTile* map_tiles)
               }
             }
 
+            else if (XBLD_IS_POWER_LINE(map_tile->xbld))
+            {
+              if (map_tile->xter != XTER_FLAT)
+              { //raise the trees on sloped terrains to add extended trunks
+                model->origin.y = t.height + HEIGHT_INCREMENT / 2.f; //midpoint
+              }
+              else
+              {
+                model->origin.y = t.height;
+              }
+            }
+
             else if (XBLD_IS_HYDROELECTRIC(map_tile->xbld))
             {
               if (map_tile->xter == XTER_WATERFALL)
@@ -302,7 +314,7 @@ void Scene::Initialize(MapTile* map_tiles)
 
               if (XBLD_IS_HIGHWAY_CORNER(map_tile->xbld))
               {
-                TransformHighwayCorner(map_tile, model);                
+                TransformHighwayCorner(map_tile, model, map_orientation);
               }
               
             }
@@ -385,6 +397,11 @@ void Scene::CreateDevice()
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
   
   
+  /*
+  CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
+    D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
+    D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
+    */
   CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
     D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
     D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
@@ -414,7 +431,7 @@ void Scene::CreateResources()
   m_viewport = DirectX::SimpleMath::Viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
 
   const DXGI_FORMAT backBufferFormat = DXGI_FORMAT_B8G8R8A8_UNORM;
-  const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+  const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; //DXGI_FORMAT_D32_FLOAT_S8X24_UINT; 
   constexpr UINT backBufferCount = 2;
 
   //TODO clean this up, multiple sample counts
@@ -1030,42 +1047,62 @@ void Scene::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model)
   }
 }
 
-void Scene::TransformHighwayCorner(const MapTile* map_tile, Model3D* model)
-{
+void Scene::TransformHighwayCorner(const MapTile* map_tile, Model3D* model, BYTE map_orientation)
+{  
   BYTE orientation = (map_tile->xzon >> 4);
+
+  bool shift_left = map_orientation == 0b1000;
+  bool rotate_corner_2 = orientation == map_orientation;
+  bool rotate_corner_1 = shift_left ? (orientation << 1) == map_orientation : (orientation >> 3) == map_orientation;
+  bool rotate_corner_3 = shift_left ? (orientation << 3) == map_orientation : (orientation >> 1) == map_orientation;
+  bool rotate_corner_4 = shift_left ? (orientation << 2) == map_orientation : (orientation >> 2) == map_orientation;
+
+  //bool rotate4 = (map_orientation == 0b1000 && orientation & 0b0010) || (map_orientation & 0b0001 && orientation & 0b0100);
+  //bool rotate1 = (map_orientation == 0b1000 && orientation & 0b0100) || (map_orientation & 0b0001 && orientation & 0b1000);
+  //bool rotate2 = (map_orientation == 0b1000 && orientation & 0b1000) || (map_orientation & 0b0001 && orientation & 0b0001);
+  //bool rotate3 = (map_orientation == 0b1000 && orientation & 0b0001) || (map_orientation & 0b0001 && orientation & 0b0010);
+
+
   switch (map_tile->xbld)
   {
   case XBLD_HIGHWAY_CORNER_4:
-    if (orientation & 0b0010)
+  {    
+    if (rotate_corner_4)
     {
       model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     }
-    break;
-
+  }
+  break;
   case XBLD_HIGHWAY_CORNER_1:  
-    if (orientation & 0b0100)
+  {    
+    if (rotate_corner_1)
     {
       model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     }
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
-    break;
+  }
+  break;
   case XBLD_HIGHWAY_CORNER_2:
-    if (orientation & 0b1000)
+  {
+    if (rotate_corner_2)
     {
       model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     }
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
-    break;
+  }
+  break;
   case XBLD_HIGHWAY_CORNER_3:
-    if (orientation & 0b0001)
+  {    
+    if (rotate_corner_3)
     {
       model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     }
     model->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
-    break;
+  }
+  break;
   }
 }
 
@@ -1238,6 +1275,7 @@ void Scene::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_HIGHWAY_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
   case XBLD_HIGHWAY_CROSSOVER_4:
+  case XBLD_POWER_LINE_2:
   //case XBLD_HIGHWAY_CORNER_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
@@ -1292,6 +1330,7 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
   case XBLD_HYDROELECTRIC_1:
   case XBLD_HYDROELECTRIC_2:
   case XBLD_ZOO:
+  //case XBLD_MARINA:
     tile.render = false;
     break;
   }

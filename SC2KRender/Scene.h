@@ -106,7 +106,7 @@ private:
   void FillTunnels();
   void AddSecondaryModel(const MapSceneTile&, const Model3D*, const XBLDType);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
-  void TransformHighwayCorner(const MapTile*, Model3D*);
+  void TransformHighwayCorner(const MapTile*, Model3D*, BYTE);
   void RotateModel(int32_t, Model3D*);
   void SetDrawTileWithModel(MapSceneTile&);  
   
