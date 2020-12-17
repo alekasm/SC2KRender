@@ -110,13 +110,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     if (hWnd == MenuContext::hWndClient)
     {
       scene->UpdateWindow(hWnd);
-    }
+    }    
     break;
   case WM_CLOSE:
     if (hWnd == MenuContext::hWndSettings)
     {
       ShowWindow(hWnd, SW_HIDE);
       return 0;
+    }
+    else if (hWnd == MenuContext::hWndClient)
+    {
+      DestroyWindow(hWnd);
     }
     break;
   case WM_COMMAND:

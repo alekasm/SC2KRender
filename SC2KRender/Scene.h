@@ -40,6 +40,7 @@ namespace DX
   }
 }
 enum Edge { LEFT, TOP, BOTTOM, RIGHT };
+typedef std::vector<std::pair<size_t, size_t>> ModelTileVector;
 
 class Scene
 {
@@ -106,7 +107,8 @@ private:
   void FillTunnels();
   void AddSecondaryModel(const MapSceneTile&, const Model3D*, const XBLDType);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
-  void TransformHighwayCorner(const MapTile*, Model3D*, BYTE);
+  void TransformHighwayCorners(const std::vector<ModelTileVector>&);
+  void ClusterTiles(const ModelTileVector&, float, std::vector<ModelTileVector>&);
   void RotateModel(int32_t, Model3D*);
   void SetDrawTileWithModel(MapSceneTile&);  
   
@@ -177,6 +179,7 @@ private:
   int client_cx = 0, client_cy = 0;
   float render_distance = 128.f;
   float scaled_render_distance = render_distance * scale;
+  BYTE map_orientation = 0x0;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
   std::vector<DirectX::VertexPositionColor> fill_tiles;

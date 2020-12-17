@@ -29,10 +29,4 @@ struct Model3D
     m_world = XMMatrixMultiply(scene->GetWorldMatrix(), m_world); 
   }
 
-  bool visible()
-  {
-    
-  }
-
-
 };
