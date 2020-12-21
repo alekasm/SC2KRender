@@ -108,6 +108,7 @@ private:
   void AddSecondaryModel(const MapSceneTile&, const Model3D*, const XBLDType);
   void TransformHighwayOnRamp(const MapTile*, Model3D*);
   void TransformHighwayCorners(const std::vector<ModelTileVector>&);
+  void TransformHighwayBridge(const std::vector<ModelTileVector>&);
   void ClusterTiles(const ModelTileVector&, float, std::vector<ModelTileVector>&);
   void RotateModel(int32_t, Model3D*);
   void SetDrawTileWithModel(MapSceneTile&);  

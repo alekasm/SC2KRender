@@ -21,6 +21,8 @@ void Scene::UpdateWindow(HWND hWnd)
   if (m_d3dDevice.Get() == nullptr)
     return; //Don't update window if not pre-initialized
 
+  m_timer.ResetElapsedTime();
+
   RECT WindowRect;
   GetClientRect(hWnd, (LPRECT)&WindowRect);
   ClientToScreen(hWnd, (LPPOINT)&WindowRect.left);
@@ -157,6 +159,7 @@ void Scene::Initialize(MapTile* map_tiles)
   //first = index to v_model3d
   //second = index to tiles
   ModelTileVector highway_model_vec;
+  ModelTileVector highway_bridge_model_vec;
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
@@ -174,6 +177,13 @@ void Scene::Initialize(MapTile* map_tiles)
         sea_tile.SetHeight(map_tile->water_height);
         sea_tile.ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
       }
+      
+      if (map_tile->xbld == XBLD_MARINA && !add_water && render_models)
+      {
+        //t.ColorTile(DirectX::Colors::SC2K_MARINA_FILL);
+      }
+      
+
 #if USING_SPRITES_3D
       if (XBLD_IS_TREE(map_tile->xbld))
       {
@@ -202,9 +212,7 @@ void Scene::Initialize(MapTile* map_tiles)
         XBLD_IS_BUILDING(map_tile->xbld))
       {
         map_orientation = orientation;
-      }
-
-     
+      }     
 
       bool render_tile = single_tile ||
         (!no_xzon && orientation == map_orientation) ||
@@ -214,10 +222,6 @@ void Scene::Initialize(MapTile* map_tiles)
       if (render_tile)
       {
 
-        if (map_tile->xbld == 0x6A)
-        {
-          printf("highway bridge at %d, %d\n", x, y);
-        }
         if (xbld_map.count(map_tile->xbld))
         {
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
@@ -297,16 +301,17 @@ void Scene::Initialize(MapTile* map_tiles)
 
             else if (XBLD_IS_HIGHWAY(map_tile->xbld))
             {
+
               model->origin.y += HIGHWAY_HEIGHT;
+             
               if (XBLD_IS_HIGHWAY_BRIDGE(map_tile->xbld))
               {
                 model->origin.y += HEIGHT_INCREMENT;
               }
               
-              if (XBLD_IS_HIGHWAY_SLOPE(map_tile->xbld) &&
+              else if (XBLD_IS_HIGHWAY_SLOPE(map_tile->xbld) &&
                   map_tile->xter == XTER_HIGHGROUND)
-              {
-                //XBLDType convert;
+              {                
                 switch (map_tile->xbld)
                 {
                 case XBLD_HIGHWAY_SLOPE_1:
@@ -317,22 +322,32 @@ void Scene::Initialize(MapTile* map_tiles)
                 case XBLD_HIGHWAY_SLOPE_4:
                   xbld_value = XBLD_HIGHWAY_1;
                   break;
-                }
+                }                
                 std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
                 it = AssetLoader::mmodels->find(xbld_map.at(xbld_value));
                 model->model = it->second;
-              }              
-            }
-            
+              } 
+
+            } //end XBLD_IS_HIGHWAY   
+
             RotateModel(xbld_value, model);
             v_model3d.push_back(model);
-            AddSecondaryModel(t, model, xbld_value);
+
             if (XBLD_IS_HIGHWAY_CORNER(map_tile->xbld))
             {
               highway_model_vec.push_back(std::make_pair(
                 v_model3d.size() - 1, 
                 x + TILES_DIMENSION * y));
             }
+            else if (XBLD_IS_HIGHWAY_BRIDGE(map_tile->xbld))
+            {
+              highway_bridge_model_vec.push_back(std::make_pair(
+                v_model3d.size() - 1,
+                x + TILES_DIMENSION * y));
+            }
+            
+            AddSecondaryModel(t, model, xbld_value);
+
           }
         }
       }
@@ -343,9 +358,16 @@ void Scene::Initialize(MapTile* map_tiles)
   printf("Map XZON Object Origin (bits 4 - 7): 0x%x\n", map_orientation);
   FillTileEdges();
   FillTunnels();
+
   std::vector<ModelTileVector> highway_clusters;
   ClusterTiles(highway_model_vec, 1.0f, highway_clusters);
   TransformHighwayCorners(highway_clusters);
+
+  std::vector<ModelTileVector> highway_bridge_clusters;
+  ClusterTiles(highway_bridge_model_vec, 1.0f, highway_bridge_clusters);
+  TransformHighwayBridge(highway_bridge_clusters);
+
+  m_position = Vector3(96.f, 12.f, 96.f);
   m_position *= scale;
   SetScale(scale);
 
@@ -1071,7 +1093,7 @@ void Scene::TransformHighwayCorners(const std::vector<ModelTileVector>& clusters
     Model3D* model_cluster_BR = v_model3d[mtv.at(3).first];
     switch (tile_cluster_TL->xbld)
     {
-    case 0x65:
+    case XBLD_HIGHWAY_CORNER_1:
       model_cluster_BL->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
       model_cluster_BL->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
       model_cluster_TR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
@@ -1081,7 +1103,7 @@ void Scene::TransformHighwayCorners(const std::vector<ModelTileVector>& clusters
       model_cluster_BR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
       model_cluster_BR->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
       break;
-    case 0x66:
+    case XBLD_HIGHWAY_CORNER_2:
       //model_cluster_TL->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
       model_cluster_TL->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
       model_cluster_TR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI);
@@ -1091,7 +1113,7 @@ void Scene::TransformHighwayCorners(const std::vector<ModelTileVector>& clusters
       model_cluster_BR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI);
       model_cluster_BR->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
       break;
-    case 0x67:
+    case XBLD_HIGHWAY_CORNER_3:
      model_cluster_TR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
      model_cluster_TR->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
      model_cluster_BL->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
@@ -1101,11 +1123,57 @@ void Scene::TransformHighwayCorners(const std::vector<ModelTileVector>& clusters
      model_cluster_BR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
      model_cluster_BR->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
       break;
-    case 0x68:
+    case XBLD_HIGHWAY_CORNER_4:
       model_cluster_BR->m_world_identity *= DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
       break;
     }
   }
+}
+
+bool IsXZON10(const MapTile* tile)
+{
+  return tile->xzon == 0x10;
+}
+
+
+void Scene::TransformHighwayBridge(const std::vector<ModelTileVector>& clusters)
+{
+  for (ModelTileVector mtv : clusters)
+  {
+    const MapTile* tile_cluster_TL = tiles[mtv.at(0).second].map_tile;
+    const MapTile* tile_cluster_TR = tiles[mtv.at(1).second].map_tile;
+    const MapTile* tile_cluster_BL = tiles[mtv.at(2).second].map_tile;
+    const MapTile* tile_cluster_BR = tiles[mtv.at(3).second].map_tile;
+    const std::vector<const MapTile*> tile_mtv_vec = 
+    {
+      tile_cluster_TL, tile_cluster_TR, tile_cluster_BL, tile_cluster_BR
+    };
+
+    std::vector<const MapTile*>::const_iterator it = std::find_if(tile_mtv_vec.begin(), tile_mtv_vec.end(), IsXZON10);
+    if (it == tile_mtv_vec.end())
+    {
+      printf("Unable to generate Highway Bridge rotations\n");
+      return;
+    }
+    size_t index = it - tile_mtv_vec.begin();
+    BYTE rotation_mask = 0b00000010;
+    bool should_rotate = (tile_mtv_vec.at(index)->xbit & rotation_mask) == rotation_mask;
+    if (should_rotate)
+    {     
+      v_model3d[mtv.at(0).first]->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d[mtv.at(0).first]->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
+      v_model3d[mtv.at(1).first]->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d[mtv.at(1).first]->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
+      v_model3d[mtv.at(2).first]->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d[mtv.at(2).first]->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
+      v_model3d[mtv.at(3).first]->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d[mtv.at(3).first]->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+    }
+  }
+
 }
 
 
@@ -1358,7 +1426,7 @@ void Scene::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_RAIL_SLOPE_1:
   case XBLD_RAIL_SLOPE_3:
   case XBLD_HIGHWAY_2:
-  case XBLD_HIGHWAY_BRIDGE_2:
+  //case XBLD_HIGHWAY_BRIDGE_2:
   case XBLD_HIGHWAY_CROSSOVER_2:
   case XBLD_HIGHWAY_CROSSOVER_4:
   case XBLD_POWER_LINE_2:
@@ -1416,6 +1484,19 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
   case XBLD_HYDROELECTRIC_1:
   case XBLD_HYDROELECTRIC_2:
   case XBLD_ZOO:
+/*
+  case XBLD_ROAD_1:
+  case XBLD_ROAD_2:
+  case XBLD_ROAD_3:
+  case XBLD_ROAD_4:
+  case XBLD_ROAD_5:
+  case XBLD_ROAD_6:
+  case XBLD_ROAD_11:
+  case XBLD_ROAD_12:
+  case XBLD_ROAD_13:
+  case XBLD_ROAD_14:
+  case XBLD_ROAD_15:
+  */
   //case XBLD_MARINA:
     tile.render = false;
     break;
