@@ -255,6 +255,7 @@ enum XBLDType
 enum SceneryObject
 {
   PILLAR = 300,
+  PILLAR_BRIDGE = 301,
   TREE_TRUNKS_1 = 306,
   TREE_TRUNKS_2 = 307,
   TREE_TRUNKS_3 = 308,

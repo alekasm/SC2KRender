@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AssetLoader.cpp" />
     <ClCompile Include="DirectXTK\BasicEffect.cpp" />
     <ClCompile Include="DirectXTK\BasicPostProcess.cpp" />
     <ClCompile Include="DirectXTK\BinaryReader.cpp" />
@@ -178,13 +179,13 @@
     <ClCompile Include="MapSceneTile.cpp" />
     <ClCompile Include="menus\ClientMenu.h" />
     <ClCompile Include="menus\SettingsMenu.h" />
+    <ClCompile Include="ModifyModel.cpp" />
     <ClCompile Include="SC2KRender.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneTile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AssetLoader.h" />
-    <ClInclude Include="AssetMaps.h" />
     <ClInclude Include="ColorConstants.h" />
     <ClInclude Include="DirectXTK.h" />
     <ClInclude Include="DirectXTK\AlignedNew.h" />
@@ -221,6 +222,7 @@
     <ClInclude Include="menus\MenuContext.h" />
     <ClInclude Include="menus\Menus.h" />
     <ClInclude Include="Model3D.h" />
+    <ClInclude Include="ModifyModel.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneTile.h" />

@@ -132,6 +132,12 @@
     <ClCompile Include="menus\SettingsMenu.h">
       <Filter>Header Files</Filter>
     </ClCompile>
+    <ClCompile Include="ModifyModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AssetLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MapData.h">
@@ -257,13 +263,13 @@
     <ClInclude Include="Model3D.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="AssetMaps.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="menus\Menus.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="menus\MenuContext.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ModifyModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
