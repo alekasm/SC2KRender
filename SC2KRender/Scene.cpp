@@ -134,7 +134,11 @@ void Scene::Initialize(Map& map)
 {
   //TODO fix and compare old way of generating map rotation
   map_rotation = map.rotation;
-
+  if (map_tiles != nullptr)
+  {
+    delete[] map_tiles;
+  }
+  map_tiles = map.tiles;
   render_scene = false;
   delete[] tiles;
   delete[] sea_tiles;
@@ -302,7 +306,7 @@ void Scene::Initialize(Map& map)
               }
             }
 
-            else if (map_tile->xbld == XBLD_PIER)
+            else if (map_tile->xbld == XBLD_PIER || map_tile->xbld == XBLD_RUNWAY)
             {
               BYTE bit_check_mask = 0b00000010;
               bool toggled = (map_tile->xbit & bit_check_mask) == bit_check_mask;
@@ -407,7 +411,6 @@ void Scene::Initialize(Map& map)
 
   printf("Rendering %d 3d models\n", v_model3d.size());
   render_scene = true;
-  delete[] map.tiles;
 }
 
 void Scene::CreateDevice()

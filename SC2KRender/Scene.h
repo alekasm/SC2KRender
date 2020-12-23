@@ -184,6 +184,7 @@ private:
   uint32_t map_rotation = 0;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
+  MapTile* map_tiles = nullptr;
   const Map map;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
