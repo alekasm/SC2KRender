@@ -39,7 +39,8 @@ struct Map
   MapTile* tiles;
   int sea_level;
   std::string city_name;
-  //uint32_t founding_year;
-  //uint32_t days_elapsed;
-  //int32_t money_supply;
+  uint32_t founding_year;
+  uint32_t days_elapsed;
+  int32_t money_supply;
+  uint32_t rotation;
 };

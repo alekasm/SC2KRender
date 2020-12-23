@@ -1,8 +1,8 @@
 #pragma once
 #include <string>
-struct MapTile;
+struct Map;
 class MapLoader
 {
 public:
-  static bool LoadMap(std::string filename, MapTile* &tiles);
+  static bool LoadMap(std::string filename, Map &out);
 };

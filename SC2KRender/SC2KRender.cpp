@@ -28,7 +28,6 @@ http://thedemonthrone.ca/projects/rendering-terrain/rendering-terrain-part-10-vi
 #include "menus/Menus.h"
 
 
-MapTile* tiles = nullptr;
 std::unique_ptr<Scene> scene;
 
 extern "C"
@@ -173,10 +172,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
       GetOpenFileName(&ofn);
       std::string filename(ofn.lpstrFile);
-      if (!filename.empty() && MapLoader::LoadMap(filename, tiles))
+      Map map;
+      if (!filename.empty() && MapLoader::LoadMap(filename, map))
       {
         SetWindowTextA(MenuContext::hWndClient, std::string("SC2KRender - " + filename).c_str());
-        scene->Initialize(tiles);
+        scene->Initialize(map);
         scene->SetFocus(true);
       }
     }

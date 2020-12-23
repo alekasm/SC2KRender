@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 #include <type_traits>
+#include <vector>
 
 //http://djm.cc/simcity-2000-info.txt
 
@@ -20,24 +21,7 @@ void UnimplementedFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   fseek(file, segment_size, SEEK_CUR);
 }
-/*
-void ExtractMISCFunction(FILE* file, uint32_t segment_size, Map& map)
-{  
-  printf("Reading MISC(0x%x), Size: %d\n", ftell(file), segment_size);
-  uint16_t remainder = segment_size % 2;
-  uint16_t read_size = segment_size - remainder;
-  printf("Read Size: %d, Remainder: %d\n", read_size, remainder);
-  uint32_t* misc_data = new uint32_t[read_size];
-  fread(&*misc_data, read_size, 1, file);  
-  fseek(file, remainder, SEEK_CUR);
-  if (read_size > 4)
-  {
-    map.founding_year = _byteswap_ulong(misc_data[3]);
-    map.days_elapsed = _byteswap_ulong(misc_data[4]);
-    map.money_supply = static_cast<int32_t>(_byteswap_ulong(misc_data[5]));
-  }
-}
-*/
+
 void ExtractCNAMFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   //Assume in this case segment_size always = 32
@@ -48,6 +32,53 @@ void ExtractCNAMFunction(FILE* file, uint32_t segment_size, Map& map)
   //Remove unit separator
   city_name.erase(remove(city_name.begin(), city_name.end(), 0x1F), city_name.end()); 
   map.city_name = city_name;  
+}
+
+template <typename Type>
+Type BigEndianByteToType(std::vector<BYTE> bytes)
+{
+  return (Type)((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3] << 0));
+}
+
+void ExtractMISCFunction(FILE* file, uint32_t segment_size, Map& map)
+{
+  printf("Reading MISC(0x%x), Size: %d\n", ftell(file), segment_size);
+
+  unsigned int start_pos = ftell(file);
+  std::vector<BYTE> values;
+  while (ftell(file) - start_pos < segment_size)
+  {
+    BYTE size_data;
+    fread(&size_data, sizeof(BYTE), 1, file);
+    bool repeat_compression = size_data > 128;
+    if (repeat_compression)
+    {
+      int repeat_amount = static_cast<int>(size_data) - 127;
+      BYTE tile_type_data;
+      fread(&tile_type_data, sizeof(BYTE), 1, file);
+      for (int row_repeat = 0; row_repeat < repeat_amount; ++row_repeat)
+      {
+        values.push_back(tile_type_data);
+      }
+    }
+    else
+    {
+      for (int row_index = 0; row_index < size_data; ++row_index)
+      {
+        BYTE tile_type_data;
+        fread(&tile_type_data, sizeof(BYTE), 1, file);
+        values.push_back(tile_type_data);
+      }
+    }
+  }
+
+  std::vector<BYTE> year_founded(values.begin() + 0xC, values.begin() + 0xC + 0x4);
+  std::vector<BYTE> rotation(values.begin() + 0x8, values.begin() + 0x8 + 0x4);
+  std::vector<BYTE> money(values.begin() + 0x14, values.begin() + 0x14 + 0x4);
+
+  map.founding_year = BigEndianByteToType<uint32_t>(year_founded);
+  map.rotation = BigEndianByteToType<uint32_t>(rotation);
+  map.money_supply = BigEndianByteToType<int32_t>(money);
 }
 
 void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
@@ -100,7 +131,7 @@ void DecompressData(FILE* file, uint32_t segment_size, Map& map)
 {
   //printf("Reading XTER(0x%x), Size: %d\n", ftell(file), segment_size);
   /*
-  This data segment uses a compression scheme. The first byte is a "data_size" byte whichw
+  This data segment uses a compression scheme. The first byte is a "data_size" byte which
   says how many bytes to read. If the size > 128, then it's "compressed" otherwise it's
   uncompressed.
 
@@ -169,13 +200,11 @@ void ExtractXZONFunction(FILE* file, uint32_t segment_size, Map& map)
   DecompressData<XZONType>(file, segment_size, map);
 }
 
-
 void ExtractXUNDFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading XUND(0x%x), Size: %d\n", ftell(file), segment_size);
   DecompressData<XUNDType>(file, segment_size, map);
 }
-
 
 void ExtractXBITFunction(FILE* file, uint32_t segment_size, Map& map)
 {
@@ -194,11 +223,12 @@ namespace
     {"XBLD", ExtractXBLDFunction},
     {"XZON", ExtractXZONFunction},
     {"XUND", ExtractXUNDFunction},
-    {"XBIT", ExtractXBITFunction}
+    {"XBIT", ExtractXBITFunction},
+    {"MISC", ExtractMISCFunction}
   };
 }
 
-bool MapLoader::LoadMap(std::string filename, MapTile* &tile_out)
+bool MapLoader::LoadMap(std::string filename, Map& out)
 {
   FILE* file;
   int result = fopen_s(&file, filename.c_str(), "rb");
@@ -247,6 +277,6 @@ bool MapLoader::LoadMap(std::string filename, MapTile* &tile_out)
   //printf("Money Supply: %d\n", map.money_supply);
 
   fclose(file);
-  tile_out = map.tiles;
+  out = map;
   return true;
 }

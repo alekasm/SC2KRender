@@ -130,8 +130,11 @@ void Scene::SetRenderDistance(float value)
   }
 }
 
-void Scene::Initialize(MapTile* map_tiles)
+void Scene::Initialize(Map& map)
 {
+  //TODO fix and compare old way of generating map rotation
+  map_rotation = map.rotation;
+
   render_scene = false;
   delete[] tiles;
   delete[] sea_tiles;
@@ -166,7 +169,7 @@ void Scene::Initialize(MapTile* map_tiles)
     {
       MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
       t.SetOrigin(x, y);
-      const MapTile* map_tile = &map_tiles[x + TILES_DIMENSION * y];
+      const MapTile* map_tile = &map.tiles[x + TILES_DIMENSION * y];
       t.FillAttributes(map_tile);
       //bool add_water = map_tile->height < map_tile->water_height || map_tile->type / 0x10 == 3;
       bool add_water = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
@@ -299,6 +302,32 @@ void Scene::Initialize(MapTile* map_tiles)
               }
             }
 
+            else if (map_tile->xbld == XBLD_PIER)
+            {
+              BYTE bit_check_mask = 0b00000010;
+              bool toggled = (map_tile->xbit & bit_check_mask) == bit_check_mask;
+              bool rotate;
+              switch (map_rotation)
+              {              
+              case 0:
+              case 2:
+                rotate = !toggled;
+                break;
+              case 1:
+              case 3:
+                rotate = toggled;
+                break;
+              default:
+                rotate = false;
+                break;
+              }
+              if (rotate)
+              {
+                model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+                model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
+              }
+            }
+
             else if (XBLD_IS_HIGHWAY(map_tile->xbld))
             {
 
@@ -356,6 +385,11 @@ void Scene::Initialize(MapTile* map_tiles)
   }
 
   printf("Map XZON Object Origin (bits 4 - 7): 0x%x\n", map_orientation);
+  printf("Map Rotation: %d\n", map.rotation);
+  printf("Money: %d\n", map.money_supply);
+  printf("City Age: %d\n", map.days_elapsed);
+  printf("City Founded: %d\n", map.founding_year);
+  
   FillTileEdges();
   FillTunnels();
 
@@ -373,6 +407,7 @@ void Scene::Initialize(MapTile* map_tiles)
 
   printf("Rendering %d 3d models\n", v_model3d.size());
   render_scene = true;
+  delete[] map.tiles;
 }
 
 void Scene::CreateDevice()
@@ -1430,6 +1465,7 @@ void Scene::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_HIGHWAY_CROSSOVER_2:
   case XBLD_HIGHWAY_CROSSOVER_4:
   case XBLD_POWER_LINE_2:
+  case XBLD_HIGHWAY_CROSSOVER_6:
   //case XBLD_HIGHWAY_CORNER_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);

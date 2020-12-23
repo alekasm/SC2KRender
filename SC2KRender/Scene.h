@@ -45,7 +45,7 @@ typedef std::vector<std::pair<size_t, size_t>> ModelTileVector;
 class Scene
 {
 public:
-  void Initialize(MapTile* tiles);
+  void Initialize(Map&);
   void PreInitialize(HWND window);
   void UpdateWindow(HWND window);
   void MouseLook(int x, int y);
@@ -181,8 +181,10 @@ private:
   float render_distance = 128.f;
   float scaled_render_distance = render_distance * scale;
   BYTE map_orientation = 0x0;
+  uint32_t map_rotation = 0;
   MapSceneTile* tiles = nullptr;
   SceneTile* sea_tiles = nullptr;
+  const Map map;
   std::vector<DirectX::VertexPositionColor> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
   std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
