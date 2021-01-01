@@ -223,6 +223,7 @@
     <ClInclude Include="menus\Menus.h" />
     <ClInclude Include="Model3D.h" />
     <ClInclude Include="ModifyModel.h" />
+    <ClInclude Include="QuadSceneTile.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneTile.h" />

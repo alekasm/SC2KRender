@@ -5,10 +5,12 @@
 #include "Sprite2D.h"
 #include "Model3D.h"
 #include "ModifyModel.h"
+#include "QuadSceneTile.h"
 
 #define USING_SPRITES_3D FALSE
 #define USING_SPRITES_2D FALSE
 #define USING_MODELS TRUE
+#define ARRAY_LENGTH TILES_DIMENSION * TILES_DIMENSION
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
@@ -140,9 +142,9 @@ void Scene::Initialize(Map& map)
   }
   map_tiles = map.tiles;
   render_scene = false;
-  delete[] tiles;
-  delete[] sea_tiles;
-  fill_tiles.clear();
+  
+  //delete[] sea_tiles;
+  
   while (!v_sprite3d.empty())
   {
     delete v_sprite3d.at(0);
@@ -159,9 +161,35 @@ void Scene::Initialize(Map& map)
     v_model3d.erase(v_model3d.begin());
   }
 
+  while (!fill_tiles.empty())
+  {
+    delete fill_tiles.at(0);
+    fill_tiles.erase(fill_tiles.begin());
+  }
+
+  if (tiles != nullptr)
+  {
+    for (size_t i = 0; i < ARRAY_LENGTH; ++i)
+    {
+      delete tiles[i];
+    }
+    delete[] tiles;
+    tiles = nullptr;
+  }
+
+  if (sea_tiles != nullptr)
+  {
+    for (size_t i = 0; i < ARRAY_LENGTH; ++i)
+    {
+      delete sea_tiles[i];
+    }
+    delete[] sea_tiles;
+    sea_tiles = nullptr;
+  }
+
   map_orientation = 0b0000;
-  tiles = new MapSceneTile[TILES_DIMENSION * TILES_DIMENSION];
-  sea_tiles = new SceneTile[TILES_DIMENSION * TILES_DIMENSION];
+  tiles = new MapSceneTile*[TILES_DIMENSION * TILES_DIMENSION];
+  sea_tiles = new SceneTile*[TILES_DIMENSION * TILES_DIMENSION];
 
   //first = index to v_model3d
   //second = index to tiles
@@ -171,21 +199,26 @@ void Scene::Initialize(Map& map)
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
-      MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
-      t.SetOrigin(x, y);
+      MapSceneTile* t = new MapSceneTile();
+      SceneTile* sea_tile = new SceneTile();
+
+      tiles[x + TILES_DIMENSION * y] = t;
+      sea_tiles[x + TILES_DIMENSION * y] = sea_tile;
+
+      t->SetOrigin(x, y);
       const MapTile* map_tile = &map.tiles[x + TILES_DIMENSION * y];
-      t.FillAttributes(map_tile);
+      t->FillAttributes(map_tile);
       //bool add_water = map_tile->height < map_tile->water_height || map_tile->type / 0x10 == 3;
-      bool add_water = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
-      if (add_water)
+      //bool add_water = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
+      if (t->sea_tile)
       {
-        SceneTile& sea_tile = sea_tiles[x + TILES_DIMENSION * y];
-        sea_tile.SetOrigin(x, y);
-        sea_tile.SetHeight(map_tile->water_height);
-        sea_tile.ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
+        sea_tile->SetOrigin(x, y);
+        sea_tile->SetHeight(map_tile->water_height);
+        sea_tile->ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
+        sea_tile->fill_color = DirectX::Colors::SC2K_SEA_BLUE;
       }
       
-      if (map_tile->xbld == XBLD_MARINA && !add_water && render_models)
+      if (map_tile->xbld == XBLD_MARINA && !t->sea_tile && render_models)
       {
         //t.ColorTile(DirectX::Colors::SC2K_MARINA_FILL);
       }
@@ -235,7 +268,7 @@ void Scene::Initialize(Map& map)
           it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
           {
-            DirectX::SimpleMath::Vector3 position = t.v_pos[VPos::TOP_LEFT];
+            DirectX::SimpleMath::Vector3 position = t->v_pos[VPos::TOP_LEFT];
             Model3D* model = new Model3D(it->second, position);
 
             if (map_tile->xbit & 0b0100) //appears to be a "water tile"
@@ -271,18 +304,18 @@ void Scene::Initialize(Map& map)
 
             else if (XBLD_IS_TUNNEL(map_tile->xbld))
             {
-              model->origin.y = t.height;
+              model->origin.y = t->height;
             }
 
             else if (XBLD_IS_TREES(map_tile->xbld))
             {
               if (map_tile->xter != XTER_FLAT)
               { //raise the trees on sloped terrains to add extended trunks
-                model->origin.y = t.height + 1.f;
+                model->origin.y = t->height + 1.f;
               }
               else
               {
-                model->origin.y = t.height;
+                model->origin.y = t->height;
               }
             }
 
@@ -290,11 +323,11 @@ void Scene::Initialize(Map& map)
             {
               if (map_tile->xter != XTER_FLAT)
               { //raise the trees on sloped terrains to add extended trunks
-                model->origin.y = t.height + HEIGHT_INCREMENT / 2.f; //midpoint
+                model->origin.y = t->height + HEIGHT_INCREMENT / 2.f; //midpoint
               }
               else
               {
-                model->origin.y = t.height;
+                model->origin.y = t->height;
               }
             }
 
@@ -302,7 +335,7 @@ void Scene::Initialize(Map& map)
             {
               if (map_tile->xter == XTER_WATERFALL)
               {
-                t.SetHeight(map_tile->height);
+                t->SetHeight(map_tile->height);
               }
             }
 
@@ -394,7 +427,11 @@ void Scene::Initialize(Map& map)
   printf("City Age: %d\n", map.days_elapsed);
   printf("City Founded: %d\n", map.founding_year);
   
-  FillTileEdges();
+  //SetRenderModels(false);
+
+  FillTileEdges((SceneTile**)tiles);
+  FillTileEdges(sea_tiles);
+  //SetRenderModels(true);
   ModifyModel::FillTunnels(tiles, &v_model3d);
 
   std::vector<ModelTileVector> highway_clusters;
@@ -748,16 +785,16 @@ void Scene::MouseClick()
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
-      MapSceneTile& t = tiles[x + TILES_DIMENSION * y];
+      MapSceneTile* t = tiles[x + TILES_DIMENSION * y];
       float distance1, distance2;
-      bool tri1 = ray.Intersects(t.v_pos[VPos::TOP_LEFT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance1);
-      bool tri2 = ray.Intersects(t.v_pos[VPos::BOTTOM_RIGHT], t.v_pos[VPos::BOTTOM_LEFT], t.v_pos[VPos::TOP_RIGHT], distance2);
+      bool tri1 = ray.Intersects(t->v_pos[VPos::TOP_LEFT], t->v_pos[VPos::BOTTOM_LEFT], t->v_pos[VPos::TOP_RIGHT], distance1);
+      bool tri2 = ray.Intersects(t->v_pos[VPos::BOTTOM_RIGHT], t->v_pos[VPos::BOTTOM_LEFT], t->v_pos[VPos::TOP_RIGHT], distance2);
       if (tri1 || tri2)
       {
-        t.ColorTile(DirectX::Colors::Crimson);
+        t->ColorTile(DirectX::Colors::Crimson);
         printf("[Debug] Map Tile(%d, %d): Map Height: %d, XTER: %x, Water Height:%d, ALTM: %d, XBLD: %x, XZON: %x, XUND: %x, XBIT: %x\n",
-          x, y, t.map_tile->height, t.map_tile->xter, t.map_tile->water_height, t.map_tile->altm, t.map_tile->xbld, t.map_tile->xzon,
-          t.map_tile->xund, t.map_tile->xbit);
+          x, y, t->map_tile->height, t->map_tile->xter, t->map_tile->water_height, t->map_tile->altm, t->map_tile->xbld, t->map_tile->xzon,
+          t->map_tile->xund, t->map_tile->xbit);
         return;
       }
     }
@@ -772,6 +809,28 @@ void Scene::MultiplyMovementSpeed(float value)
 void Scene::SetRenderModels(bool value)
 {
   render_models = value;
+  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+  {
+    for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+    {
+      const MapSceneTile* t = tiles[x + TILES_DIMENSION * y];
+      if (XBLD_IS_HYDROELECTRIC(t->map_tile->xbld))
+      {
+        if (t->map_tile->xter == XTER_WATERFALL)
+        {
+          if (render_models)
+          {
+            //t.SetHeight(t.map_tile->height);
+          }
+          else
+          {
+            //t.FillAttributes(t.map_tile);
+          }
+          
+        }
+      }
+    }
+  }
 }
 
 
@@ -876,18 +935,19 @@ void Scene::Render()
     m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
 
     m_batch->Begin();
-    for (unsigned int quad_ix = 0; quad_ix < fill_tiles.size(); quad_ix += 4)
+
+    for (const QuadSceneTile* qst : fill_tiles)
     {
-      m_batch->DrawQuad(fill_tiles[quad_ix], fill_tiles[quad_ix + 1], fill_tiles[quad_ix + 2], fill_tiles[quad_ix + 3]);
+      m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
     }
 
     for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
     {
-      const SceneTile& t = tiles[i]; //object slice is ok
-      if (t.render || !render_models)
+      const SceneTile* t = tiles[i]; //object slice is ok
+      if (t->render || !render_models)
       {
-        m_batch->DrawTriangle(t.vpc_pos[VPos::TOP_LEFT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
-        m_batch->DrawTriangle(t.vpc_pos[VPos::BOTTOM_RIGHT], t.vpc_pos[VPos::BOTTOM_LEFT], t.vpc_pos[VPos::TOP_RIGHT]);
+        m_batch->DrawTriangle(t->vpc_pos[VPos::TOP_LEFT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
+        m_batch->DrawTriangle(t->vpc_pos[VPos::BOTTOM_RIGHT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
       }
     }
     m_batch->End();
@@ -897,11 +957,11 @@ void Scene::Render()
     m_batch->Begin();
     for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
     {
-      const SceneTile& w = sea_tiles[i];
-      if (w.height > -1.f && w.render)
+      const SceneTile* w = sea_tiles[i];
+      if (w->height > -1.f && w->render)
       {
-        m_batch->DrawTriangle(w.vpc_pos[VPos::TOP_LEFT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
-        m_batch->DrawTriangle(w.vpc_pos[VPos::BOTTOM_RIGHT], w.vpc_pos[VPos::BOTTOM_LEFT], w.vpc_pos[VPos::TOP_RIGHT]);
+        m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
+        m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
       }
     }
     m_batch->End();
@@ -978,34 +1038,34 @@ void Scene::Render()
 
 }
 
-BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge edge)
-{
+BOOL Scene::FillMapSceneTile(const SceneTile* a, const SceneTile* b, Edge edge)
+{  
   Vector3 a1, a2, b1, b2;
   switch (edge)
   {
   case LEFT:
-    a1 = a.v_pos[VPos::TOP_LEFT];
-    a2 = a.v_pos[VPos::BOTTOM_LEFT];
-    b1 = b.v_pos[VPos::TOP_RIGHT];
-    b2 = b.v_pos[VPos::BOTTOM_RIGHT];
+    a1 = a->v_pos[VPos::TOP_LEFT];
+    a2 = a->v_pos[VPos::BOTTOM_LEFT];
+    b1 = b->v_pos[VPos::TOP_RIGHT];
+    b2 = b->v_pos[VPos::BOTTOM_RIGHT];
     break;
   case RIGHT:
-    a1 = a.v_pos[VPos::TOP_RIGHT];
-    a2 = a.v_pos[VPos::BOTTOM_RIGHT];
-    b1 = b.v_pos[VPos::TOP_LEFT];
-    b2 = b.v_pos[VPos::BOTTOM_LEFT];
+    a1 = a->v_pos[VPos::TOP_RIGHT];
+    a2 = a->v_pos[VPos::BOTTOM_RIGHT];
+    b1 = b->v_pos[VPos::TOP_LEFT];
+    b2 = b->v_pos[VPos::BOTTOM_LEFT];
     break;
   case TOP:
-    a1 = a.v_pos[VPos::TOP_LEFT];
-    a2 = a.v_pos[VPos::TOP_RIGHT];
-    b1 = b.v_pos[VPos::BOTTOM_LEFT];
-    b2 = b.v_pos[VPos::BOTTOM_RIGHT];
+    a1 = a->v_pos[VPos::TOP_LEFT];
+    a2 = a->v_pos[VPos::TOP_RIGHT];
+    b1 = b->v_pos[VPos::BOTTOM_LEFT];
+    b2 = b->v_pos[VPos::BOTTOM_RIGHT];
     break;
   case BOTTOM:
-    a1 = a.v_pos[VPos::BOTTOM_LEFT];
-    a2 = a.v_pos[VPos::BOTTOM_RIGHT];
-    b1 = b.v_pos[VPos::TOP_LEFT];
-    b2 = b.v_pos[VPos::TOP_RIGHT];
+    a1 = a->v_pos[VPos::BOTTOM_LEFT];
+    a2 = a->v_pos[VPos::BOTTOM_RIGHT];
+    b1 = b->v_pos[VPos::TOP_LEFT];
+    b2 = b->v_pos[VPos::TOP_RIGHT];
     break;
   }
 
@@ -1013,19 +1073,21 @@ BOOL Scene::FillMapSceneTile(const MapSceneTile& a, const MapSceneTile& b, Edge 
   if (winner == 0.f)
     return FALSE;
 
-  XTERType winner_type = winner > 0.f ? a.map_tile->xter : b.map_tile->xter;
-  DirectX::XMVECTORF32 winner_color = winner_type == XTER_WATERFALL ?
-    DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT : DirectX::Colors::SC2K_DIRT_DARKEST;
-  fill_tiles.push_back(DirectX::VertexPositionColor(a1, winner_color));
-  fill_tiles.push_back(DirectX::VertexPositionColor(a2, winner_color));
-  fill_tiles.push_back(DirectX::VertexPositionColor(b2, winner_color));
-  fill_tiles.push_back(DirectX::VertexPositionColor(b1, winner_color));
+  const SceneTile* winner_tile = winner > 0.f ? a : b;
+  DirectX::XMVECTORF32 winner_color = winner_tile->fill_color;
+
+  QuadSceneTile* qst = new QuadSceneTile();
+  qst->vpc[0] = DirectX::VertexPositionColor(a1, winner_color);
+  qst->vpc[1] = DirectX::VertexPositionColor(a2, winner_color);
+  qst->vpc[2] = DirectX::VertexPositionColor(b2, winner_color);
+  qst->vpc[3] = DirectX::VertexPositionColor(b1, winner_color);
+  fill_tiles.push_back(qst);
   return TRUE;
 }
 
 BOOL Scene::FillEdgeSceneTile(unsigned int index, Edge edge)
 {
-  const MapSceneTile& a = tiles[index];
+  const MapSceneTile* a = tiles[index];
   Vector3 a1, a2, b1, b2;
   SceneTile::VertexPos pos1, pos2;
   switch (edge)
@@ -1047,27 +1109,31 @@ BOOL Scene::FillEdgeSceneTile(unsigned int index, Edge edge)
     pos2 = VPos::BOTTOM_RIGHT;
     break;
   }
-  a1 = a.v_pos[pos1];
-  a2 = a.v_pos[pos2];
+  a1 = a->v_pos[pos1];
+  a2 = a->v_pos[pos2];
   b1 = Vector3(a1.x, 0.f, a1.z);
   b2 = Vector3(a2.x, 0.f, a2.z);
 
-  fill_tiles.push_back(DirectX::VertexPositionColor(a1, DirectX::Colors::SC2K_DIRT_DARKEST));
-  fill_tiles.push_back(DirectX::VertexPositionColor(a2, DirectX::Colors::SC2K_DIRT_DARKEST));
-  fill_tiles.push_back(DirectX::VertexPositionColor(b2, DirectX::Colors::SC2K_DIRT_DARKEST));
-  fill_tiles.push_back(DirectX::VertexPositionColor(b1, DirectX::Colors::SC2K_DIRT_DARKEST));
-  const SceneTile& w = sea_tiles[index];
-  if (w.height > -1)
+  QuadSceneTile* qst = new QuadSceneTile();
+  qst->vpc[0] = DirectX::VertexPositionColor(a1, DirectX::Colors::SC2K_DIRT_DARKEST);
+  qst->vpc[1] = DirectX::VertexPositionColor(a2, DirectX::Colors::SC2K_DIRT_DARKEST);
+  qst->vpc[2] = DirectX::VertexPositionColor(b2, DirectX::Colors::SC2K_DIRT_DARKEST);
+  qst->vpc[3] = DirectX::VertexPositionColor(b1, DirectX::Colors::SC2K_DIRT_DARKEST);
+  fill_tiles.push_back(qst);
+  const SceneTile* w = sea_tiles[index];
+  if (w->height > -1)
   {
-    fill_tiles.push_back(DirectX::VertexPositionColor(w.v_pos[pos1], DirectX::Colors::SC2K_SEA_BLUE));
-    fill_tiles.push_back(DirectX::VertexPositionColor(w.v_pos[pos2], DirectX::Colors::SC2K_SEA_BLUE));
-    fill_tiles.push_back(DirectX::VertexPositionColor(a2, DirectX::Colors::SC2K_SEA_BLUE));
-    fill_tiles.push_back(DirectX::VertexPositionColor(a1, DirectX::Colors::SC2K_SEA_BLUE));
+    QuadSceneTile* qst_sea = new QuadSceneTile();
+    qst_sea->vpc[0] = DirectX::VertexPositionColor(w->v_pos[pos1], DirectX::Colors::SC2K_SEA_BLUE);
+    qst_sea->vpc[1] = DirectX::VertexPositionColor(w->v_pos[pos2], DirectX::Colors::SC2K_SEA_BLUE);
+    qst_sea->vpc[2] = DirectX::VertexPositionColor(a2, DirectX::Colors::SC2K_SEA_BLUE);
+    qst_sea->vpc[3] = DirectX::VertexPositionColor(a1, DirectX::Colors::SC2K_SEA_BLUE);
+    fill_tiles.push_back(qst_sea);
   }
   return TRUE;
 }
 
-void Scene::FillTileEdges()
+void Scene::FillTileEdges(SceneTile** p_tiles)
 {
   //Fill-in tile polygons using minimal vertices, compare using top and left tiles.
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
@@ -1075,14 +1141,16 @@ void Scene::FillTileEdges()
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       unsigned int index = x + TILES_DIMENSION * y;
-      const MapSceneTile& this_tile = tiles[index];
+      SceneTile* this_tile = p_tiles[index];
+      
       if (x == 0)
       {
         FillEdgeSceneTile(index, Edge::LEFT);
       }
       else if (x > 0)
-      {
-        const MapSceneTile& cmp_left = tiles[(x - 1) + TILES_DIMENSION * y];
+      { 
+        unsigned int cmp_left_index = (x - 1) + TILES_DIMENSION * y;
+        SceneTile* cmp_left = p_tiles[cmp_left_index];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
         if (x + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::RIGHT);
@@ -1094,7 +1162,8 @@ void Scene::FillTileEdges()
       }
       else if (y > 0)
       {
-        const MapSceneTile& cmp_top = tiles[x + TILES_DIMENSION * (y - 1)];
+        unsigned int cmp_top_index = x + TILES_DIMENSION * (y - 1);
+        SceneTile* cmp_top = p_tiles[cmp_top_index];
         FillMapSceneTile(this_tile, cmp_top, Edge::TOP);
         if (y + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::BOTTOM);
@@ -1120,7 +1189,7 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
   ModelTileVector::const_iterator vec_it;
   for (vec_it = vec.begin(); vec_it != vec.end(); ++vec_it)
   {
-    const MapTile* tile = tiles[vec_it->second].map_tile;
+    const MapTile* tile = tiles[vec_it->second]->map_tile;
     int x1 = vec_it->second % 128;
     int y1 = vec_it->second / 128;
     
@@ -1130,7 +1199,7 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
     {
       for (std::pair<size_t, size_t> cluster : *cluster_it)
       {
-        const MapTile* tile_cluster = tiles[cluster.second].map_tile;
+        const MapTile* tile_cluster = tiles[cluster.second]->map_tile;
         int x2 = cluster.second % 128;
         int y2 = cluster.second / 128;   
 
@@ -1184,18 +1253,19 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
   }
 }
 
-
-void Scene::SetDrawTileWithModel(MapSceneTile& tile)
+void Scene::SetDrawTileWithModel(MapSceneTile* tile)
 {
-  switch (tile.map_tile->xbld)
+  switch (tile->map_tile->xbld)
   {
   case XBLD_TUNNEL_1:
   case XBLD_TUNNEL_2:
   case XBLD_TUNNEL_3:
   case XBLD_TUNNEL_4:
-  case XBLD_HYDROELECTRIC_1:
-  case XBLD_HYDROELECTRIC_2:
+  //case XBLD_HYDROELECTRIC_1:
+  //case XBLD_HYDROELECTRIC_2:
   case XBLD_ZOO:
+  case 0xFC:
+  case 0xFD:
 /*
   case XBLD_ROAD_1:
   case XBLD_ROAD_2:
@@ -1210,7 +1280,7 @@ void Scene::SetDrawTileWithModel(MapSceneTile& tile)
   case XBLD_ROAD_15:
   */
   //case XBLD_MARINA:
-    tile.render = false;
+    tile->render = false;
     break;
   }
 }

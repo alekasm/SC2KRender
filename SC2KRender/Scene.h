@@ -22,6 +22,7 @@
 #pragma comment(lib, "dwrite")
 
 struct SceneTile;
+struct QuadSceneTile;
 struct MapSceneTile;
 struct Sprite2D;
 struct Sprite3D;
@@ -103,11 +104,11 @@ private:
   void CreateDevice();
   void CreateResources();
   void Clear();  
-  void FillTileEdges();
+  void FillTileEdges(SceneTile**);
   void ClusterTiles(const ModelTileVector&, float, std::vector<ModelTileVector>&);
-  void SetDrawTileWithModel(MapSceneTile&);  
+  void SetDrawTileWithModel(MapSceneTile*);  
   
-  BOOL FillMapSceneTile(const MapSceneTile&, const MapSceneTile&, Edge);
+  BOOL FillMapSceneTile(const SceneTile* a, const SceneTile* b, Edge edge);
   BOOL FillEdgeSceneTile(unsigned int, Edge);
 
   //void DrawModel(Model3D*);
@@ -176,11 +177,11 @@ private:
   float scaled_render_distance = render_distance * scale;
   BYTE map_orientation = 0x0;
   uint32_t map_rotation = 0;
-  MapSceneTile* tiles = nullptr;
-  SceneTile* sea_tiles = nullptr;
+  MapSceneTile** tiles = nullptr;
+  SceneTile** sea_tiles = nullptr;
   MapTile* map_tiles = nullptr;
   const Map map;
-  std::vector<DirectX::VertexPositionColor> fill_tiles;
+  std::vector<QuadSceneTile*> fill_tiles;
   DirectX::SimpleMath::Vector3 m_position;
   std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
   std::vector<Sprite3D*> v_sprite3d;

@@ -3,6 +3,7 @@
 void MapSceneTile::FillAttributes(const MapTile* tile)
 {
   map_tile = tile;
+  sea_tile = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
   if (tile->xter / 0x10 == 3)
   {
     SetHeight(tile->height - 1);   
@@ -150,6 +151,7 @@ void MapSceneTile::FillAttributes(const MapTile* tile)
     v_pos[BOTTOM_RIGHT].y += HEIGHT_INCREMENT * 2;
     v_pos[BOTTOM_LEFT].y += HEIGHT_INCREMENT * 2;
     ColorTile(DirectX::Colors::SC2K_SEA_BLUE_STATIC);
+    fill_color = DirectX::Colors::SC2K_SEA_BLUE_STATIC_BRIGHT;
     break;
   case XTER_FLAT:
   case XTER_WATER_SUBMERGED_FLAT:

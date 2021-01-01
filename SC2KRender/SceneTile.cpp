@@ -6,6 +6,12 @@ SceneTile::SceneTile()
   c_pos[BOTTOM_LEFT] = DirectX::Colors::SC2K_DIRT_NORMAL;
   c_pos[TOP_RIGHT] = DirectX::Colors::SC2K_DIRT_NORMAL;
   c_pos[BOTTOM_RIGHT] = DirectX::Colors::SC2K_DIRT_NORMAL;
+  v_pos[TOP_LEFT] = Vector3::Zero;
+  v_pos[BOTTOM_LEFT] = Vector3::Zero;
+  v_pos[TOP_RIGHT] = Vector3::Zero;
+  v_pos[BOTTOM_RIGHT] = Vector3::Zero;
+  fill_color = DirectX::Colors::SC2K_DIRT_DARKEST;
+  CreateVertexPositionColors();
 }
 
 void SceneTile::CreateVertexPositionColors()
@@ -44,6 +50,7 @@ void SceneTile::SetHeight(int height)
   v_pos[TOP_RIGHT].y = this->height;
   v_pos[BOTTOM_LEFT].y = this->height;
   v_pos[BOTTOM_RIGHT].y = this->height;
+  CreateVertexPositionColors();
 }
 
 void SceneTile::SetOrigin(unsigned int x, unsigned int y)

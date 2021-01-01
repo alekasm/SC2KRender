@@ -21,6 +21,8 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_HIGHWAY_CROSSOVER_4:
   case XBLD_POWER_LINE_2:
   case XBLD_HIGHWAY_CROSSOVER_6:
+  //case XBLD_HYDROELECTRIC_1:
+  //case XBLD_HYDROELECTRIC_2:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
@@ -66,12 +68,12 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
 * existing models. Separate models may look better, or be more appropriate in
 * the future.
 */
-void ModifyModel::AddSecondaryModel(const MapSceneTile& t,
+void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
   const Model3D* rmodel,
   const XBLDType xbld,
   std::vector<Model3D*>* v_model3d)
 {
-  if (t.map_tile->xter == XTER_FLAT && XBLD_IS_TREE(xbld))
+  if (t->map_tile->xter == XTER_FLAT && XBLD_IS_TREE(xbld))
   { //only add trunks if on a slope
     return;
   }
@@ -135,10 +137,10 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile& t,
   {
     return; //TODO this is an error
   }
-  float height = t.map_tile->height * HEIGHT_INCREMENT;
+  float height = t->map_tile->height * HEIGHT_INCREMENT;
 
 add_model:
-  Vector3 reference_tile(t.v_pos[SceneTile::VertexPos::TOP_LEFT]);
+  Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
   reference_tile.y = height;
   Model3D* model = new Model3D(it->second, reference_tile);
   ModifyModel::RotateModel(model_id, model);
@@ -168,13 +170,13 @@ void ModifyModel::TransformHighwayOnRamp(const MapTile* map_tile, Model3D* model
   }
 }
 
-void ModifyModel::TransformHighwayCorners(MapSceneTile* tiles, 
+void ModifyModel::TransformHighwayCorners(MapSceneTile** tiles, 
   std::vector<Model3D*>* v_model3d, 
   const std::vector<ModelTileVector>& clusters)
 {
   for (ModelTileVector mtv : clusters)
   {
-    const MapTile* tile_cluster_TL = tiles[mtv.at(0).second].map_tile;
+    const MapTile* tile_cluster_TL = tiles[mtv.at(0).second]->map_tile;
     Model3D* model_cluster_TL = v_model3d->operator[](mtv.at(0).first);
     Model3D* model_cluster_TR = v_model3d->operator[](mtv.at(1).first);
     Model3D* model_cluster_BL = v_model3d->operator[](mtv.at(2).first);
@@ -223,15 +225,15 @@ bool IsXZON10(const MapTile* tile)
   return tile->xzon == 0x10;
 }
 
-void ModifyModel::TransformHighwayBridge(MapSceneTile* tiles, std::vector<Model3D*>* v_model3d, 
+void ModifyModel::TransformHighwayBridge(MapSceneTile** tiles, std::vector<Model3D*>* v_model3d, 
   const std::vector<ModelTileVector>& clusters)
 {
   for (ModelTileVector mtv : clusters)
   {
-    const MapTile* tile_cluster_TL = tiles[mtv.at(0).second].map_tile;
-    const MapTile* tile_cluster_TR = tiles[mtv.at(1).second].map_tile;
-    const MapTile* tile_cluster_BL = tiles[mtv.at(2).second].map_tile;
-    const MapTile* tile_cluster_BR = tiles[mtv.at(3).second].map_tile;
+    const MapTile* tile_cluster_TL = tiles[mtv.at(0).second]->map_tile;
+    const MapTile* tile_cluster_TR = tiles[mtv.at(1).second]->map_tile;
+    const MapTile* tile_cluster_BL = tiles[mtv.at(2).second]->map_tile;
+    const MapTile* tile_cluster_BR = tiles[mtv.at(3).second]->map_tile;
     const std::vector<const MapTile*> tile_mtv_vec =
     {
       tile_cluster_TL, tile_cluster_TR, tile_cluster_BL, tile_cluster_BR
@@ -269,19 +271,19 @@ void ModifyModel::TransformHighwayBridge(MapSceneTile* tiles, std::vector<Model3
  * function fills in the missing data by finding an entry, then iterating until it finds
  * the exit - adding tunnel pieces in between.
  */
-void ModifyModel::FillTunnels(MapSceneTile* tiles, std::vector<Model3D*>* v_model3d)
+void ModifyModel::FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_model3d)
 {
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       unsigned int start_index = x + TILES_DIMENSION * y;
-      const MapSceneTile& start_tile = tiles[start_index];
+      const MapSceneTile* start_tile = tiles[start_index];
 
-      if (start_tile.map_tile->xbld == XBLD_TUNNEL_3)
+      if (start_tile->map_tile->xbld == XBLD_TUNNEL_3)
       {
         std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
-        it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(start_tile.map_tile->xbld));
+        it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(start_tile->map_tile->xbld));
         if (it == AssetLoader::mmodels->end())
         {
           continue; //TODO - this should never happen
@@ -290,22 +292,22 @@ void ModifyModel::FillTunnels(MapSceneTile* tiles, std::vector<Model3D*>* v_mode
         for (unsigned int x2 = x; x2 < TILES_DIMENSION; ++x2)
         {
           unsigned int end_index = x2 + TILES_DIMENSION * y;
-          const MapSceneTile& end_tile = tiles[end_index];
-          if (end_tile.map_tile->xbld == XBLD_TUNNEL_1)
+          const MapSceneTile* end_tile = tiles[end_index];
+          if (end_tile->map_tile->xbld == XBLD_TUNNEL_1)
           {
             break;
           }
-          DirectX::SimpleMath::Vector3 position = end_tile.v_pos[SceneTile::VertexPos::TOP_LEFT];
+          DirectX::SimpleMath::Vector3 position = end_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
           Model3D* model = new Model3D(it->second, position);
-          model->origin.y = start_tile.height;
-          ModifyModel::RotateModel(start_tile.map_tile->xbld, model);
+          model->origin.y = start_tile->height;
+          ModifyModel::RotateModel(start_tile->map_tile->xbld, model);
           v_model3d->push_back(model);
         }
       }
-      else if (start_tile.map_tile->xbld == XBLD_TUNNEL_4)
+      else if (start_tile->map_tile->xbld == XBLD_TUNNEL_4)
       {
         std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
-        it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(start_tile.map_tile->xbld));
+        it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(start_tile->map_tile->xbld));
         if (it == AssetLoader::mmodels->end())
         {
           continue; //TODO - this should never happen
@@ -314,15 +316,15 @@ void ModifyModel::FillTunnels(MapSceneTile* tiles, std::vector<Model3D*>* v_mode
         for (unsigned int y2 = y; y2 < TILES_DIMENSION; ++y2)
         {
           unsigned int end_index = x + TILES_DIMENSION * y2;
-          const MapSceneTile& end_tile = tiles[end_index];
-          if (end_tile.map_tile->xbld == XBLD_TUNNEL_2)
+          const MapSceneTile* end_tile = tiles[end_index];
+          if (end_tile->map_tile->xbld == XBLD_TUNNEL_2)
           {
             break;
           }
-          DirectX::SimpleMath::Vector3 position = end_tile.v_pos[SceneTile::VertexPos::TOP_LEFT];
+          DirectX::SimpleMath::Vector3 position = end_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
           Model3D* model = new Model3D(it->second, position);
-          model->origin.y = start_tile.height;
-          ModifyModel::RotateModel(start_tile.map_tile->xbld, model);
+          model->origin.y = start_tile->height;
+          ModifyModel::RotateModel(start_tile->map_tile->xbld, model);
           v_model3d->push_back(model);
         }
       }

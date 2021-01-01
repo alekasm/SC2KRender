@@ -272,6 +272,9 @@
     <ClInclude Include="ModifyModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="QuadSceneTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl">
