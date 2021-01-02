@@ -57,8 +57,9 @@ void SceneTile::SetOrigin(unsigned int x, unsigned int y)
 { //Sets origin using top-left
   float fx = static_cast<float>(x);
   float fy = static_cast<float>(y);
-  v_pos[TOP_LEFT] = DirectX::SimpleMath::Vector3(fx, 0, fy);
-  v_pos[BOTTOM_LEFT] = DirectX::SimpleMath::Vector3(fx, 0, fy + 1);
-  v_pos[TOP_RIGHT] = DirectX::SimpleMath::Vector3(fx + 1, 0, fy);
-  v_pos[BOTTOM_RIGHT] = DirectX::SimpleMath::Vector3(fx + 1, 0, fy + 1);
+  v_pos[TOP_LEFT] = DirectX::SimpleMath::Vector3(fx, height, fy);
+  v_pos[BOTTOM_LEFT] = DirectX::SimpleMath::Vector3(fx, height, fy + 1);
+  v_pos[TOP_RIGHT] = DirectX::SimpleMath::Vector3(fx + 1, height, fy);
+  v_pos[BOTTOM_RIGHT] = DirectX::SimpleMath::Vector3(fx + 1, height, fy + 1);
+  CreateVertexPositionColors();
 }

@@ -171,25 +171,23 @@ void Scene::Initialize(Map& map)
   {
     for (size_t i = 0; i < ARRAY_LENGTH; ++i)
     {
-      delete tiles[i];
+      MapSceneTile* tile = tiles[i];
+      if (tile != nullptr)
+      {
+        SceneTile* sea_tile = tile->sea_tile1;
+        if (sea_tile != nullptr)
+        {
+          delete sea_tile;
+        }
+        delete tile;
+      }     
     }
     delete[] tiles;
     tiles = nullptr;
   }
 
-  if (sea_tiles != nullptr)
-  {
-    for (size_t i = 0; i < ARRAY_LENGTH; ++i)
-    {
-      delete sea_tiles[i];
-    }
-    delete[] sea_tiles;
-    sea_tiles = nullptr;
-  }
-
   map_orientation = 0b0000;
-  tiles = new MapSceneTile*[TILES_DIMENSION * TILES_DIMENSION];
-  sea_tiles = new SceneTile*[TILES_DIMENSION * TILES_DIMENSION];
+  tiles = new MapSceneTile*[ARRAY_LENGTH];
 
   //first = index to v_model3d
   //second = index to tiles
@@ -199,29 +197,22 @@ void Scene::Initialize(Map& map)
   {
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
+      unsigned int i_index = x + TILES_DIMENSION * y;
       MapSceneTile* t = new MapSceneTile();
-      SceneTile* sea_tile = new SceneTile();
+      tiles[i_index] = t;    
 
-      tiles[x + TILES_DIMENSION * y] = t;
-      sea_tiles[x + TILES_DIMENSION * y] = sea_tile;
-
+      const MapTile* map_tile = &map.tiles[i_index];
       t->SetOrigin(x, y);
-      const MapTile* map_tile = &map.tiles[x + TILES_DIMENSION * y];
       t->FillAttributes(map_tile);
-      //bool add_water = map_tile->height < map_tile->water_height || map_tile->type / 0x10 == 3;
-      //bool add_water = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
-      if (t->sea_tile)
+      if (t->sea_tile1 != nullptr)
       {
-        sea_tile->SetOrigin(x, y);
-        sea_tile->SetHeight(map_tile->water_height);
-        sea_tile->ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
-        sea_tile->fill_color = DirectX::Colors::SC2K_SEA_BLUE;
+        t->sea_tile1->SetOrigin(x, y);
       }
       
-      if (map_tile->xbld == XBLD_MARINA && !t->sea_tile && render_models)
-      {
+      //if (map_tile->xbld == XBLD_MARINA && !t->sea_tile && render_models)
+      //{
         //t.ColorTile(DirectX::Colors::SC2K_MARINA_FILL);
-      }
+      //}
       
 
 #if USING_SPRITES_3D
@@ -430,7 +421,7 @@ void Scene::Initialize(Map& map)
   //SetRenderModels(false);
 
   FillTileEdges((SceneTile**)tiles);
-  FillTileEdges(sea_tiles);
+  //FillTileEdges(sea_tiles);
   //SetRenderModels(true);
   ModifyModel::FillTunnels(tiles, &v_model3d);
 
@@ -955,10 +946,10 @@ void Scene::Render()
     //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
     m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
     m_batch->Begin();
-    for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
+    for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
     {
-      const SceneTile* w = sea_tiles[i];
-      if (w->height > -1.f && w->render)
+      const SceneTile* w = tiles[i]->sea_tile1;
+      if (w != nullptr && w->render)
       {
         m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
         m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
@@ -1120,8 +1111,8 @@ BOOL Scene::FillEdgeSceneTile(unsigned int index, Edge edge)
   qst->vpc[2] = DirectX::VertexPositionColor(b2, DirectX::Colors::SC2K_DIRT_DARKEST);
   qst->vpc[3] = DirectX::VertexPositionColor(b1, DirectX::Colors::SC2K_DIRT_DARKEST);
   fill_tiles.push_back(qst);
-  const SceneTile* w = sea_tiles[index];
-  if (w->height > -1)
+  const SceneTile* w = tiles[index]->sea_tile1;
+  if (w != nullptr)
   {
     QuadSceneTile* qst_sea = new QuadSceneTile();
     qst_sea->vpc[0] = DirectX::VertexPositionColor(w->v_pos[pos1], DirectX::Colors::SC2K_SEA_BLUE);

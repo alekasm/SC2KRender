@@ -3,7 +3,14 @@
 void MapSceneTile::FillAttributes(const MapTile* tile)
 {
   map_tile = tile;
-  sea_tile = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
+  bool is_sea_tile = map_tile->xter / 0x10 > 0 && map_tile->xter != XTER_WATERFALL;
+  if (is_sea_tile)
+  {
+    sea_tile1 = new SceneTile();
+    sea_tile1->SetHeight(map_tile->water_height);
+    sea_tile1->ColorTile(DirectX::Colors::SC2K_SEA_BLUE);
+    sea_tile1->fill_color = DirectX::Colors::SC2K_SEA_BLUE;
+  }
   if (tile->xter / 0x10 == 3)
   {
     SetHeight(tile->height - 1);   

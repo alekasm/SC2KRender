@@ -178,7 +178,7 @@ private:
   BYTE map_orientation = 0x0;
   uint32_t map_rotation = 0;
   MapSceneTile** tiles = nullptr;
-  SceneTile** sea_tiles = nullptr;
+  //SceneTile** sea_tiles = nullptr;
   MapTile* map_tiles = nullptr;
   const Map map;
   std::vector<QuadSceneTile*> fill_tiles;
