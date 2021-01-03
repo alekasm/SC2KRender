@@ -134,9 +134,10 @@ void Scene::SetRenderDistance(float value)
 
 void Scene::Initialize(Map& map)
 {
-  //TODO fix and compare old way of generating map rotation
   map_rotation = map.rotation;
   ModifyModel::SetMapRotation(map_rotation);
+  map_orientation = 1 << map_rotation;
+
   if (map_tiles != nullptr)
   {
     delete[] map_tiles;
@@ -185,7 +186,7 @@ void Scene::Initialize(Map& map)
     tiles = nullptr;
   }
 
-  map_orientation = 0b0000;
+  
   tiles = new MapSceneTile*[ARRAY_LENGTH];
 
   //first = index to v_model3d
@@ -235,14 +236,7 @@ void Scene::Initialize(Map& map)
 
       bool no_xzon = map_tile->xzon == 0;
       BYTE orientation = (map_tile->xzon >> 4);
-
       bool single_tile = orientation == 0b1111;
-      //if (map_orientation == 0b0000 && !no_xzon && !single_tile)
-      if (map_orientation == 0b0000 && !single_tile &&
-        XBLD_IS_BUILDING(map_tile->xbld))
-      {
-        map_orientation = orientation;
-      }     
 
       bool render_tile = single_tile ||
         (!no_xzon && orientation == map_orientation) ||
@@ -251,7 +245,6 @@ void Scene::Initialize(Map& map)
 
       if (render_tile)
       {
-
         if (AssetLoader::xbld_map.count(map_tile->xbld))
         {
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
