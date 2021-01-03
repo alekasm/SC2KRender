@@ -2,6 +2,81 @@
 #include "AssetLoader.h"
 #include "MapSceneTile.h"
 
+
+void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
+{
+  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
+    for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
+    {
+      MapSceneTile* tile = tiles[x + TILES_DIMENSION * y];
+      if (!XBLD_IS_HYDROELECTRIC(tile->map_tile->xbld)) continue;
+      if (tile->map_tile->xter != XTER_WATERFALL)
+      {
+        printf("[WARN] HydroElectric object not placed on XTER Waterfall.\n");
+        continue;
+      }
+
+      tile->SetHeight(tile->map_tile->height);
+
+      if (x > 0)
+      {
+        MapSceneTile* left_tile = tiles[(x - 1) + TILES_DIMENSION * y];
+        if (left_tile->sea_tile != nullptr)
+        {
+          SceneTile* left_sea_tile = left_tile->sea_tile;
+          left_sea_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT] =
+            left_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT];
+          left_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT] =
+            left_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT];
+          left_sea_tile->CreateVertexPositionColors();
+        }
+      }
+
+      if (y > 0)
+      {
+        MapSceneTile* top_tile = tiles[x  + TILES_DIMENSION * (y - 1)];
+        if (top_tile->sea_tile != nullptr)
+        {
+          SceneTile* top_sea_tile = top_tile->sea_tile;
+          top_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT] =
+            top_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT];
+          top_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT] =
+            top_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT];
+          top_sea_tile->CreateVertexPositionColors();
+        }
+      }
+
+      if (y < TILES_DIMENSION - 1)
+      {
+        MapSceneTile* bottom_tile = tiles[x + TILES_DIMENSION * (y + 1)];
+        if (bottom_tile->sea_tile != nullptr)
+        {
+          SceneTile* bottom_sea_tile = bottom_tile->sea_tile;
+          bottom_sea_tile->v_pos[SceneTile::VertexPos::TOP_LEFT] =
+            bottom_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
+          bottom_sea_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT] =
+            bottom_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT];
+          bottom_sea_tile->CreateVertexPositionColors();
+        }  
+      }
+
+      if (x < TILES_DIMENSION - 1)
+      {
+        MapSceneTile* right_tile = tiles[(x + 1) + TILES_DIMENSION * y];
+        if (right_tile->sea_tile != nullptr)
+        {
+          SceneTile* right_sea_tile = right_tile->sea_tile;
+          right_sea_tile->v_pos[SceneTile::VertexPos::TOP_LEFT] =
+            right_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
+          right_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT] =
+            right_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT];
+          right_sea_tile->CreateVertexPositionColors();
+        }
+      }
+
+    }
+}
+
 void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
 {
   switch (model_id)

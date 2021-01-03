@@ -16,4 +16,5 @@ struct ModifyModel
     std::vector<Model3D*>* v_model3d,
     const std::vector<ModelTileVector>& clusters);
   static void FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_model3d);
+  static void AdjustHydroElectricSea(MapSceneTile**);
 };

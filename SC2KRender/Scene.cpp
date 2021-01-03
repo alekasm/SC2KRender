@@ -141,9 +141,7 @@ void Scene::Initialize(Map& map)
     delete[] map_tiles;
   }
   map_tiles = map.tiles;
-  render_scene = false;
-  
-  //delete[] sea_tiles;
+  render_scene = false; 
   
   while (!v_sprite3d.empty())
   {
@@ -174,7 +172,7 @@ void Scene::Initialize(Map& map)
       MapSceneTile* tile = tiles[i];
       if (tile != nullptr)
       {
-        SceneTile* sea_tile = tile->sea_tile1;
+        SceneTile* sea_tile = tile->sea_tile;
         if (sea_tile != nullptr)
         {
           delete sea_tile;
@@ -204,9 +202,9 @@ void Scene::Initialize(Map& map)
       const MapTile* map_tile = &map.tiles[i_index];
       t->SetOrigin(x, y);
       t->FillAttributes(map_tile);
-      if (t->sea_tile1 != nullptr)
+      if (t->sea_tile != nullptr)
       {
-        t->sea_tile1->SetOrigin(x, y);
+        t->sea_tile->SetOrigin(x, y);
       }
       
       //if (map_tile->xbld == XBLD_MARINA && !t->sea_tile && render_models)
@@ -322,14 +320,6 @@ void Scene::Initialize(Map& map)
               }
             }
 
-            else if (XBLD_IS_HYDROELECTRIC(map_tile->xbld))
-            {
-              if (map_tile->xter == XTER_WATERFALL)
-              {
-                t->SetHeight(map_tile->height);
-              }
-            }
-
             else if (map_tile->xbld == XBLD_PIER || map_tile->xbld == XBLD_RUNWAY)
             {
               BYTE bit_check_mask = 0b00000010;
@@ -419,8 +409,8 @@ void Scene::Initialize(Map& map)
   printf("City Founded: %d\n", map.founding_year);
   
   //SetRenderModels(false);
-
-  FillTileEdges((SceneTile**)tiles);
+  ModifyModel::AdjustHydroElectricSea(tiles);
+  FillTileEdges();
   //FillTileEdges(sea_tiles);
   //SetRenderModels(true);
   ModifyModel::FillTunnels(tiles, &v_model3d);
@@ -433,9 +423,11 @@ void Scene::Initialize(Map& map)
   ClusterTiles(highway_bridge_model_vec, 1.0f, highway_bridge_clusters);
   ModifyModel::TransformHighwayBridge(tiles, &v_model3d, highway_bridge_clusters);
 
+  
+
   m_position = Vector3(96.f, 12.f, 96.f);
   m_position *= scale;
-  SetScale(scale);
+  SetScale(scale);  
 
   printf("Rendering %d 3d models\n", v_model3d.size());
   render_scene = true;
@@ -948,12 +940,16 @@ void Scene::Render()
     m_batch->Begin();
     for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
     {
-      const SceneTile* w = tiles[i]->sea_tile1;
+      const SceneTile* w = tiles[i]->sea_tile;
       if (w != nullptr && w->render)
       {
         m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
         m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
       }
+    }
+    for (const QuadSceneTile* qst : fill_tiles_alpha)
+    {
+      m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
     }
     m_batch->End();
 
@@ -1029,10 +1025,18 @@ void Scene::Render()
 
 }
 
-BOOL Scene::FillMapSceneTile(const SceneTile* a, const SceneTile* b, Edge edge)
+BOOL Scene::FillMapSceneTile(const MapSceneTile* a, const MapSceneTile* b, Edge edge)
 {  
+  //if (XBLD_IS_HYDROELECTRIC(a->map_tile->xbld)) return FALSE;
+  //if (XBLD_IS_HYDROELECTRIC(b->map_tile->xbld)) return FALSE;
+  Edge edge2 = edge;
+  if (XBLD_IS_HYDROELECTRIC(a->map_tile->xbld))
+  {
+    //if (edge2 == Edge::LEFT) edge2 = Edge::RIGHT;
+   // else if (edge2 == Edge::TOP) edge2 = Edge::BOTTOM;
+  }
   Vector3 a1, a2, b1, b2;
-  switch (edge)
+  switch (edge2)
   {
   case LEFT:
     a1 = a->v_pos[VPos::TOP_LEFT];
@@ -1060,20 +1064,30 @@ BOOL Scene::FillMapSceneTile(const SceneTile* a, const SceneTile* b, Edge edge)
     break;
   }
 
+  // distance of 2 means the entire side is filled
+  // distance of 1 means that a diagonal edge was filled
+  // distance of 0 means that the edges are flush
+
   float winner = (a1.y - b1.y) + (a2.y - b2.y);
-  if (winner == 0.f)
-    return FALSE;
+  QuadSceneTile* qst_terrain = nullptr;
+  if (std::fabs(winner) > 0.f)
+  {
+    const MapSceneTile* winner_tile = winner > 0.f ? a : b;
+    DirectX::XMVECTORF32 winner_color = winner_tile->fill_color;
 
-  const SceneTile* winner_tile = winner > 0.f ? a : b;
-  DirectX::XMVECTORF32 winner_color = winner_tile->fill_color;
-
-  QuadSceneTile* qst = new QuadSceneTile();
-  qst->vpc[0] = DirectX::VertexPositionColor(a1, winner_color);
-  qst->vpc[1] = DirectX::VertexPositionColor(a2, winner_color);
-  qst->vpc[2] = DirectX::VertexPositionColor(b2, winner_color);
-  qst->vpc[3] = DirectX::VertexPositionColor(b1, winner_color);
-  fill_tiles.push_back(qst);
+    qst_terrain = new QuadSceneTile();
+    qst_terrain->vpc[0] = DirectX::VertexPositionColor(a1, winner_color);
+    qst_terrain->vpc[1] = DirectX::VertexPositionColor(a2, winner_color);
+    qst_terrain->vpc[2] = DirectX::VertexPositionColor(b2, winner_color);
+    qst_terrain->vpc[3] = DirectX::VertexPositionColor(b1, winner_color);
+    if(winner_color.f[3] == 1.f)
+      fill_tiles.push_back(qst_terrain);
+    else
+      fill_tiles_alpha.push_back(qst_terrain);
+  }
   return TRUE;
+
+
 }
 
 BOOL Scene::FillEdgeSceneTile(unsigned int index, Edge edge)
@@ -1111,7 +1125,7 @@ BOOL Scene::FillEdgeSceneTile(unsigned int index, Edge edge)
   qst->vpc[2] = DirectX::VertexPositionColor(b2, DirectX::Colors::SC2K_DIRT_DARKEST);
   qst->vpc[3] = DirectX::VertexPositionColor(b1, DirectX::Colors::SC2K_DIRT_DARKEST);
   fill_tiles.push_back(qst);
-  const SceneTile* w = tiles[index]->sea_tile1;
+  const SceneTile* w = tiles[index]->sea_tile;
   if (w != nullptr)
   {
     QuadSceneTile* qst_sea = new QuadSceneTile();
@@ -1124,7 +1138,7 @@ BOOL Scene::FillEdgeSceneTile(unsigned int index, Edge edge)
   return TRUE;
 }
 
-void Scene::FillTileEdges(SceneTile** p_tiles)
+void Scene::FillTileEdges()
 {
   //Fill-in tile polygons using minimal vertices, compare using top and left tiles.
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
@@ -1132,7 +1146,7 @@ void Scene::FillTileEdges(SceneTile** p_tiles)
     for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
     {
       unsigned int index = x + TILES_DIMENSION * y;
-      SceneTile* this_tile = p_tiles[index];
+      MapSceneTile* this_tile = tiles[index];
       
       if (x == 0)
       {
@@ -1141,7 +1155,7 @@ void Scene::FillTileEdges(SceneTile** p_tiles)
       else if (x > 0)
       { 
         unsigned int cmp_left_index = (x - 1) + TILES_DIMENSION * y;
-        SceneTile* cmp_left = p_tiles[cmp_left_index];
+        MapSceneTile* cmp_left = tiles[cmp_left_index];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
         if (x + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::RIGHT);
@@ -1154,7 +1168,7 @@ void Scene::FillTileEdges(SceneTile** p_tiles)
       else if (y > 0)
       {
         unsigned int cmp_top_index = x + TILES_DIMENSION * (y - 1);
-        SceneTile* cmp_top = p_tiles[cmp_top_index];
+        MapSceneTile* cmp_top = tiles[cmp_top_index];
         FillMapSceneTile(this_tile, cmp_top, Edge::TOP);
         if (y + 1 == TILES_DIMENSION)
           FillEdgeSceneTile(index, Edge::BOTTOM);

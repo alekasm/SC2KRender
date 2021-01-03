@@ -103,12 +103,12 @@ public:
 private:
   void CreateDevice();
   void CreateResources();
-  void Clear();  
-  void FillTileEdges(SceneTile**);
+  void Clear();    
   void ClusterTiles(const ModelTileVector&, float, std::vector<ModelTileVector>&);
   void SetDrawTileWithModel(MapSceneTile*);  
   
-  BOOL FillMapSceneTile(const SceneTile* a, const SceneTile* b, Edge edge);
+  void FillTileEdges();
+  BOOL FillMapSceneTile(const MapSceneTile*, const MapSceneTile*, Edge);
   BOOL FillEdgeSceneTile(unsigned int, Edge);
 
   //void DrawModel(Model3D*);
@@ -178,10 +178,10 @@ private:
   BYTE map_orientation = 0x0;
   uint32_t map_rotation = 0;
   MapSceneTile** tiles = nullptr;
-  //SceneTile** sea_tiles = nullptr;
   MapTile* map_tiles = nullptr;
   const Map map;
   std::vector<QuadSceneTile*> fill_tiles;
+  std::vector<QuadSceneTile*> fill_tiles_alpha;
   DirectX::SimpleMath::Vector3 m_position;
   std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
   std::vector<Sprite3D*> v_sprite3d;
