@@ -2,7 +2,7 @@
 #include "Model3D.h"
 
 struct ModifyModel
-{
+{ 
   static void RotateModel(int32_t model_id, Model3D* model);
   static void AddSecondaryModel(const MapSceneTile*,
     const Model3D*,
@@ -17,4 +17,7 @@ struct ModifyModel
     const std::vector<ModelTileVector>& clusters);
   static void FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_model3d);
   static void AdjustHydroElectricSea(MapSceneTile**);
+  static void SetMapRotation(uint32_t);
+private:
+  static uint32_t map_rotation;
 };

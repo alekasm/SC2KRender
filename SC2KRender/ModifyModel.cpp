@@ -2,7 +2,12 @@
 #include "AssetLoader.h"
 #include "MapSceneTile.h"
 
+uint32_t ModifyModel::map_rotation = 0;
 
+void ModifyModel::SetMapRotation(uint32_t rotation)
+{
+  map_rotation = rotation;
+}
 void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
 {
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
@@ -17,6 +22,7 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
       }
 
       tile->SetHeight(tile->map_tile->height);
+
 
       if (x > 0)
       {
@@ -96,10 +102,16 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_HIGHWAY_CROSSOVER_4:
   case XBLD_POWER_LINE_2:
   case XBLD_HIGHWAY_CROSSOVER_6:
-  //case XBLD_HYDROELECTRIC_1:
-  //case XBLD_HYDROELECTRIC_2:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
+    break;
+  case XBLD_HYDROELECTRIC_1:
+  case XBLD_HYDROELECTRIC_2:
+    if (map_rotation == 0x1 || map_rotation == 0x4)
+    {
+      model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+      model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
+    }
     break;
   case XBLD_ROAD_8:
   case XBLD_RAIL_8:

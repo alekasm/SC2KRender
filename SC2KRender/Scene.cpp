@@ -136,6 +136,7 @@ void Scene::Initialize(Map& map)
 {
   //TODO fix and compare old way of generating map rotation
   map_rotation = map.rotation;
+  ModifyModel::SetMapRotation(map_rotation);
   if (map_tiles != nullptr)
   {
     delete[] map_tiles;
