@@ -107,7 +107,7 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
     break;
   case XBLD_HYDROELECTRIC_1:
   case XBLD_HYDROELECTRIC_2:
-    if (map_rotation == 0x1 || map_rotation == 0x4)
+    if (map_rotation == 1 || map_rotation == 3)
     {
       model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
       model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
