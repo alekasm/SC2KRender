@@ -10,19 +10,20 @@
 
 //http://djm.cc/simcity-2000-info.txt
 
-typedef void (*ExtractDataFunc)(FILE*, uint32_t, Map&);
+typedef BOOL (*ExtractDataFunc)(FILE*, uint32_t, Map&);
 
 uint16_t swap_uint16(uint16_t val)
 {
   return (val << 8) | (val >> 8);
 }
 
-void UnimplementedFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL UnimplementedFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   fseek(file, segment_size, SEEK_CUR);
+  return TRUE;
 }
 
-void ExtractCNAMFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractCNAMFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   //Assume in this case segment_size always = 32
   char cnam_data[32];
@@ -32,6 +33,7 @@ void ExtractCNAMFunction(FILE* file, uint32_t segment_size, Map& map)
   //Remove unit separator
   city_name.erase(remove(city_name.begin(), city_name.end(), 0x1F), city_name.end()); 
   map.city_name = city_name;  
+  return TRUE;
 }
 
 template <typename Type>
@@ -40,7 +42,7 @@ Type BigEndianByteToType(std::vector<BYTE> bytes)
   return (Type)((bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3] << 0));
 }
 
-void ExtractMISCFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractMISCFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading MISC(0x%x), Size: %d\n", ftell(file), segment_size);
 
@@ -79,9 +81,10 @@ void ExtractMISCFunction(FILE* file, uint32_t segment_size, Map& map)
   map.founding_year = BigEndianByteToType<uint32_t>(year_founded);
   map.rotation = BigEndianByteToType<uint32_t>(rotation);
   map.money_supply = BigEndianByteToType<int32_t>(money);
+  return TRUE;
 }
 
-void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading ALTM(0x%x), Size: %d\n", ftell(file), segment_size);
   for (unsigned int x = 0; x < 128; ++x)
@@ -99,6 +102,7 @@ void ExtractALTMFunction(FILE* file, uint32_t segment_size, Map& map)
       map.tiles[x + 128 * y].water_height = water_height;
     }
   }
+  return TRUE;
 }
 
 template <typename Type>
@@ -127,7 +131,7 @@ void Assign(MapTile& tile, BYTE data)
 }
 
 template <typename Type>
-void DecompressData(FILE* file, uint32_t segment_size, Map& map)
+BOOL DecompressData(FILE* file, uint32_t segment_size, Map& map)
 {
   //printf("Reading XTER(0x%x), Size: %d\n", ftell(file), segment_size);
   /*
@@ -149,7 +153,7 @@ void DecompressData(FILE* file, uint32_t segment_size, Map& map)
   {
     BYTE size_data;
     fread(&size_data, sizeof(BYTE), 1, file);
-    bool repeat_compression = size_data > 128;
+    bool repeat_compression = size_data > 127;
     if (repeat_compression)
     {
       int repeat_amount = static_cast<int>(size_data) - 127;
@@ -178,38 +182,40 @@ void DecompressData(FILE* file, uint32_t segment_size, Map& map)
   }
   if (tile_number != 128 * 128)
   {
-    printf("Error extracting XTER Data!\n");
+    printf("Error decompressing data, processed %d/%d tiles!\n", tile_number, 128 * 128);
+    return FALSE;
   }
+  return TRUE;
 }
 
-void ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractXTERFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading XTER(0x%x), Size: %d\n", ftell(file), segment_size);
-  DecompressData<XTERType>(file, segment_size, map);
+  return DecompressData<XTERType>(file, segment_size, map);
 }
 
-void ExtractXBLDFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractXBLDFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading XBLD(0x%x), Size: %d\n", ftell(file), segment_size);
-  DecompressData<XBLDType>(file, segment_size, map);
+  return DecompressData<XBLDType>(file, segment_size, map);
 }
 
-void ExtractXZONFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractXZONFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading XZON(0x%x), Size: %d\n", ftell(file), segment_size);
-  DecompressData<XZONType>(file, segment_size, map);
+  return DecompressData<XZONType>(file, segment_size, map);
 }
 
-void ExtractXUNDFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractXUNDFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading XUND(0x%x), Size: %d\n", ftell(file), segment_size);
-  DecompressData<XUNDType>(file, segment_size, map);
+  return DecompressData<XUNDType>(file, segment_size, map);
 }
 
-void ExtractXBITFunction(FILE* file, uint32_t segment_size, Map& map)
+BOOL ExtractXBITFunction(FILE* file, uint32_t segment_size, Map& map)
 {
   printf("Reading XBIT(0x%x), Size: %d\n", ftell(file), segment_size);
-  DecompressData<XBITType>(file, segment_size, map);
+  return DecompressData<XBITType>(file, segment_size, map);
 }
 
 #define NAME_VALUE(s) (strtol(s))
@@ -228,6 +234,7 @@ namespace
   };
 }
 
+#define ALLOW_UNSAFE_DATA TRUE
 bool MapLoader::LoadMap(std::string filename, Map& out)
 {
   FILE* file;
@@ -268,7 +275,10 @@ bool MapLoader::LoadMap(std::string filename, Map& out)
       fseek(file, segment_header.totalbytes, SEEK_CUR);
       continue;
     }
-    it->second(file, segment_header.totalbytes, map);
+    if (!it->second(file, segment_header.totalbytes, map))
+    {
+      return false;
+    }
   }
 
   printf("City Name: %s\n", map.city_name.c_str());
