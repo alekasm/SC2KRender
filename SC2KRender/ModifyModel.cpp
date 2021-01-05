@@ -3,6 +3,25 @@
 #include "MapSceneTile.h"
 
 uint32_t ModifyModel::map_rotation = 0;
+std::map<XBLDType, std::vector<std::pair<int32_t, bool>>> ModifyModel::scenery_object_map =
+{
+  {XBLD_HIGHWAY_BRIDGE_1, {{SceneryObject::PILLAR_BRIDGE, true}}},
+  {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, true}}},
+  {XBLD_HIGHWAY_2, {{SceneryObject::PILLAR, true}}},
+  {XBLD_HIGHWAY_CROSSOVER_4, {{XBLD_RAIL_1, false}}},
+  {XBLD_HIGHWAY_CROSSOVER_3, {{XBLD_RAIL_2, false}}},
+  {XBLD_HIGHWAY_CROSSOVER_2, {{XBLD_ROAD_1, false}}},
+  {XBLD_HIGHWAY_CROSSOVER_1, {{XBLD_ROAD_2, false}}},
+  {XBLD_TREES_7, {{SceneryObject::TREE_TRUNKS_7, false}}},
+  {XBLD_TREES_6, {{SceneryObject::TREE_TRUNKS_6, false}}},
+  {XBLD_TREES_5, {{SceneryObject::TREE_TRUNKS_5, false}}},
+  {XBLD_TREES_4, {{SceneryObject::TREE_TRUNKS_4, false}}},
+  {XBLD_TREES_3, {{SceneryObject::TREE_TRUNKS_3, false}}},
+  {XBLD_TREES_2, {{SceneryObject::TREE_TRUNKS_2, false}}},
+  {XBLD_TREES_1, {{SceneryObject::TREE_TRUNKS_1, false}}},
+  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::BRIDGE_RAISED_ARC, false},
+                                {SceneryObject::PILLAR_BRIDGE_RAISED, true}}}
+};
 
 void ModifyModel::SetMapRotation(uint32_t rotation)
 {
@@ -148,6 +167,7 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
     break;
   case SceneryObject::PILLAR_BRIDGE_RAISED: //bit 2 in xbit
+  case SceneryObject::BRIDGE_RAISED_ARC:
     if ((tile->xbit & 0b00000010) == 0b00000010)
     {
       model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
@@ -156,6 +176,8 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
     break;
   }
 }
+
+
 
 /*
 * Instead of creating separate models for crossovers, we can overlap two
@@ -172,82 +194,37 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     return;
   }
 
-  int32_t model_id = 0;
-  bool repeat_y = false;
+
   //Do not use t.map_tile->xbld
-  switch (xbld)
+  auto it_lookup = scenery_object_map.find(xbld);
+  if (it_lookup == scenery_object_map.end()) return;
+  for (std::pair<uint32_t, bool> entry : it_lookup->second)
   {
-  case XBLD_BRIDGE_COMMON_PIECE_1:
-    model_id = SceneryObject::PILLAR_BRIDGE_RAISED;
-    repeat_y = true;
-    break;
-  case XBLD_TREES_1:
-    model_id = SceneryObject::TREE_TRUNKS_1;
-    break;
-  case XBLD_TREES_2:
-    model_id = SceneryObject::TREE_TRUNKS_2;
-    break;
-  case XBLD_TREES_3:
-    model_id = SceneryObject::TREE_TRUNKS_3;
-    break;
-  case XBLD_TREES_4:
-    model_id = SceneryObject::TREE_TRUNKS_4;
-    break;
-  case XBLD_TREES_5:
-    model_id = SceneryObject::TREE_TRUNKS_5;
-    break;
-  case XBLD_TREES_6:
-    model_id = SceneryObject::TREE_TRUNKS_6;
-    break;
-  case XBLD_TREES_7:
-    model_id = SceneryObject::TREE_TRUNKS_7;
-    break;
-  case XBLD_HIGHWAY_CROSSOVER_1:
-    model_id = XBLD_ROAD_2;
-    break;
-  case XBLD_HIGHWAY_CROSSOVER_2:
-    model_id = XBLD_ROAD_1;
-    break;
-  case XBLD_HIGHWAY_CROSSOVER_3:
-    model_id = XBLD_RAIL_2;
-    break;
-  case XBLD_HIGHWAY_CROSSOVER_4:
-    model_id = XBLD_RAIL_1;
-    break;
-  case XBLD_HIGHWAY_1:
-  case XBLD_HIGHWAY_2:
-    model_id = SceneryObject::PILLAR;
-    repeat_y = true;
-    break;
-  case XBLD_HIGHWAY_BRIDGE_1:
-    model_id = SceneryObject::PILLAR_BRIDGE;
-    repeat_y = true;
-    break;
-  case XBLD_HIGHWAY_CROSSOVER_5:
-  case XBLD_HIGHWAY_CROSSOVER_6:
-    return; //Do nothing for powerlines
-  }
-  if (model_id == 0) return;
-  if (repeat_y && rmodel == nullptr) return;
-  std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
-  it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(model_id));
-  if (it == AssetLoader::mmodels->end())
-  {
-    return; //TODO this is an error
-  }
-  float height = t->map_tile->height * HEIGHT_INCREMENT;
+    int32_t model_id = entry.first;
+    bool repeat_y = entry.second;
 
-add_model:
-  Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
-  reference_tile.y = height;
-  Model3D* model = new Model3D(it->second, reference_tile);
-  ModifyModel::RotateModel(model_id, model, t->map_tile);
-  v_model3d->push_back(model);
+    if (model_id == 0) return;
+    if (repeat_y && rmodel == nullptr) return;
+    std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
+    it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(model_id));
+    if (it == AssetLoader::mmodels->end())
+    {
+      return; //TODO this is an error
+    }
+    float height = t->map_tile->height * HEIGHT_INCREMENT;
 
-  if (repeat_y && (height + HEIGHT_INCREMENT) <= rmodel->origin.y)
-  {
-    height += HEIGHT_INCREMENT;
-    goto add_model;
+  add_model:
+    Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
+    reference_tile.y = height;
+    Model3D* model = new Model3D(it->second, reference_tile);
+    ModifyModel::RotateModel(model_id, model, t->map_tile);
+    v_model3d->push_back(model);
+
+    if (repeat_y && (height + HEIGHT_INCREMENT) <= rmodel->origin.y)
+    {
+      height += HEIGHT_INCREMENT;
+      goto add_model;
+    }
   }
 }
 

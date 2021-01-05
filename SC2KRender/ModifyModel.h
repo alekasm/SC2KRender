@@ -20,4 +20,5 @@ struct ModifyModel
   static void SetMapRotation(uint32_t);
 private:
   static uint32_t map_rotation;
+  static std::map<XBLDType, std::vector<std::pair<int32_t, bool>>> scenery_object_map;
 };
