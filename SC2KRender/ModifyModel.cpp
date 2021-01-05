@@ -83,7 +83,7 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
     }
 }
 
-void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
+void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* tile)
 {
   switch (model_id)
   {
@@ -147,6 +147,13 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model)
   case XBLD_HIGHWAY_SLOPE_4:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
     break;
+  case SceneryObject::PILLAR_BRIDGE_RAISED: //bit 2 in xbit
+    if ((tile->xbit & 0b00000010) == 0b00000010)
+    {
+      model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+      model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
+    }
+    break;
   }
 }
 
@@ -170,6 +177,10 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
   //Do not use t.map_tile->xbld
   switch (xbld)
   {
+  case XBLD_BRIDGE_COMMON_PIECE_1:
+    model_id = SceneryObject::PILLAR_BRIDGE_RAISED;
+    repeat_y = true;
+    break;
   case XBLD_TREES_1:
     model_id = SceneryObject::TREE_TRUNKS_1;
     break;
@@ -230,7 +241,7 @@ add_model:
   Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
   reference_tile.y = height;
   Model3D* model = new Model3D(it->second, reference_tile);
-  ModifyModel::RotateModel(model_id, model);
+  ModifyModel::RotateModel(model_id, model, t->map_tile);
   v_model3d->push_back(model);
 
   if (repeat_y && (height + HEIGHT_INCREMENT) <= rmodel->origin.y)
@@ -387,7 +398,7 @@ void ModifyModel::FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_mod
           DirectX::SimpleMath::Vector3 position = end_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
           Model3D* model = new Model3D(it->second, position);
           model->origin.y = start_tile->height;
-          ModifyModel::RotateModel(start_tile->map_tile->xbld, model);
+          ModifyModel::RotateModel(start_tile->map_tile->xbld, model, start_tile->map_tile);
           v_model3d->push_back(model);
         }
       }
@@ -411,7 +422,7 @@ void ModifyModel::FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_mod
           DirectX::SimpleMath::Vector3 position = end_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
           Model3D* model = new Model3D(it->second, position);
           model->origin.y = start_tile->height;
-          ModifyModel::RotateModel(start_tile->map_tile->xbld, model);
+          ModifyModel::RotateModel(start_tile->map_tile->xbld, model, start_tile->map_tile);
           v_model3d->push_back(model);
         }
       }

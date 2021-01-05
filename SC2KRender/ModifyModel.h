@@ -3,7 +3,7 @@
 
 struct ModifyModel
 { 
-  static void RotateModel(int32_t model_id, Model3D* model);
+  static void RotateModel(int32_t model_id, Model3D* model, const MapTile* tile);
   static void AddSecondaryModel(const MapSceneTile*,
     const Model3D*,
     const XBLDType,

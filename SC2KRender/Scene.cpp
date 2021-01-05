@@ -371,7 +371,7 @@ void Scene::Initialize(Map& map)
 
             } //end XBLD_IS_HIGHWAY   
 
-            ModifyModel::RotateModel(xbld_value, model);
+            ModifyModel::RotateModel(xbld_value, model, map_tile);
             v_model3d.push_back(model);
 
             if (XBLD_IS_HIGHWAY_CORNER(map_tile->xbld))
