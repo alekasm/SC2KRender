@@ -19,8 +19,10 @@ std::map<XBLDType, std::vector<std::pair<int32_t, bool>>> ModifyModel::scenery_o
   {XBLD_TREES_3, {{SceneryObject::TREE_TRUNKS_3, false}}},
   {XBLD_TREES_2, {{SceneryObject::TREE_TRUNKS_2, false}}},
   {XBLD_TREES_1, {{SceneryObject::TREE_TRUNKS_1, false}}},
-  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::BRIDGE_RAISED_ARC, false},
-                                {SceneryObject::PILLAR_BRIDGE_RAISED, true}}}
+  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::PILLAR_BRIDGE_RAISED, true},
+                                {SceneryObject::BRIDGE_RAISED_ARC, false}
+                                
+                              }}
 };
 
 void ModifyModel::SetMapRotation(uint32_t rotation)
@@ -198,6 +200,7 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
   //Do not use t.map_tile->xbld
   auto it_lookup = scenery_object_map.find(xbld);
   if (it_lookup == scenery_object_map.end()) return;
+  float height = t->map_tile->height * HEIGHT_INCREMENT;
   for (std::pair<uint32_t, bool> entry : it_lookup->second)
   {
     int32_t model_id = entry.first;
@@ -210,8 +213,7 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     if (it == AssetLoader::mmodels->end())
     {
       return; //TODO this is an error
-    }
-    float height = t->map_tile->height * HEIGHT_INCREMENT;
+    }    
 
   add_model:
     Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
@@ -220,11 +222,12 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     ModifyModel::RotateModel(model_id, model, t->map_tile);
     v_model3d->push_back(model);
 
-    if (repeat_y && (height + HEIGHT_INCREMENT) <= rmodel->origin.y)
+    height += HEIGHT_INCREMENT;
+    if (repeat_y && height <= rmodel->origin.y)
     {
-      height += HEIGHT_INCREMENT;
       goto add_model;
     }
+
   }
 }
 
