@@ -2,25 +2,44 @@
 #include "AssetLoader.h"
 #include "MapSceneTile.h"
 
-uint32_t ModifyModel::map_rotation = 0;
-std::map<XBLDType, std::vector<std::pair<int32_t, bool>>> ModifyModel::scenery_object_map =
+enum Origin { MODEL, TILE };
+struct SecondaryProps
 {
-  {XBLD_HIGHWAY_BRIDGE_1, {{SceneryObject::PILLAR_BRIDGE, true}}},
-  {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, true}}},
-  {XBLD_HIGHWAY_2, {{SceneryObject::PILLAR, true}}},
-  {XBLD_HIGHWAY_CROSSOVER_4, {{XBLD_RAIL_1, false}}},
-  {XBLD_HIGHWAY_CROSSOVER_3, {{XBLD_RAIL_2, false}}},
-  {XBLD_HIGHWAY_CROSSOVER_2, {{XBLD_ROAD_1, false}}},
-  {XBLD_HIGHWAY_CROSSOVER_1, {{XBLD_ROAD_2, false}}},
-  {XBLD_TREES_7, {{SceneryObject::TREE_TRUNKS_7, false}}},
-  {XBLD_TREES_6, {{SceneryObject::TREE_TRUNKS_6, false}}},
-  {XBLD_TREES_5, {{SceneryObject::TREE_TRUNKS_5, false}}},
-  {XBLD_TREES_4, {{SceneryObject::TREE_TRUNKS_4, false}}},
-  {XBLD_TREES_3, {{SceneryObject::TREE_TRUNKS_3, false}}},
-  {XBLD_TREES_2, {{SceneryObject::TREE_TRUNKS_2, false}}},
-  {XBLD_TREES_1, {{SceneryObject::TREE_TRUNKS_1, false}}},
-  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::PILLAR_BRIDGE_RAISED, true},
-                                {SceneryObject::BRIDGE_RAISED_ARC, false}
+  bool repeat = false;  
+  Origin origin = Origin::TILE;
+  SecondaryProps(Origin origin)
+  {
+    this->origin = origin;
+  }
+  SecondaryProps(bool repeat)
+  {
+    this->repeat = repeat;
+  }
+  SecondaryProps(){}
+};
+
+uint32_t ModifyModel::map_rotation = 0;
+std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel::scenery_object_map =
+{
+  {XBLD_HIGHWAY_BRIDGE_1, {{SceneryObject::PILLAR_BRIDGE, SecondaryProps(true)}}},
+  {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
+  {XBLD_HIGHWAY_2, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
+  {XBLD_HIGHWAY_CROSSOVER_4, {{XBLD_RAIL_1, SecondaryProps()}}},
+  {XBLD_HIGHWAY_CROSSOVER_3, {{XBLD_RAIL_2, SecondaryProps()}}},
+  {XBLD_HIGHWAY_CROSSOVER_2, {{XBLD_ROAD_1, SecondaryProps()}}},
+  {XBLD_HIGHWAY_CROSSOVER_1, {{XBLD_ROAD_2, SecondaryProps()}}},
+  {XBLD_HIGHWAY_CROSSOVER_1, {{XBLD_ROAD_2, SecondaryProps()}}},
+  {XBLD_TREES_7, {{SceneryObject::TREE_TRUNKS_7, SecondaryProps()}}},
+  {XBLD_TREES_6, {{SceneryObject::TREE_TRUNKS_6, SecondaryProps()}}},
+  {XBLD_TREES_5, {{SceneryObject::TREE_TRUNKS_5, SecondaryProps()}}},
+  {XBLD_TREES_4, {{SceneryObject::TREE_TRUNKS_4, SecondaryProps()}}},
+  {XBLD_TREES_3, {{SceneryObject::TREE_TRUNKS_3, SecondaryProps()}}},
+  {XBLD_TREES_2, {{SceneryObject::TREE_TRUNKS_2, SecondaryProps()}}},
+  {XBLD_TREES_1, {{SceneryObject::TREE_TRUNKS_1, SecondaryProps()}}},
+  {XBLD_BRIDGE_COMMON_PIECE_1, { {SceneryObject::PILLAR_BRIDGE_RAISED, SecondaryProps(true)},
+                                 {SceneryObject::BRIDGE_RAISED_ARC, SecondaryProps(Origin::MODEL)}
+               
+                                
                                 
                               }}
 };
@@ -196,15 +215,14 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     return;
   }
 
-
+  
   //Do not use t.map_tile->xbld
   auto it_lookup = scenery_object_map.find(xbld);
-  if (it_lookup == scenery_object_map.end()) return;
-  float height = t->map_tile->height * HEIGHT_INCREMENT;
-  for (std::pair<uint32_t, bool> entry : it_lookup->second)
+  if (it_lookup == scenery_object_map.end()) return;  
+  for (const std::pair<uint32_t, SecondaryProps>& entry : it_lookup->second)
   {
     int32_t model_id = entry.first;
-    bool repeat_y = entry.second;
+    bool repeat_y = entry.second.repeat;
 
     if (model_id == 0) return;
     if (repeat_y && rmodel == nullptr) return;
@@ -213,21 +231,22 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     if (it == AssetLoader::mmodels->end())
     {
       return; //TODO this is an error
-    }    
-
+    }      
+    float height_model = rmodel->origin.y;
+    float height_tile = t->map_tile->height * HEIGHT_INCREMENT;
+    float height = entry.second.origin == Origin::TILE ? height_tile : height_model;
   add_model:
     Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
     reference_tile.y = height;
     Model3D* model = new Model3D(it->second, reference_tile);
     ModifyModel::RotateModel(model_id, model, t->map_tile);
     v_model3d->push_back(model);
-
+  
     height += HEIGHT_INCREMENT;
-    if (repeat_y && height <= rmodel->origin.y)
-    {
+    if (repeat_y && height < rmodel->origin.y)
+    {         
       goto add_model;
     }
-
   }
 }
 

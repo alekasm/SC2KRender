@@ -283,6 +283,7 @@ void Scene::Initialize(Map& map)
                 model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
                 model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
               }
+              model->origin.y += HEIGHT_INCREMENT;
             }
 
             else if (XBLD_IS_TUNNEL(map_tile->xbld))
