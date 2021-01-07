@@ -56,8 +56,7 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
       MapSceneTile* tile = tiles[x + TILES_DIMENSION * y];
       if (!XBLD_IS_HYDROELECTRIC(tile->map_tile->xbld)) continue;
       if (tile->map_tile->xter != XTER_WATERFALL)
-      {
-        printf("[WARN] HydroElectric object not placed on XTER Waterfall.\n");
+      { //Adjustments only need to be made for waterfalls
         continue;
       }
 
@@ -215,7 +214,6 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     return;
   }
 
-  
   //Do not use t.map_tile->xbld
   auto it_lookup = scenery_object_map.find(xbld);
   if (it_lookup == scenery_object_map.end()) return;  
@@ -234,6 +232,11 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     }      
     float height_model = rmodel->origin.y;
     float height_tile = t->map_tile->height * HEIGHT_INCREMENT;
+    //TODO Understand why
+    if (repeat_y && t->map_tile->height == t->map_tile->water_height)
+    {
+      height_tile -= HEIGHT_INCREMENT;
+    }
     float height = entry.second.origin == Origin::TILE ? height_tile : height_model;
   add_model:
     Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
