@@ -21,7 +21,11 @@ struct SecondaryProps
 uint32_t ModifyModel::map_rotation = 0;
 std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel::scenery_object_map =
 {
-  {XBLD_HIGHWAY_BRIDGE_1, {{SceneryObject::PILLAR_BRIDGE, SecondaryProps(true)}}},
+  {XBLD_HIGHWAY_BRIDGE_1, {{SceneryObject::BRIDGE_REINFORCED, SecondaryProps(Origin::MODEL)},
+                           {SceneryObject::PILLAR_BRIDGE, SecondaryProps(true)}                           
+                          } 
+  },
+  {XBLD_HIGHWAY_BRIDGE_2, {{SceneryObject::BRIDGE_REINFORCED, SecondaryProps(Origin::MODEL)}}},
   {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
   {XBLD_HIGHWAY_2, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
   {XBLD_HIGHWAY_CROSSOVER_4, {{XBLD_RAIL_1, SecondaryProps()}}},
@@ -36,12 +40,10 @@ std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel:
   {XBLD_TREES_3, {{SceneryObject::TREE_TRUNKS_3, SecondaryProps()}}},
   {XBLD_TREES_2, {{SceneryObject::TREE_TRUNKS_2, SecondaryProps()}}},
   {XBLD_TREES_1, {{SceneryObject::TREE_TRUNKS_1, SecondaryProps()}}},
-  {XBLD_BRIDGE_COMMON_PIECE_1, { {SceneryObject::PILLAR_BRIDGE_RAISED, SecondaryProps(true)},
-                                 {SceneryObject::BRIDGE_RAISED_ARC, SecondaryProps(Origin::MODEL)}
-               
-                                
-                                
-                              }}
+  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::PILLAR_BRIDGE_RAISED, SecondaryProps(true)},
+                                {SceneryObject::BRIDGE_RAISED_ARC, SecondaryProps(Origin::MODEL)}                                
+                              }
+  }
 };
 
 void ModifyModel::SetMapRotation(uint32_t rotation)
@@ -350,17 +352,34 @@ void ModifyModel::TransformHighwayBridge(MapSceneTile** tiles, std::vector<Model
     bool should_rotate = (tile_mtv_vec.at(index)->xbit & rotation_mask) == rotation_mask;
     if (should_rotate)
     {
+      /*
+      * I'm making pretty dangerous assumptions regarding transforming mtv.at(i)->first + 1. The + 1 is assumed
+      * to be the secondary model directly after the the road model. For the HIGHWAY_BRIDGE_1/2 this is the metal
+      * cage model decoration.
+      */
       v_model3d->operator[](mtv.at(0).first)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
       v_model3d->operator[](mtv.at(0).first)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
+      v_model3d->operator[](mtv.at(0).first + 1)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d->operator[](mtv.at(0).first + 1)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
 
       v_model3d->operator[](mtv.at(1).first)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
       v_model3d->operator[](mtv.at(1).first)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
 
+      v_model3d->operator[](mtv.at(1).first + 1)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d->operator[](mtv.at(1).first + 1)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
       v_model3d->operator[](mtv.at(2).first)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
       v_model3d->operator[](mtv.at(2).first)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
 
+      v_model3d->operator[](mtv.at(2).first + 1)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d->operator[](mtv.at(2).first + 1)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
       v_model3d->operator[](mtv.at(3).first)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
       v_model3d->operator[](mtv.at(3).first)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+
+      v_model3d->operator[](mtv.at(3).first + 1)->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+      v_model3d->operator[](mtv.at(3).first + 1)->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
     }
   }
 
