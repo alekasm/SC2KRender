@@ -22,10 +22,16 @@ uint32_t ModifyModel::map_rotation = 0;
 std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel::scenery_object_map =
 {
   {XBLD_HIGHWAY_BRIDGE_1, {{SceneryObject::BRIDGE_REINFORCED, SecondaryProps(Origin::MODEL)},
-                           {SceneryObject::PILLAR_BRIDGE, SecondaryProps(true)}                           
+                           {SceneryObject::PILLAR, SecondaryProps(true)}                           
                           } 
   },
   {XBLD_HIGHWAY_BRIDGE_2, {{SceneryObject::BRIDGE_REINFORCED, SecondaryProps(Origin::MODEL)}}},
+  {XBLD_BRIDGE_SUSPENSION_PIECE_1, {{SceneryObject::BRIDGE_SUSPENSION_1, SecondaryProps(Origin::MODEL)}}},
+  {XBLD_BRIDGE_SUSPENSION_PIECE_2, {{SceneryObject::BRIDGE_SUSPENSION_2, SecondaryProps(Origin::MODEL)}}},
+  {XBLD_BRIDGE_SUSPENSION_PIECE_3, {{SceneryObject::BRIDGE_SUSPENSION_3, SecondaryProps(Origin::MODEL)},
+                                    {SceneryObject::PILLAR_BRIDGE, SecondaryProps(true)}}},
+  {XBLD_BRIDGE_SUSPENSION_PIECE_4, {{SceneryObject::BRIDGE_SUSPENSION_2, SecondaryProps(Origin::MODEL)}}},
+  {XBLD_BRIDGE_SUSPENSION_PIECE_5, {{SceneryObject::BRIDGE_SUSPENSION_1, SecondaryProps(Origin::MODEL)}}},
   {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
   {XBLD_HIGHWAY_2, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
   {XBLD_HIGHWAY_CROSSOVER_4, {{XBLD_RAIL_1, SecondaryProps()}}},
@@ -196,6 +202,34 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
       model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     }
     break;
+  case SceneryObject::BRIDGE_SUSPENSION_1: 
+  case SceneryObject::BRIDGE_SUSPENSION_2:
+  case SceneryObject::BRIDGE_SUSPENSION_3:
+  {
+    bool rotate = (tile->xbit & 0b00000010) == 0b00000010;
+    if (rotate)
+    {
+      model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
+      model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
+    }
+    switch (tile->xbld)
+    {
+    case XBLD_BRIDGE_SUSPENSION_PIECE_1:
+    case XBLD_BRIDGE_SUSPENSION_PIECE_2:
+      if (rotate)
+      {
+        model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
+        model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
+      }
+      else
+      {
+        model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
+        model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
+      }
+      break;
+    }
+  }
+  break;
   }
 }
 
