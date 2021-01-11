@@ -14,6 +14,7 @@ struct SecondaryProps
   SecondaryProps(bool repeat)
   {
     this->repeat = repeat;
+    if (repeat) origin = Origin::MODEL;
   }
   SecondaryProps(){}
 };
@@ -34,6 +35,7 @@ std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel:
   {XBLD_BRIDGE_SUSPENSION_PIECE_5, {{SceneryObject::BRIDGE_SUSPENSION_1, SecondaryProps(Origin::MODEL)}}},
   {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
   {XBLD_HIGHWAY_2, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
+  {XBLD_BRIDGE_RAIL_PIECE_1, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
   {XBLD_HIGHWAY_CROSSOVER_4, {{XBLD_RAIL_1, SecondaryProps()}}},
   {XBLD_HIGHWAY_CROSSOVER_3, {{XBLD_RAIL_2, SecondaryProps()}}},
   {XBLD_HIGHWAY_CROSSOVER_2, {{XBLD_ROAD_1, SecondaryProps()}}},
@@ -268,22 +270,28 @@ void ModifyModel::AddSecondaryModel(const MapSceneTile* t,
     }      
     float height_model = rmodel->origin.y;
     float height_tile = t->map_tile->height * HEIGHT_INCREMENT;
+
     //TODO Understand why
-    if (repeat_y && t->map_tile->height == t->map_tile->water_height)
-    {
-      height_tile -= HEIGHT_INCREMENT;
+    if (repeat_y)
+    {     
+      height_model -= HEIGHT_INCREMENT;
+      if (t->map_tile->height == t->map_tile->water_height)
+      {
+        height_tile -= HEIGHT_INCREMENT;
+      }
     }
+
     float height = entry.second.origin == Origin::TILE ? height_tile : height_model;
   add_model:
     Vector3 reference_tile(t->v_pos[SceneTile::VertexPos::TOP_LEFT]);
     reference_tile.y = height;
     Model3D* model = new Model3D(it->second, reference_tile);
     ModifyModel::RotateModel(model_id, model, t->map_tile);
-    v_model3d->push_back(model);
-  
-    height += HEIGHT_INCREMENT;
-    if (repeat_y && height < rmodel->origin.y)
-    {         
+    v_model3d->push_back(model);  
+    
+    if (repeat_y && height >= height_tile)
+    {        
+      height -= HEIGHT_INCREMENT;
       goto add_model;
     }
   }
