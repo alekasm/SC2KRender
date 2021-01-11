@@ -30,7 +30,7 @@ std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel:
   {XBLD_BRIDGE_SUSPENSION_PIECE_1, {{SceneryObject::BRIDGE_SUSPENSION_1, SecondaryProps(Origin::MODEL)}}},
   {XBLD_BRIDGE_SUSPENSION_PIECE_2, {{SceneryObject::BRIDGE_SUSPENSION_2, SecondaryProps(Origin::MODEL)}}},
   {XBLD_BRIDGE_SUSPENSION_PIECE_3, {{SceneryObject::BRIDGE_SUSPENSION_3, SecondaryProps(Origin::MODEL)},
-                                    {SceneryObject::PILLAR_BRIDGE, SecondaryProps(true)}}},
+                                    {SceneryObject::BRIDGE_SUSPENSION_PILLAR, SecondaryProps(true)}}},
   {XBLD_BRIDGE_SUSPENSION_PIECE_4, {{SceneryObject::BRIDGE_SUSPENSION_2, SecondaryProps(Origin::MODEL)}}},
   {XBLD_BRIDGE_SUSPENSION_PIECE_5, {{SceneryObject::BRIDGE_SUSPENSION_1, SecondaryProps(Origin::MODEL)}}},
   {XBLD_HIGHWAY_1, {{SceneryObject::PILLAR, SecondaryProps(true)}}},
@@ -48,7 +48,7 @@ std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel:
   {XBLD_TREES_3, {{SceneryObject::TREE_TRUNKS_3, SecondaryProps()}}},
   {XBLD_TREES_2, {{SceneryObject::TREE_TRUNKS_2, SecondaryProps()}}},
   {XBLD_TREES_1, {{SceneryObject::TREE_TRUNKS_1, SecondaryProps()}}},
-  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::PILLAR_BRIDGE_RAISED, SecondaryProps(true)},
+  {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::BRIDGE_RAISED_PILLAR, SecondaryProps(true)},
                                 {SceneryObject::BRIDGE_RAISED_ARC, SecondaryProps(Origin::MODEL)}                                
                               }
   }
@@ -195,9 +195,9 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
   case XBLD_RAIL_6:
   case XBLD_HIGHWAY_SLOPE_4:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitX, -M_PI_4);
-    break;
-  case SceneryObject::PILLAR_BRIDGE_RAISED: //bit 2 in xbit
+    break;  
   case SceneryObject::BRIDGE_RAISED_ARC:
+  case SceneryObject::BRIDGE_RAISED_PILLAR: //bit 2 in xbit
     if ((tile->xbit & 0b00000010) == 0b00000010)
     {
       model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
@@ -207,6 +207,7 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
   case SceneryObject::BRIDGE_SUSPENSION_1: 
   case SceneryObject::BRIDGE_SUSPENSION_2:
   case SceneryObject::BRIDGE_SUSPENSION_3:
+  case SceneryObject::BRIDGE_SUSPENSION_PILLAR:
   {
     bool rotate = (tile->xbit & 0b00000010) == 0b00000010;
     if (rotate)
