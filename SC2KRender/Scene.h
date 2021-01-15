@@ -119,7 +119,7 @@ private:
   float m_outputHeight;
   bool render_scene = false;
   bool render_models = true;
-  bool render_debug_ui = true;
+  bool render_debug_ui = false;
   bool use_aabb_frustum_culling = true;
   bool use_vsync = true;
   bool use_render_distance;
@@ -173,7 +173,7 @@ private:
   float fov = DirectX::XM_PI / 3.f;
   int window_cx = 0, window_cy = 0;
   int client_cx = 0, client_cy = 0;
-  float render_distance = 128.f;
+  float render_distance = 0.f;
   float scaled_render_distance = render_distance * scale;
   BYTE map_orientation = 0x0;
   uint32_t map_rotation = 0;

@@ -187,7 +187,7 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
 
   SendMessage(MenuContext::RenderDistBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
   SendMessage(MenuContext::RenderDistBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
-  SendMessage(MenuContext::RenderDistBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(6));
+  SendMessage(MenuContext::RenderDistBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(7));
   SendMessage(MenuContext::RenderDistBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
   UpdateWindow(MenuContext::RenderDistBar);
 
@@ -212,7 +212,7 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     "Button", "Show Debug UI", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
     10, 195, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
-  Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_CHECKED);
+  Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_UNCHECKED);
 
   MenuContext::VSyncCheckbox = CreateWindow(
     "Button", "Enable VSync", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
@@ -223,6 +223,6 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
 
   UpdateMoveSpeedBar(4);
   UpdateMouseSpeedBar(4);
-  UpdateRenderDistBar(6);
+  UpdateRenderDistBar(7);
   UpdateZoomBar(1);
 }

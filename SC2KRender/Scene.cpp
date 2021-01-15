@@ -143,8 +143,8 @@ void Scene::Initialize(Map& map)
     delete[] map_tiles;
   }
   map_tiles = map.tiles;
-  render_scene = false; 
-  
+  render_scene = false;
+
   while (!v_sprite3d.empty())
   {
     delete v_sprite3d.at(0);
@@ -180,14 +180,14 @@ void Scene::Initialize(Map& map)
           delete sea_tile;
         }
         delete tile;
-      }     
+      }
     }
     delete[] tiles;
     tiles = nullptr;
   }
 
-  
-  tiles = new MapSceneTile*[ARRAY_LENGTH];
+
+  tiles = new MapSceneTile * [ARRAY_LENGTH];
 
   //first = index to v_model3d
   //second = index to tiles
@@ -199,7 +199,7 @@ void Scene::Initialize(Map& map)
     {
       unsigned int i_index = x + TILES_DIMENSION * y;
       MapSceneTile* t = new MapSceneTile();
-      tiles[i_index] = t;    
+      tiles[i_index] = t;
 
       const MapTile* map_tile = &map.tiles[i_index];
       t->SetOrigin(x, y);
@@ -208,12 +208,12 @@ void Scene::Initialize(Map& map)
       {
         t->sea_tile->SetOrigin(x, y);
       }
-      
+
       //if (map_tile->xbld == XBLD_MARINA && !t->sea_tile && render_models)
       //{
         //t.ColorTile(DirectX::Colors::SC2K_MARINA_FILL);
       //}
-      
+
 
 #if USING_SPRITES_3D
       if (XBLD_IS_TREE(map_tile->xbld))
@@ -247,6 +247,7 @@ void Scene::Initialize(Map& map)
       {
         if (AssetLoader::xbld_map.count(map_tile->xbld))
         {
+          SetDrawTileWithModel(t);
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
           it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
@@ -321,7 +322,7 @@ void Scene::Initialize(Map& map)
               bool toggled = (map_tile->xbit & bit_check_mask) == bit_check_mask;
               bool rotate;
               switch (map_rotation)
-              {              
+              {
               case 0:
               case 2:
                 rotate = !toggled;
@@ -345,15 +346,15 @@ void Scene::Initialize(Map& map)
             {
 
               model->origin.y += HIGHWAY_HEIGHT;
-             
+
               if (XBLD_IS_HIGHWAY_BRIDGE(map_tile->xbld))
               {
                 model->origin.y += HEIGHT_INCREMENT;
               }
-              
+
               else if (XBLD_IS_HIGHWAY_SLOPE(map_tile->xbld) &&
-                  map_tile->xter == XTER_HIGHGROUND)
-              {                
+                map_tile->xter == XTER_HIGHGROUND)
+              {
                 switch (map_tile->xbld)
                 {
                 case XBLD_HIGHWAY_SLOPE_1:
@@ -364,21 +365,22 @@ void Scene::Initialize(Map& map)
                 case XBLD_HIGHWAY_SLOPE_4:
                   xbld_value = XBLD_HIGHWAY_1;
                   break;
-                }                
+                }
                 std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
                 it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(xbld_value));
                 model->model = it->second;
-              } 
+              }
 
             } //end XBLD_IS_HIGHWAY   
 
             ModifyModel::RotateModel(xbld_value, model, map_tile);
             v_model3d.push_back(model);
+            model->SetTileId(i_index);
 
             if (XBLD_IS_HIGHWAY_CORNER(map_tile->xbld))
             {
               highway_model_vec.push_back(std::make_pair(
-                v_model3d.size() - 1, 
+                v_model3d.size() - 1,
                 x + TILES_DIMENSION * y));
             }
             else if (XBLD_IS_HIGHWAY_BRIDGE(map_tile->xbld))
@@ -387,13 +389,13 @@ void Scene::Initialize(Map& map)
                 v_model3d.size() - 1,
                 x + TILES_DIMENSION * y));
             }
-            
+
             ModifyModel::AddSecondaryModel(t, model, xbld_value, &v_model3d);
 
           }
         }
       }
-      SetDrawTileWithModel(t);    
+      //SetDrawTileWithModel(t);
     }
   }
 
@@ -402,7 +404,7 @@ void Scene::Initialize(Map& map)
   printf("Money: %d\n", map.money_supply);
   printf("City Age: %d\n", map.days_elapsed);
   printf("City Founded: %d\n", map.founding_year);
-  
+
   //SetRenderModels(false);
   ModifyModel::AdjustHydroElectricSea(tiles);
   FillTileEdges();
@@ -418,11 +420,11 @@ void Scene::Initialize(Map& map)
   ClusterTiles(highway_bridge_model_vec, 1.0f, highway_bridge_clusters);
   ModifyModel::TransformHighwayBridge(tiles, &v_model3d, highway_bridge_clusters);
 
-  
+
 
   m_position = Vector3(96.f, 12.f, 96.f);
   m_position *= scale;
-  SetScale(scale);  
+  SetScale(scale);
 
   printf("Rendering %d 3d models\n", v_model3d.size());
   render_scene = true;
@@ -483,8 +485,8 @@ void Scene::CreateDevice()
   m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
-  
-  
+
+
   /*
   CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
     D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
@@ -539,7 +541,7 @@ void Scene::CreateResources()
         break;
       }
       max_supported_sample_count = sample_count;
-    }    
+    }
 
     if (max_supported_sample_count < 4)
     {
@@ -628,7 +630,7 @@ void Scene::CreateResources()
   CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
   if (use_4x_msaa)
   {
-    depthStencilDesc = CD3D11_TEXTURE2D_DESC(depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1, 
+    depthStencilDesc = CD3D11_TEXTURE2D_DESC(depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1,
       D3D11_BIND_DEPTH_STENCIL, D3D11_USAGE_DEFAULT, 0, 4, 0);
     depthStencilViewDesc = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2DMS);
   }
@@ -639,7 +641,7 @@ void Scene::CreateResources()
   }
 
   Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencil;
-  m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf());  
+  m_d3dDevice->CreateTexture2D(&depthStencilDesc, nullptr, depthStencil.GetAddressOf());
   m_d3dDevice->CreateDepthStencilView(depthStencil.Get(), &depthStencilViewDesc, m_depthStencilView.ReleaseAndGetAddressOf());
 }
 
@@ -753,6 +755,7 @@ void Scene::Update(DX::StepTimer const& timer)
 
 void Scene::MouseClick()
 {
+  if (!render_debug_ui) return;
   Vector3 near_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 0.f), m_proj, m_view, m_world);
   Vector3 far_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 1.f), m_proj, m_view, m_world);
   Vector3 normalized = far_plane - near_plane;
@@ -804,7 +807,7 @@ void Scene::SetRenderModels(bool value)
           {
             //t.FillAttributes(t.map_tile);
           }
-          
+
         }
       }
     }
@@ -872,32 +875,48 @@ void Scene::Render()
 
       for (Model3D* model3d : v_model3d)
       {
-        if (!use_render_distance || Vector3::Distance(m_position, model3d->origin_scaled) < scaled_render_distance)
-        {
-          if (!use_aabb_frustum_culling)
-          {
-            model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
-            continue;
-          }
-          bool frustum_test = true;
-          auto mesh_it = model3d->model->meshes.cbegin();
-          if (mesh_it == model3d->model->meshes.cend()) continue;
-          Vector3 center = (Vector3(mesh_it->get()->boundingBox.Center) * scale) + model3d->origin_scaled;
-          for (int i = 0; i < 6; ++i)
-          {
-            Vector3 n = Vector3(fabs(frustum_planes[i].x), fabs(frustum_planes[i].y), fabs(frustum_planes[i].z));
-            DirectX::SimpleMath::Vector4 v4(center.x, center.y, center.z, 1.f);
-            float e = n.Dot(mesh_it->get()->boundingBox.Extents);
-            float s = frustum_planes[i].Dot(v4);
-            if (s + e < 0.f)
-            {
-              frustum_test = false;
-              break;
-            }            
-          }
-          if (frustum_test)
-            model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+        MapSceneTile* tile = nullptr;
+        int32_t id = model3d->tile_id;
+        if (id >= 0)
+        {          
+          tile = tiles[id];
+          if (tile->render == MODEL_HIDDEN)          
+            tile->render = MODEL_VISIBLE;
+         
         }
+
+        if (use_render_distance && Vector3::Distance(m_position, model3d->origin_scaled) > scaled_render_distance)
+        {
+          if (tile != nullptr && tile->render == MODEL_VISIBLE)
+          {
+            tile->render = MODEL_HIDDEN;
+          }
+          continue;
+        }
+
+        if (!use_aabb_frustum_culling)
+        {
+          model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+          continue;
+        }
+        bool frustum_test = true;
+        auto mesh_it = model3d->model->meshes.cbegin();
+        if (mesh_it == model3d->model->meshes.cend()) continue;
+        Vector3 center = (Vector3(mesh_it->get()->boundingBox.Center) * scale) + model3d->origin_scaled;
+        for (int i = 0; i < 6; ++i)
+        {
+          Vector3 n = Vector3(fabs(frustum_planes[i].x), fabs(frustum_planes[i].y), fabs(frustum_planes[i].z));
+          DirectX::SimpleMath::Vector4 v4(center.x, center.y, center.z, 1.f);
+          float e = n.Dot(mesh_it->get()->boundingBox.Extents);
+          float s = frustum_planes[i].Dot(v4);
+          if (s + e < 0.f)
+          {
+            frustum_test = false;
+            break;
+          }
+        }
+        if (frustum_test)
+          model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
       }
 
     }
@@ -919,10 +938,11 @@ void Scene::Render()
       m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
     }
 
-    for (unsigned int i = 0; i < TILES_DIMENSION * TILES_DIMENSION; ++i)
+    for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
     {
       const SceneTile* t = tiles[i]; //object slice is ok
-      if (t->render || !render_models)
+      //t should never be null
+      if (t->render == ALWAYS || t->render == MODEL_HIDDEN || !render_models)
       {
         m_batch->DrawTriangle(t->vpc_pos[VPos::TOP_LEFT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
         m_batch->DrawTriangle(t->vpc_pos[VPos::BOTTOM_RIGHT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
@@ -936,11 +956,9 @@ void Scene::Render()
     for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
     {
       const SceneTile* w = tiles[i]->sea_tile;
-      if (w != nullptr && w->render)
-      {
-        m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
-        m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
-      }
+      if (w == nullptr) continue;
+      m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
+      m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
     }
     for (const QuadSceneTile* qst : fill_tiles_alpha)
     {
@@ -1021,7 +1039,7 @@ void Scene::Render()
 }
 
 BOOL Scene::FillMapSceneTile(const MapSceneTile* a, const MapSceneTile* b, Edge edge)
-{  
+{
   //if (XBLD_IS_HYDROELECTRIC(a->map_tile->xbld)) return FALSE;
   //if (XBLD_IS_HYDROELECTRIC(b->map_tile->xbld)) return FALSE;
   Edge edge2 = edge;
@@ -1075,7 +1093,7 @@ BOOL Scene::FillMapSceneTile(const MapSceneTile* a, const MapSceneTile* b, Edge 
     qst_terrain->vpc[1] = DirectX::VertexPositionColor(a2, winner_color);
     qst_terrain->vpc[2] = DirectX::VertexPositionColor(b2, winner_color);
     qst_terrain->vpc[3] = DirectX::VertexPositionColor(b1, winner_color);
-    if(winner_color.f[3] == 1.f)
+    if (winner_color.f[3] == 1.f)
       fill_tiles.push_back(qst_terrain);
     else
       fill_tiles_alpha.push_back(qst_terrain);
@@ -1142,13 +1160,13 @@ void Scene::FillTileEdges()
     {
       unsigned int index = x + TILES_DIMENSION * y;
       MapSceneTile* this_tile = tiles[index];
-      
+
       if (x == 0)
       {
         FillEdgeSceneTile(index, Edge::LEFT);
       }
       else if (x > 0)
-      { 
+      {
         unsigned int cmp_left_index = (x - 1) + TILES_DIMENSION * y;
         MapSceneTile* cmp_left = tiles[cmp_left_index];
         FillMapSceneTile(this_tile, cmp_left, Edge::LEFT);
@@ -1192,7 +1210,7 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
     const MapTile* tile = tiles[vec_it->second]->map_tile;
     int x1 = vec_it->second % 128;
     int y1 = vec_it->second / 128;
-    
+
     bool clustered = false;
     std::vector<ModelTileVector>::iterator cluster_it;
     for (cluster_it = clusters.begin(); cluster_it != clusters.end(); ++cluster_it)
@@ -1201,17 +1219,17 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
       {
         const MapTile* tile_cluster = tiles[cluster.second]->map_tile;
         int x2 = cluster.second % 128;
-        int y2 = cluster.second / 128;   
+        int y2 = cluster.second / 128;
 
         if (tile_cluster->xbld != tile->xbld) continue;
-        
+
         float distance = std::sqrt(
-          std::pow(x2 - x1, 2) + 
+          std::pow(x2 - x1, 2) +
           std::pow(y2 - y1, 2));
 
         //printf("<%d, %d> -> <%d, %d> Distance: %f\n", x1, y1, x2, y2, distance);
 
-        if (distance <= dist )
+        if (distance <= dist)
         {
           clustered = true;
           cluster_it->push_back(*vec_it);
@@ -1219,7 +1237,7 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
         }
       }
       if (clustered) break;
-    } 
+    }
     if (!clustered)
     {
       clusters.push_back({ *vec_it });
@@ -1261,12 +1279,11 @@ void Scene::SetDrawTileWithModel(MapSceneTile* tile)
   case XBLD_TUNNEL_2:
   case XBLD_TUNNEL_3:
   case XBLD_TUNNEL_4:
-  //case XBLD_HYDROELECTRIC_1:
-  //case XBLD_HYDROELECTRIC_2:
   case XBLD_ZOO:
   case 0xFC:
   case 0xFD:
-/*
+  
+  //Roads are added to help with z-fighting
   case XBLD_ROAD_1:
   case XBLD_ROAD_2:
   case XBLD_ROAD_3:
@@ -1278,9 +1295,8 @@ void Scene::SetDrawTileWithModel(MapSceneTile* tile)
   case XBLD_ROAD_13:
   case XBLD_ROAD_14:
   case XBLD_ROAD_15:
-  */
-  //case XBLD_MARINA:
-    tile->render = false;
+
+  tile->render = MODEL_VISIBLE;
     break;
   }
 }

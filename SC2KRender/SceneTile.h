@@ -2,6 +2,8 @@
 #include "Scene.h"
 #include "ColorConstants.h"
 
+enum TileRenderMode { ALWAYS, NEVER, MODEL_VISIBLE, MODEL_HIDDEN };
+
 struct SceneTile
 {  
   enum VertexPos { TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT };
@@ -10,7 +12,9 @@ struct SceneTile
   DirectX::VertexPositionColor vpc_pos[4];
   DirectX::XMVECTORF32 fill_color;
   float height = -1.f;
-  bool render = true;
+  TileRenderMode render = ALWAYS;
+
+  //bool render = true;
   SceneTile();
   
   void CreateVertexPositionColors();
