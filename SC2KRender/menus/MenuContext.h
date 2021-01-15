@@ -10,8 +10,8 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 struct MenuContext
 {
   static HWND hWndClient, hWndSettings;
-  static HWND MouseSensBar, MoveSpeedBar, ZoomBar, RenderDistBar;
-  static HWND MouseSensText, MoveSpeedText, ZoomText, RenderDistText;
+  static HWND MouseSensBar, MoveSpeedBar, FOVBar, RenderDistBar;
+  static HWND MouseSensText, MoveSpeedText, FOVText, RenderDistText;
   static HMENU Menu, FileMenu, OptionsMenu;
   static RECT WindowRect;
   static RECT ClientRect;
@@ -23,10 +23,10 @@ struct MenuContext
   {
     UpdateWindow(MouseSensBar);
     UpdateWindow(MoveSpeedBar);
-    UpdateWindow(ZoomBar);
+    UpdateWindow(FOVBar);
     UpdateWindow(MouseSensText);
     UpdateWindow(MoveSpeedText);
-    UpdateWindow(ZoomText);
+    UpdateWindow(FOVText);
     UpdateWindow(ShowDebugUICheckbox);
     UpdateWindow(RenderDistBar);
     UpdateWindow(RenderDistText);
@@ -39,7 +39,7 @@ struct MenuContext
     return 
       hWnd == MouseSensText ||
       hWnd == MoveSpeedText ||
-      hWnd == ZoomText ||
+      hWnd == FOVText ||
       hWnd == RenderDistText;
   }
 };

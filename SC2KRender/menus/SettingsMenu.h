@@ -10,13 +10,13 @@
 RECT MenuContext::SettingsRect = { 0, 0, 420, 270 };
 HWND MenuContext::MouseSensText = NULL;
 HWND MenuContext::MoveSpeedText = NULL;
-HWND MenuContext::ZoomText = NULL;
+HWND MenuContext::FOVText = NULL;
 HWND MenuContext::MouseSensBar = NULL;
 HWND MenuContext::MoveSpeedBar = NULL;
 HWND MenuContext::RenderDistBar = NULL;
 HWND MenuContext::RenderDistText = NULL;
 
-HWND MenuContext::ZoomBar = NULL;
+HWND MenuContext::FOVBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
 HWND MenuContext::AABBFrustumCullingCheckbox = NULL;
 HWND MenuContext::MSAA4XCheckbox = NULL;
@@ -30,7 +30,7 @@ const float render_dist_values[7] = { 16.f, 32.f, 48.f, 64.f, 96.f, 128.f, 0.f }
 
 float mouse_speed_value;
 float move_speed_value;
-float zoom_value;
+float fov_value;
 float render_dist_value; //each tile is .5f, so 2 tiles = 1.f, each 0.5m = 50m
 
 void Menus::SetMaxSamples(unsigned int count)
@@ -64,16 +64,15 @@ void Menus::UpdateMoveSpeedBar(int slider_value)
   UpdateWindow(MenuContext::MoveSpeedText);
 }
 
-void Menus::UpdateZoomBar(int slider_value)
+void Menus::UpdateFOVBar(int slider_value)
 {
-  if (slider_value < 1 || slider_value > 10) return;
-  zoom_value = (float) slider_value / 10.f;
+  if (slider_value < 1 || slider_value > 7) return;
+  fov_value = 50.f + ((float) slider_value * 10.f);
 
-  std::string zoom_text("World Zoom: ");
-  zoom_text.append(std::to_string(slider_value * 10));
-  zoom_text.append("%");
-  SetWindowText(MenuContext::ZoomText, zoom_text.c_str());
-  UpdateWindow(MenuContext::ZoomText);
+  std::string fov_text("Field of View: ");
+  fov_text.append(std::to_string((int)fov_value));
+  SetWindowText(MenuContext::FOVText, fov_text.c_str());
+  UpdateWindow(MenuContext::FOVText);
 }
 
 void Menus::UpdateRenderDistBar(int slider_value)
@@ -98,9 +97,9 @@ float Menus::GetMouseSpeed()
   return mouse_speed_value;
 }
 
-float Menus::GetZoom()
+float Menus::GetFOV()
 {
-  return zoom_value;
+  return fov_value;
 }
 
 float Menus::GetRenderDist()
@@ -166,20 +165,20 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     190, 50, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
   UpdateWindow(MenuContext::MoveSpeedText);
 
-  MenuContext::ZoomBar = CreateWindow(
-    TRACKBAR_CLASS, "ZoomBar", WS_VISIBLE | WS_CHILD | TBS_HORZ | TBS_AUTOTICKS,
+  MenuContext::FOVBar = CreateWindow(
+    TRACKBAR_CLASS, "FOVBar", WS_VISIBLE | WS_CHILD | TBS_HORZ | TBS_AUTOTICKS,
     10, 90, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
 
-  SendMessage(MenuContext::ZoomBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
-  SendMessage(MenuContext::ZoomBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(10));
-  SendMessage(MenuContext::ZoomBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(1));
-  SendMessage(MenuContext::ZoomBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
-  UpdateWindow(MenuContext::ZoomBar);
+  SendMessage(MenuContext::FOVBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
+  SendMessage(MenuContext::FOVBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
+  SendMessage(MenuContext::FOVBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(2));
+  SendMessage(MenuContext::FOVBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
+  UpdateWindow(MenuContext::FOVBar);
 
-  MenuContext::ZoomText = CreateWindow("EDIT", "World Zoom: 10%",
+  MenuContext::FOVText = CreateWindow("EDIT", "Field of View: 70",
     WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE,
     190, 90, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
-  UpdateWindow(MenuContext::ZoomText);
+  UpdateWindow(MenuContext::FOVText);
 
   MenuContext::RenderDistBar = CreateWindow(
     TRACKBAR_CLASS, "RenderDistBar", WS_VISIBLE | WS_CHILD | TBS_HORZ | TBS_AUTOTICKS,
@@ -224,5 +223,5 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
   UpdateMoveSpeedBar(4);
   UpdateMouseSpeedBar(4);
   UpdateRenderDistBar(7);
-  UpdateZoomBar(1);
+  UpdateFOVBar(2);
 }

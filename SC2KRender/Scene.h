@@ -57,6 +57,7 @@ public:
   void Update(DX::StepTimer const& timer);
   void MultiplyMovementSpeed(float value);
   void SetScale(float);
+  void SetFOV(float);
   void SetRenderDebugUI(bool);
   void SetAABBFrustumCulling(bool);
   void SetMovementSpeed(float);
@@ -111,7 +112,6 @@ private:
   BOOL FillMapSceneTile(const MapSceneTile*, const MapSceneTile*, Edge);
   BOOL FillEdgeSceneTile(unsigned int, Edge);
 
-  //void DrawModel(Model3D*);
 
   HWND m_window;
   RECT m_window_coords;
@@ -164,13 +164,12 @@ private:
   float rotation_y = 0.8f;
   float yaw = 0.f;
   float pitch = 0.f;
-  float scale = 0.1f;
+  float scale = 1.f; //Dev-use only
   float base_move_speed = 0.2f;
   float mouse_move_speed = 0.003f;
   float move_speed = base_move_speed * scale;
   unsigned int max_supported_sample_count = 0;
-  //float fov = DirectX::XM_PI / 4.f;
-  float fov = DirectX::XM_PI / 3.f;
+  float fov = 70.f * DirectX::XM_PI / 180.f;
   int window_cx = 0, window_cy = 0;
   int client_cx = 0, client_cy = 0;
   float render_distance = 0.f;

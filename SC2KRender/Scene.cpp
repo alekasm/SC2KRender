@@ -75,6 +75,13 @@ void Scene::PreInitialize(HWND window)
 #endif
 }
 
+void Scene::SetFOV(float value)
+{
+  fov = value * (M_PI / 180.f);
+  m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
+  m_effect->SetProjection(m_proj);
+}
+
 void Scene::SetScale(float value)
 {
   float scale_clamp = std::clamp(value, 0.1f, 1.f);

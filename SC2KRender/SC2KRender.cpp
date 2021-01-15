@@ -235,10 +235,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       Menus::UpdateMoveSpeedBar(slider_value);
       scene->SetMovementSpeed(Menus::GetMoveSpeed());
     }
-    else if ((HWND)lParam == MenuContext::ZoomBar)
+    else if ((HWND)lParam == MenuContext::FOVBar)
     {
-      Menus::UpdateZoomBar(slider_value);
-      scene->SetScale(Menus::GetZoom());
+      Menus::UpdateFOVBar(slider_value);
+      scene->SetFOV(Menus::GetFOV());
     }
     else if ((HWND)lParam == MenuContext::RenderDistBar)
     {
