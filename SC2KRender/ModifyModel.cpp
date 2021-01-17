@@ -79,10 +79,17 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
         if (left_tile->sea_tile != nullptr)
         {
           SceneTile* left_sea_tile = left_tile->sea_tile;
+
+          if (tile->v_pos[SceneTile::VertexPos::TOP_LEFT].y <
+            left_sea_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT].y)
           left_sea_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT] =
             left_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT];
+
+          if (tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT].y <
+            left_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT].y)
           left_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT] =
             left_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT];
+
           left_sea_tile->CreateVertexPositionColors();
         }
       }
@@ -93,10 +100,17 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
         if (top_tile->sea_tile != nullptr)
         {
           SceneTile* top_sea_tile = top_tile->sea_tile;
+
+          if (tile->v_pos[SceneTile::VertexPos::TOP_LEFT].y <
+            top_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT].y)
           top_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT] =
             top_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT];
+
+          if (tile->v_pos[SceneTile::VertexPos::TOP_RIGHT].y <
+            top_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT].y)
           top_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT] =
             top_tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT];
+
           top_sea_tile->CreateVertexPositionColors();
         }
       }
@@ -106,11 +120,18 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
         MapSceneTile* bottom_tile = tiles[x + TILES_DIMENSION * (y + 1)];
         if (bottom_tile->sea_tile != nullptr)
         {
-          SceneTile* bottom_sea_tile = bottom_tile->sea_tile;
+          SceneTile* bottom_sea_tile = bottom_tile->sea_tile;          
+          
+          if(tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT].y <
+            bottom_sea_tile->v_pos[SceneTile::VertexPos::TOP_LEFT].y)
           bottom_sea_tile->v_pos[SceneTile::VertexPos::TOP_LEFT] =
             bottom_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
+          
+          if (tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT].y <
+            bottom_sea_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT].y)
           bottom_sea_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT] =
-            bottom_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT];
+            bottom_tile->v_pos[SceneTile::VertexPos::TOP_RIGHT];          
+
           bottom_sea_tile->CreateVertexPositionColors();
         }  
       }
@@ -121,10 +142,17 @@ void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
         if (right_tile->sea_tile != nullptr)
         {
           SceneTile* right_sea_tile = right_tile->sea_tile;
+
+          if (tile->v_pos[SceneTile::VertexPos::TOP_RIGHT].y <
+            right_sea_tile->v_pos[SceneTile::VertexPos::TOP_LEFT].y)
           right_sea_tile->v_pos[SceneTile::VertexPos::TOP_LEFT] =
             right_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
+
+          if (tile->v_pos[SceneTile::VertexPos::BOTTOM_RIGHT].y <
+            right_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT].y)
           right_sea_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT] =
             right_tile->v_pos[SceneTile::VertexPos::BOTTOM_LEFT];
+
           right_sea_tile->CreateVertexPositionColors();
         }
       }

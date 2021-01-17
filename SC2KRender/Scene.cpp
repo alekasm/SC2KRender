@@ -250,11 +250,11 @@ void Scene::Initialize(Map& map)
         (no_xzon && (map_tile->xbit >> 4) == 0) ||
         (!XBLD_IS_BUILDING(map_tile->xbld));
 
-      if (render_tile)
+      if (AssetLoader::xbld_map.count(map_tile->xbld))      
       {
-        if (AssetLoader::xbld_map.count(map_tile->xbld))
-        {
-          SetDrawTileWithModel(t);
+        SetDrawTileWithModel(t);
+        if (render_tile)
+        {          
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
           it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(map_tile->xbld));
           if (it != AssetLoader::mmodels->end())
@@ -744,7 +744,8 @@ void Scene::Update(DX::StepTimer const& timer)
     m_position.z -= sin(yaw - (float)M_PI_2) * fps_move_speed;
     m_position.y += sin(pitch) * fps_move_speed;
   }
-  else if (GetAsyncKeyState(0x41)) //A (strafe left)
+
+  if (GetAsyncKeyState(0x41)) //A (strafe left)
   {
     m_position.x -= cos(yaw) * fps_move_speed;
     m_position.z -= sin(yaw) * fps_move_speed;
@@ -754,7 +755,8 @@ void Scene::Update(DX::StepTimer const& timer)
     m_position.x += cos(yaw) * fps_move_speed;
     m_position.z += sin(yaw) * fps_move_speed;
   }
-  else if (GetAsyncKeyState(0x52)) //R (strafe up)
+
+  if (GetAsyncKeyState(0x52)) //R (strafe up)
     m_position.y += fps_move_speed;
   else if (GetAsyncKeyState(0x46)) //F (strafe down)
     m_position.y -= fps_move_speed;
