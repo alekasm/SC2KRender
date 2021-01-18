@@ -799,30 +799,7 @@ void Scene::MultiplyMovementSpeed(float value)
 void Scene::SetRenderModels(bool value)
 {
   render_models = value;
-  for (unsigned int y = 0; y < TILES_DIMENSION; ++y)
-  {
-    for (unsigned int x = 0; x < TILES_DIMENSION; ++x)
-    {
-      const MapSceneTile* t = tiles[x + TILES_DIMENSION * y];
-      if (XBLD_IS_HYDROELECTRIC(t->map_tile->xbld))
-      {
-        if (t->map_tile->xter == XTER_WATERFALL)
-        {
-          if (render_models)
-          {
-            //t.SetHeight(t.map_tile->height);
-          }
-          else
-          {
-            //t.FillAttributes(t.map_tile);
-          }
-
-        }
-      }
-    }
-  }
 }
-
 
 void Scene::Render()
 {
@@ -835,10 +812,8 @@ void Scene::Render()
 
   if (render_scene)
   {
-
     if (render_models)
     {
-
       Matrix view_proj = m_view * m_proj;
       Plane frustum_planes[6];
 
@@ -945,7 +920,7 @@ void Scene::Render()
     for (const QuadSceneTile* qst : fill_tiles)
     {
       m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
-    }
+    }       
 
     for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
     {
