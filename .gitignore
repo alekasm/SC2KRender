@@ -342,3 +342,4 @@ healthchecksdb
 # Custom SC2KRender Files
 *.sc2
 maps/
+Steam/
