@@ -182,6 +182,7 @@
     <ClCompile Include="ModifyModel.cpp" />
     <ClCompile Include="SC2KRender.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneGenerator.cpp" />
     <ClCompile Include="SceneTile.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -226,6 +227,7 @@
     <ClInclude Include="QuadSceneTile.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneGenerator.h" />
     <ClInclude Include="SceneTile.h" />
     <ClInclude Include="Sprite2D.h" />
     <ClInclude Include="Sprite3D.h" />

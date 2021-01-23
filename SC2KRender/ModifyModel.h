@@ -1,5 +1,7 @@
 #pragma once
 #include "Model3D.h"
+
+typedef std::vector<std::pair<size_t, size_t>> ModelTileVector;
 struct SecondaryProps;
 struct ModifyModel
 { 

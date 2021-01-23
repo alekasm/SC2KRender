@@ -58,6 +58,7 @@ void ModifyModel::SetMapRotation(uint32_t rotation)
 {
   map_rotation = rotation;
 }
+
 void ModifyModel::AdjustHydroElectricSea(MapSceneTile** tiles)
 {
   for (unsigned int y = 0; y < TILES_DIMENSION; ++y)

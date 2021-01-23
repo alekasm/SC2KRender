@@ -234,7 +234,6 @@ namespace
   };
 }
 
-#define ALLOW_UNSAFE_DATA TRUE
 bool MapLoader::LoadMap(std::string filename, Map& out)
 {
   FILE* file;

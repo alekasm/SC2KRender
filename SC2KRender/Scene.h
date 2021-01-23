@@ -29,20 +29,6 @@ struct Sprite3D;
 struct Model3D;
 using DirectX::SimpleMath::Vector3;
 
-namespace DX
-{
-  inline void ThrowIfFailed(HRESULT hr)
-  {
-    if (FAILED(hr))
-    {
-      // Set a breakpoint on this line to catch DirectX API errors
-      throw std::exception();
-    }
-  }
-}
-enum Edge { LEFT, TOP, BOTTOM, RIGHT };
-typedef std::vector<std::pair<size_t, size_t>> ModelTileVector;
-
 class Scene
 {
 public:
@@ -105,12 +91,6 @@ private:
   void CreateDevice();
   void CreateResources();
   void Clear();    
-  void ClusterTiles(const ModelTileVector&, float, std::vector<ModelTileVector>&);
-  
-  void FillTileEdges();
-  BOOL FillMapSceneTile(const MapSceneTile*, const MapSceneTile*, Edge);
-  BOOL FillEdgeSceneTile(unsigned int, Edge);
-
 
   HWND m_window;
   RECT m_window_coords;
@@ -173,8 +153,6 @@ private:
   int client_cx = 0, client_cy = 0;
   float render_distance = 0.f;
   float scaled_render_distance = render_distance * scale;
-  BYTE map_orientation = 0x0;
-  uint32_t map_rotation = 0;
   MapSceneTile** tiles = nullptr;
   MapTile* map_tiles = nullptr;
   const Map map;

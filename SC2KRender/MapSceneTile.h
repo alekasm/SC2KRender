@@ -6,5 +6,4 @@ struct MapSceneTile : public SceneTile
   void FillAttributes(const MapTile*);
   const MapTile* map_tile; 
   SceneTile* sea_tile = nullptr;
-  //bool sea_tile = false;
 };
