@@ -68,11 +68,11 @@ void Scene::PreInitialize(HWND window)
   AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
 #endif
 
-#if USING_MODELS
+
   m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
   AssetLoader::LoadCustomAssets(L"assets/assetmap.cfg");
-#endif
+  AssetLoader::LoadXBLDVisibilityParameters(L"assets/visiblemap.cfg");
 }
 
 void Scene::SetFOV(float value)
@@ -252,7 +252,11 @@ void Scene::Initialize(Map& map)
 
       if (AssetLoader::xbld_map.count(map_tile->xbld))      
       {
-        SetDrawTileWithModel(t);
+        auto it = AssetLoader::xbld_visible_map.find(t->map_tile->xbld);
+        if (it != AssetLoader::xbld_visible_map.end())
+        {
+          t->render = it->second;
+        }
         if (render_tile)
         {          
           std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
@@ -402,7 +406,6 @@ void Scene::Initialize(Map& map)
           }
         }
       }
-      //SetDrawTileWithModel(t);
     }
   }
 
@@ -921,6 +924,7 @@ void Scene::Render()
     {
       m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
     }       
+    //->Draw(Quads, tiles.begin(), tiles.count())
 
     for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
     {
@@ -932,6 +936,16 @@ void Scene::Render()
         m_batch->DrawTriangle(t->vpc_pos[VPos::BOTTOM_RIGHT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
       }
     }
+
+    /*
+    for (int x = 0; x < 128; x++)
+      m_batch->DrawLine(DirectX::VertexPositionColor(Vector3(x, 4, 0), DirectX::Colors::Black),
+        DirectX::VertexPositionColor(Vector3(x, 4, 128), DirectX::Colors::Black));
+    for (int y = 0; y < 128; y++)
+      m_batch->DrawLine(DirectX::VertexPositionColor(Vector3(0, 4, y), DirectX::Colors::Black),
+        DirectX::VertexPositionColor(Vector3(128, 4, y), DirectX::Colors::Black));
+    */
+
     m_batch->End();
 
     //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
@@ -1252,35 +1266,5 @@ void Scene::ClusterTiles(const ModelTileVector& vec, float dist, std::vector<Mod
       clusters.clear();
       return;
     }
-  }
-}
-
-void Scene::SetDrawTileWithModel(MapSceneTile* tile)
-{
-  switch (tile->map_tile->xbld)
-  {
-  case XBLD_TUNNEL_1:
-  case XBLD_TUNNEL_2:
-  case XBLD_TUNNEL_3:
-  case XBLD_TUNNEL_4:
-  case XBLD_ZOO:
-  case 0xFC:
-  case 0xFD:
-  
-  //Roads are added to help with z-fighting
-  case XBLD_ROAD_1:
-  case XBLD_ROAD_2:
-  case XBLD_ROAD_3:
-  case XBLD_ROAD_4:
-  case XBLD_ROAD_5:
-  case XBLD_ROAD_6:
-  case XBLD_ROAD_11:
-  case XBLD_ROAD_12:
-  case XBLD_ROAD_13:
-  case XBLD_ROAD_14:
-  case XBLD_ROAD_15:
-
-  tile->render = MODEL_VISIBLE;
-    break;
   }
 }

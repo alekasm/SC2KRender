@@ -8,6 +8,7 @@ std::map<std::wstring, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>>* AssetL
 std::map<std::wstring, CD3D11_TEXTURE2D_DESC>* AssetLoader::mdescriptions;
 std::map<std::wstring, std::shared_ptr<DirectX::Model>>* AssetLoader::mmodels;
 std::map<int32_t, std::wstring> AssetLoader::xbld_map;
+std::map<int32_t, TileRenderMode> AssetLoader::xbld_visible_map;
 
 void AssetLoader::LoadSprites(Microsoft::WRL::ComPtr<ID3D11Device1> device, std::wstring directory)
 {
@@ -91,5 +92,24 @@ void AssetLoader::LoadCustomAssets(std::wstring file)
     std::wstring file_value = line.substr(it + 1, line.size());
     int32_t xbld_value = _wtoi(enum_value.c_str());
     xbld_map[xbld_value] = file_value;
+  }
+}
+
+void AssetLoader::LoadXBLDVisibilityParameters(std::wstring file)
+{
+  std::wifstream file_stream(file);
+  if (!file_stream.good())
+    return;
+  std::wstring line;
+  while (std::getline(file_stream, line))
+  {
+    auto it = line.find(',');
+    if (it == std::string::npos || line.empty())
+      continue;
+    std::wstring enum_value = line.substr(0, it);
+    std::wstring visibility_value = line.substr(it + 1, line.size());
+    int32_t xbld_value = _wtoi(enum_value.c_str());
+    TileRenderMode render_mode = (TileRenderMode)_wtoi(visibility_value.c_str());
+    xbld_visible_map[xbld_value] = render_mode;
   }
 }

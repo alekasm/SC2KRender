@@ -106,7 +106,6 @@ private:
   void CreateResources();
   void Clear();    
   void ClusterTiles(const ModelTileVector&, float, std::vector<ModelTileVector>&);
-  void SetDrawTileWithModel(MapSceneTile*);  
   
   void FillTileEdges();
   BOOL FillMapSceneTile(const MapSceneTile*, const MapSceneTile*, Edge);

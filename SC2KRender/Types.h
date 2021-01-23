@@ -1,5 +1,8 @@
 #pragma once
 
+//Define all enum values because we will be loading and casting from a param file
+enum TileRenderMode { ALWAYS = 0, NEVER = 1, MODEL_VISIBLE = 2, MODEL_HIDDEN = 3 };
+
 enum XZONType;
 enum XUNDType;
 enum XBITType;
