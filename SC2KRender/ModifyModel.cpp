@@ -180,6 +180,7 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
   case XBLD_HIGHWAY_CROSSOVER_4:
   case XBLD_POWER_LINE_2:
   case XBLD_HIGHWAY_CROSSOVER_6:
+  case XBLD_SUB_RAIL_1:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(0.f, 0.f, 1.f);
     break;
@@ -193,11 +194,13 @@ void ModifyModel::RotateModel(int32_t model_id, Model3D* model, const MapTile* t
     break;
   case XBLD_ROAD_8:
   case XBLD_RAIL_8:
+  case XBLD_SUB_RAIL_4:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, M_PI);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 1.f);
     break;
   case XBLD_ROAD_7:
   case XBLD_RAIL_7:
+  case XBLD_SUB_RAIL_3:
     model->m_world_identity = DirectX::XMMatrixRotationAxis(Vector3::UnitY, -M_PI_2);
     model->m_world_identity *= DirectX::XMMatrixTranslation(1.f, 0.f, 0.f);
     break;

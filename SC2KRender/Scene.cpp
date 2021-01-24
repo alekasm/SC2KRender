@@ -42,8 +42,8 @@ void Scene::UpdateWindow(HWND hWnd)
   m_outputWidth = m_outputWidth_;
   m_outputHeight = m_outputHeight_;
 
-  client_cx = m_outputWidth / 2;
-  client_cy = m_outputHeight / 2;
+  client_cx = static_cast<int>(m_outputWidth / 2);
+  client_cy = static_cast<int>(m_outputHeight / 2);
   window_cx = static_cast<int>(WindowRect.left + client_cx);
   window_cy = static_cast<int>(WindowRect.top + client_cy);
 
@@ -79,7 +79,7 @@ void Scene::PreInitialize(HWND window)
 
 void Scene::SetFOV(float value)
 {
-  fov = value * (M_PI / 180.f);
+  fov = static_cast<float>(value * (M_PI / 180.f));
   m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
   m_effect->SetProjection(m_proj);
 }
@@ -108,7 +108,7 @@ void Scene::SetEnableVSync(bool value)
 
 void Scene::SetMSAA(unsigned int value)
 {
-  msaa_value = std::pow(2, value);
+  msaa_value = static_cast<unsigned int>(std::pow(2, value));
   CreateResources();
 }
 
@@ -241,9 +241,7 @@ void Scene::CreateDevice()
       context.ReleaseAndGetAddressOf()    // returns the device immediate context
     );
 
-
   //device->CreateDeferredContext(0, &pd3dDeferredContext);
-
 
   device.As(&m_d3dDevice);
   context.As(&m_d3dContext);
@@ -265,7 +263,6 @@ void Scene::CreateDevice()
   m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
-
 
   /*
   CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
@@ -311,7 +308,7 @@ void Scene::CreateResources()
     for (unsigned int s = 1; s < 5; ++s)
     {
       UINT num_qual_levels;
-      unsigned int sample_count = std::pow(2, s);
+      unsigned int sample_count = static_cast<unsigned int>(std::pow(2, s));
       HRESULT multi_sample_hr = m_d3dDevice->CheckMultisampleQualityLevels(
         DXGI_FORMAT_B8G8R8A8_UNORM,
         sample_count, &num_qual_levels);
@@ -495,7 +492,7 @@ void Scene::SetAABBFrustumCulling(bool value)
 
 void Scene::Update(DX::StepTimer const& timer)
 {
-  float fps = timer.GetFramesPerSecond();
+  float fps = static_cast<float>(timer.GetFramesPerSecond());
   float delta_fps = fps > 0.01f ? 100 / fps : 1;
   float fps_move_speed = move_speed * delta_fps;
 
@@ -532,8 +529,8 @@ void Scene::Update(DX::StepTimer const& timer)
 void Scene::MouseClick()
 {
   if (!render_debug_ui) return;
-  Vector3 near_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 0.f), m_proj, m_view, m_world);
-  Vector3 far_plane = m_viewport.Unproject(Vector3(client_cx, client_cy, 1.f), m_proj, m_view, m_world);
+  Vector3 near_plane = m_viewport.Unproject(Vector3((float)client_cx, (float)client_cy, 0.f), m_proj, m_view, m_world);
+  Vector3 far_plane = m_viewport.Unproject(Vector3((float)client_cx, (float)client_cy, 1.f), m_proj, m_view, m_world);
   Vector3 normalized = far_plane - near_plane;
   normalized.Normalize();
   DirectX::SimpleMath::Ray ray(near_plane, normalized);
