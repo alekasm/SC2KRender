@@ -55,9 +55,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   SetConsoleMode(hInput, dwMode & ENABLE_EXTENDED_FLAGS);
   ShowWindow(GetConsoleWindow(), SW_HIDE);
 
-  printf("SC2KRender (Version 0.7)\n");
+  printf("SC2KRender (Version 0.8)\n");
   printf("Written by Aleksander Krimsky | www.krimsky.net\n");
-  printf("3D Models by Thomas Nelson\n");
+  printf("Lead Artist: Thomas Nelson\n");
   printf("Written with DirectX 11 - Modified DirectXTK\n");
   printf("GitHub: https://github.com/alekasm/SC2KRender \n");
   printf("\nControls:\nFree Cam: WASD\nStrafe Up/Down: RF\n\n");
