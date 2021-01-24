@@ -106,9 +106,9 @@ void Scene::SetEnableVSync(bool value)
   use_vsync = value;
 }
 
-void Scene::SetMSAA(bool value)
+void Scene::SetMSAA(unsigned int value)
 {
-  use_4x_msaa = value;
+  msaa_value = std::pow(2, value);
   CreateResources();
 }
 
@@ -320,14 +320,10 @@ void Scene::CreateResources()
       {
         break;
       }
-      max_supported_sample_count = sample_count;
+      max_supported_sample_count = sample_count;     
     }
-
-    if (max_supported_sample_count < 4)
-    {
-      use_4x_msaa = false;
-    }
-    printf("Max MSAA Sample Count: %d. Using 4x MSAA: %d\n", max_supported_sample_count, use_4x_msaa);
+    msaa_value = max_supported_sample_count;
+    printf("Max MSAA Sample Count: %d\n", max_supported_sample_count);
   }
 
   // If the swap chain already exists, resize it, otherwise create one.
@@ -352,7 +348,7 @@ void Scene::CreateResources()
     swapChainDesc.Height = backBufferHeight;
     swapChainDesc.Format = backBufferFormat;
     //swapChainDesc.SampleDesc.Count = 1;
-    swapChainDesc.SampleDesc.Count = use_4x_msaa ? 4 : 1;
+    swapChainDesc.SampleDesc.Count = msaa_value;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.BufferCount = backBufferCount;
@@ -406,10 +402,10 @@ void Scene::CreateResources()
 
   CD3D11_TEXTURE2D_DESC depthStencilDesc;
   CD3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-  if (use_4x_msaa)
+  if (msaa_value)
   {
     depthStencilDesc = CD3D11_TEXTURE2D_DESC(depthBufferFormat, backBufferWidth, backBufferHeight, 1, 1,
-      D3D11_BIND_DEPTH_STENCIL, D3D11_USAGE_DEFAULT, 0, 4, 0);
+      D3D11_BIND_DEPTH_STENCIL, D3D11_USAGE_DEFAULT, 0, msaa_value, 0);
     depthStencilViewDesc = CD3D11_DEPTH_STENCIL_VIEW_DESC(D3D11_DSV_DIMENSION_TEXTURE2DMS);
   }
   else
@@ -500,7 +496,7 @@ void Scene::SetAABBFrustumCulling(bool value)
 void Scene::Update(DX::StepTimer const& timer)
 {
   float fps = timer.GetFramesPerSecond();
-  float delta_fps = fps ? 100 / fps : 1;
+  float delta_fps = fps > 0.01f ? 100 / fps : 1;
   float fps_move_speed = move_speed * delta_fps;
 
   if (GetAsyncKeyState(0x57)) //W (move forward)
@@ -638,7 +634,6 @@ void Scene::Render()
           tile = tiles[id];
           if (tile->render == MODEL_HIDDEN)
             tile->render = MODEL_VISIBLE;
-
         }
 
         if (use_render_distance && Vector3::Distance(m_position, model3d->origin_scaled) > scaled_render_distance)

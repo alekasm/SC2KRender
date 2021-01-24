@@ -19,7 +19,7 @@ HWND MenuContext::RenderDistText = NULL;
 HWND MenuContext::FOVBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
 HWND MenuContext::AABBFrustumCullingCheckbox = NULL;
-HWND MenuContext::MSAA4XCheckbox = NULL;
+HWND MenuContext::MSAAComboBox = NULL;
 HWND MenuContext::VSyncCheckbox = NULL;
 HWND MenuContext::hWndSettings = NULL;
 
@@ -35,11 +35,16 @@ float render_dist_value; //each tile is .5f, so 2 tiles = 1.f, each 0.5m = 50m
 
 void Menus::SetMaxSamples(unsigned int count)
 {
-  if (count <= 1)
+  unsigned int index = 0;
+  for (unsigned int samples = 2; samples <= count; samples *= 2)
   {
-    EnableWindow(MenuContext::MSAA4XCheckbox, FALSE);
-    Button_SetCheck(MenuContext::MSAA4XCheckbox, BST_UNCHECKED);
-  }
+    char text[64];
+    snprintf(text, sizeof(text), "MSAA %dx", samples);
+    SendMessage(MenuContext::MSAAComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)text);   
+    ++index;
+  }  
+  SendMessage(MenuContext::MSAAComboBox, CB_SETCURSEL, (WPARAM)index, (LPARAM)0);
+  UpdateWindow(MenuContext::MSAAComboBox);
 }
 
 void Menus::UpdateMouseSpeedBar(int slider_value)
@@ -195,15 +200,16 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     190, 130, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
   UpdateWindow(MenuContext::RenderDistText);
 
-  MenuContext::MSAA4XCheckbox = CreateWindow(
-    "Button", "4x MSAA", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    10, 170, 150, 25, MenuContext::hWndSettings, NULL,
-    NULL, NULL);
-  Button_SetCheck(MenuContext::MSAA4XCheckbox, BST_CHECKED);
+  MenuContext::MSAAComboBox = CreateWindow(
+    "COMBOBOX", "", WS_VISIBLE | WS_CHILDWINDOW | CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_BORDER,
+    10, 170, 150, 150, MenuContext::hWndSettings, NULL, NULL, NULL);
+
+  SendMessage(MenuContext::MSAAComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)"No Anti-Aliasing");
+  SendMessage(MenuContext::MSAAComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 
   MenuContext::AABBFrustumCullingCheckbox = CreateWindow(
     "Button", "AABB Frustum Culling", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    170, 170, 200, 25, MenuContext::hWndSettings, NULL,
+    180, 170, 200, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::AABBFrustumCullingCheckbox, BST_CHECKED);
 
@@ -215,7 +221,7 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
 
   MenuContext::VSyncCheckbox = CreateWindow(
     "Button", "Enable VSync", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    170, 195, 150, 25, MenuContext::hWndSettings, NULL,
+    180, 195, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::VSyncCheckbox, BST_CHECKED);
 

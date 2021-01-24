@@ -139,10 +139,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
         scene->SetAABBFrustumCulling(chkState == BST_CHECKED);
       }
-      else if ((HWND)lParam == MenuContext::MSAA4XCheckbox)
+      else if ((HWND)lParam == MenuContext::MSAAComboBox)
       {
-        LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
-        scene->SetMSAA(chkState == BST_CHECKED);
+        if (HIWORD(wParam) == CBN_SELCHANGE)
+        {
+          unsigned int index = SendMessage((HWND)lParam, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
+          scene->SetMSAA(index);          
+        }
       }
       else if ((HWND)lParam == MenuContext::VSyncCheckbox)
       {

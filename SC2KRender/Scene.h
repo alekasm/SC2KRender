@@ -49,7 +49,7 @@ public:
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
   void SetRenderDistance(float);
-  void SetMSAA(bool);
+  void SetMSAA(unsigned int);
   void SetEnableVSync(bool);
   unsigned int GetMaxSampleCount();
 
@@ -102,7 +102,7 @@ private:
   bool use_aabb_frustum_culling = true;
   bool use_vsync = true;
   bool use_render_distance;
-  bool use_4x_msaa = true;
+  unsigned int msaa_value = 0;
   bool focused = false;
 
 
