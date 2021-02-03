@@ -51,7 +51,8 @@ std::map<XBLDType, std::vector<std::pair<int32_t, SecondaryProps>>> ModifyModel:
   {XBLD_BRIDGE_COMMON_PIECE_1, {{SceneryObject::BRIDGE_RAISED_PILLAR, SecondaryProps(true)},
                                 {SceneryObject::BRIDGE_RAISED_ARC, SecondaryProps(Origin::MODEL)}                                
                               }
-  }
+  },
+  {XBLD_PIER, {{SceneryObject::PIER_PILLAR, SecondaryProps(true)}}}
 };
 
 void ModifyModel::SetMapRotation(uint32_t rotation)

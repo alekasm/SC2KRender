@@ -453,6 +453,7 @@ void Scene::Tick()
   Render();
 }
 #define M_PI_3 1.04719755119659774615
+
 void Scene::MouseLook(int x, int y)
 {
   float dx = static_cast<float>(x - window_cx) * mouse_move_speed;
@@ -657,7 +658,7 @@ void Scene::Render()
           DirectX::SimpleMath::Vector4 v4(center.x, center.y, center.z, 1.f);
           float e = n.Dot(mesh_it->get()->boundingBox.Extents);
           float s = frustum_planes[i].Dot(v4);
-          if (s + e < 0.f)
+          if (s + e < -.75f) //TODO Figure out why 0.f is too sensitive
           {
             frustum_test = false;
             break;
