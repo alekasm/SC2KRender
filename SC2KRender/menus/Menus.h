@@ -14,4 +14,7 @@ struct Menus
   static float GetFOV();  
   static float GetRenderDist();
   static void SetMaxSamples(unsigned int);
+  static void SetWindowedMode();
+  static void SetBorderlessMode();
+  static void SetFullScreenMode();
 };

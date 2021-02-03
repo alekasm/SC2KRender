@@ -138,7 +138,7 @@ void Scene::SetRenderDistance(float value)
         fog->SetFogEnd(scaled_render_distance);
       }
     });
-  }
+  }  
 }
 
 void Scene::Initialize(Map& map)
@@ -208,6 +208,11 @@ void Scene::Initialize(Map& map)
   printf("Rendering %d 3d models\n", v_model3d.size());
 
   render_scene = true;
+}
+
+bool Scene::SetFullScreen(BOOL value)
+{
+  return m_swapChain->SetFullscreenState(value, NULL) == S_OK;
 }
 
 void Scene::CreateDevice()

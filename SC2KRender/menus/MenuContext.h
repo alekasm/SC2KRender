@@ -5,20 +5,28 @@
 #define MENU_SHOW_CONSOLE 2
 #define MENU_SHOW_MODELS 3
 #define MENU_SHOW_SETTINGS 4
+#define MENU_EXIT 5
+#define MENU_SCREEN_WINDOWED 6
+#define MENU_SCREEN_BORDERLESS 7
+#define MENU_SCREEN_FULLSCREEN 8
+
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+enum ScreenMode{WINDOWED, BORDERLESS, FULLSCREEN};
 struct MenuContext
 {
   static HWND hWndClient, hWndSettings;
   static HWND MouseSensBar, MoveSpeedBar, FOVBar, RenderDistBar;
   static HWND MouseSensText, MoveSpeedText, FOVText, RenderDistText;
-  static HMENU Menu, FileMenu, OptionsMenu;
+  static HMENU Menu, FileMenu, OptionsMenu, ResolutionMenu;
   static RECT WindowRect;
   static RECT ClientRect;
   static RECT SettingsRect;
   static HWND ShowDebugUICheckbox, AABBFrustumCullingCheckbox,
               VSyncCheckbox;
   static HWND MSAAComboBox;
+  static ScreenMode screen_mode;
+  
 
   static void UpdateWindows()
   {

@@ -51,6 +51,7 @@ public:
   void SetRenderDistance(float);
   void SetMSAA(unsigned int);
   void SetEnableVSync(bool);
+  bool SetFullScreen(BOOL);
   unsigned int GetMaxSampleCount();
 
   DirectX::SimpleMath::Matrix GetViewMatrix()

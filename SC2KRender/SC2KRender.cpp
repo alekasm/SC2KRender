@@ -84,6 +84,20 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   return (int)msg.wParam;
 }
 
+//This function will be called when activating it, or when exiting fullscreen
+void SetWindowedBorderless()
+{
+  MENUITEMINFO mii;
+  mii.cbSize = sizeof(MENUITEMINFO);
+  mii.fMask = MIIM_STATE;
+  mii.fState = MFS_CHECKED;
+  SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_BORDERLESS, FALSE, &mii);
+  mii.fState = MFS_UNCHECKED;
+  SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_WINDOWED, FALSE, &mii);
+  SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_FULLSCREEN, FALSE, &mii);
+  Menus::SetBorderlessMode();
+}
+
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -96,14 +110,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       if (scene->HasFocus())
       {
         scene->SetFocus(false);
+        if (MenuContext::screen_mode == ScreenMode::FULLSCREEN)
+        {
+          if (scene->SetFullScreen(FALSE))
+          {
+            SetWindowedBorderless();
+          }
+        }
       }
       else
       {
         PostQuitMessage(0);
       }
     }
-    break;
-    
+    break;    
 
   case WM_WINDOWPOSCHANGED:
     if (hWnd == MenuContext::hWndClient)
@@ -193,8 +213,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       ShowWindow(GetConsoleWindow(), SW_SHOWNOACTIVATE);
       break;
 
+    case MENU_EXIT:
+      PostQuitMessage(0);
+      break;
+
     case MENU_SHOW_SETTINGS:
       ShowWindow(MenuContext::hWndSettings, TRUE);
+      break;
+
+    case MENU_SCREEN_WINDOWED:
+    {
+      MENUITEMINFO mii;
+      mii.cbSize = sizeof(MENUITEMINFO);
+      mii.fMask = MIIM_STATE;
+      mii.fState = MFS_CHECKED;
+      SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_WINDOWED, FALSE, &mii);
+      mii.fState = MFS_UNCHECKED;
+      SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_BORDERLESS, FALSE, &mii);
+      SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_FULLSCREEN, FALSE, &mii);
+      Menus::SetWindowedMode();
+    }
+    break;
+
+    case MENU_SCREEN_BORDERLESS:
+      SetWindowedBorderless();
+      break;
+
+    case MENU_SCREEN_FULLSCREEN:
+      SetWindowedBorderless();
+      if (scene->SetFullScreen(TRUE))
+      {
+        //scene->UpdateWindow(MenuContext::hWndClient);
+        Menus::SetFullScreenMode();  
+        scene->SetFocus(true);
+      }
       break;
 
     case MENU_SHOW_MODELS:
