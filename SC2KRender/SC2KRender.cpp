@@ -128,7 +128,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   case WM_WINDOWPOSCHANGED:
     if (hWnd == MenuContext::hWndClient)
     {
-      scene->UpdateWindow(hWnd);
+      if (MenuContext::screen_mode != ScreenMode::FULLSCREEN)
+      {
+        scene->UpdateWindow(hWnd);
+      }
     }    
     break;
   case WM_CLOSE:
@@ -243,7 +246,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       SetWindowedBorderless();
       if (scene->SetFullScreen(TRUE))
       {
-        //scene->UpdateWindow(MenuContext::hWndClient);
         Menus::SetFullScreenMode();  
         scene->SetFocus(true);
       }

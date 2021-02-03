@@ -70,7 +70,6 @@ void Scene::PreInitialize(HWND window)
   AssetLoader::LoadSprites(m_d3dDevice, L"assets/sprites");
 #endif
 
-
   m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
   AssetLoader::LoadCustomAssets(L"assets/assetmap.cfg");
@@ -306,7 +305,6 @@ void Scene::CreateResources()
   const DXGI_FORMAT depthBufferFormat = DXGI_FORMAT_D24_UNORM_S8_UINT; //DXGI_FORMAT_D32_FLOAT_S8X24_UINT; 
   constexpr UINT backBufferCount = 2;
 
-  //TODO clean this up, multiple sample counts
   if (max_supported_sample_count == 0)
   {
     max_supported_sample_count = 1;
@@ -329,6 +327,7 @@ void Scene::CreateResources()
   }
 
   // If the swap chain already exists, resize it, otherwise create one.
+  //TODO This is supposed to work, but it doesn't
   if (m_swapChain)
   {
     //m_swapChain->ResizeBuffers(backBufferCount, backBufferWidth, backBufferHeight, backBufferFormat, 0);
