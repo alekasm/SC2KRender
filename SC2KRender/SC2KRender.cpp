@@ -61,15 +61,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   std::filesystem::path map_path = std::filesystem::current_path();
   map_path.append("maps");
 
-  help_string = "SC2KRender (Version 0.9A)\n";
+  help_string = "SC2KRender Version 1.0\n";
   help_string.append("Written by Aleksander Krimsky | www.krimsky.net\n");
   help_string.append("Lead Artist: Thomas Nelson\n");
   help_string.append("Written with DirectX 11 - Modified DirectXTK\n");
   help_string.append("GitHub: https://github.com/alekasm/SC2KRender \n\n");
   help_string.append("Controls:\nFree Cam: WASD\nStrafe Up/Down: RF\n\n");
-  help_string.append("Default maps: ");
-  help_string.append(map_path.string());
-  help_string.append("\n");
+  if (std::filesystem::exists(map_path))
+  {
+    help_string.append("Maps: ");
+    help_string.append(map_path.string());
+    help_string.append("\n");
+  }
   printf("%s", help_string.c_str());
 
   CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
