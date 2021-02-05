@@ -9,6 +9,7 @@
 #define MENU_SCREEN_WINDOWED 6
 #define MENU_SCREEN_BORDERLESS 7
 #define MENU_SCREEN_FULLSCREEN 8
+#define MENU_SHOW_HELP 9
 
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -39,6 +40,7 @@ struct MenuContext
     UpdateWindow(ShowDebugUICheckbox);
     UpdateWindow(RenderDistBar);
     UpdateWindow(RenderDistText);
+    UpdateWindow(VSyncCheckbox);
     UpdateWindow(AABBFrustumCullingCheckbox);
     UpdateWindow(MSAAComboBox);
   }

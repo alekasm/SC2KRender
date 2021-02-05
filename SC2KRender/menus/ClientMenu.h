@@ -77,6 +77,7 @@ void Menus::InitializeClientMenu(HINSTANCE hInstance)
   AppendMenu(MenuContext::Menu, MF_POPUP, (UINT_PTR)MenuContext::FileMenu, "File");
   AppendMenu(MenuContext::FileMenu, MF_STRING, MENU_LOAD_MAP, "Load Map");
   AppendMenu(MenuContext::FileMenu, MF_UNCHECKED, MENU_SHOW_CONSOLE, "Show Console");
+  AppendMenu(MenuContext::FileMenu, MF_STRING, MENU_SHOW_HELP, "Help");
   AppendMenu(MenuContext::FileMenu, MF_STRING, MENU_EXIT, "Exit");
 
   AppendMenu(MenuContext::Menu, MF_POPUP, (UINT_PTR)MenuContext::OptionsMenu, "Options");

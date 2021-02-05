@@ -29,6 +29,8 @@ http://thedemonthrone.ca/projects/rendering-terrain/rendering-terrain-part-10-vi
 
 
 std::unique_ptr<Scene> scene;
+std::string help_string;
+HCURSOR cursor;
 
 extern "C"
 {
@@ -54,13 +56,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   GetConsoleMode(hInput, &dwMode);
   SetConsoleMode(hInput, dwMode & ENABLE_EXTENDED_FLAGS);
   ShowWindow(GetConsoleWindow(), SW_HIDE);
+  cursor = LoadCursor(NULL, IDC_ARROW);
 
-  printf("SC2KRender (Version 0.9)\n");
-  printf("Written by Aleksander Krimsky | www.krimsky.net\n");
-  printf("Lead Artist: Thomas Nelson\n");
-  printf("Written with DirectX 11 - Modified DirectXTK\n");
-  printf("GitHub: https://github.com/alekasm/SC2KRender \n");
-  printf("\nControls:\nFree Cam: WASD\nStrafe Up/Down: RF\n\n");
+  std::filesystem::path map_path = std::filesystem::current_path();
+  map_path.append("maps");
+
+  help_string = "SC2KRender (Version 0.9A)\n";
+  help_string.append("Written by Aleksander Krimsky | www.krimsky.net\n");
+  help_string.append("Lead Artist: Thomas Nelson\n");
+  help_string.append("Written with DirectX 11 - Modified DirectXTK\n");
+  help_string.append("GitHub: https://github.com/alekasm/SC2KRender \n\n");
+  help_string.append("Controls:\nFree Cam: WASD\nStrafe Up/Down: RF\n\n");
+  help_string.append("Default maps: ");
+  help_string.append(map_path.string());
+  help_string.append("\n");
+  printf("%s", help_string.c_str());
+
   CoInitializeEx(nullptr, COINITBASE_MULTITHREADED);
   scene = std::make_unique<Scene>();
 
@@ -104,24 +115,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   switch (message)
   {
 
+  case WM_SETCURSOR: //Patches an unsolved edge case with ShowCursor(FALSE) 
+      SetCursor(scene->HasFocus() ? NULL : cursor);
+  break;
+
   case WM_KEYDOWN:
     if (wParam == VK_ESCAPE)
     {
-      if (scene->HasFocus())
+      if (MenuContext::screen_mode == ScreenMode::FULLSCREEN)
       {
-        scene->SetFocus(false);
-        if (MenuContext::screen_mode == ScreenMode::FULLSCREEN)
+        if (scene->SetFullScreen(FALSE))
         {
-          if (scene->SetFullScreen(FALSE))
-          {
-            SetWindowedBorderless();
-          }
+          SetWindowedBorderless();
         }
+      }
+      if (scene->HasFocus())
+      {        
+        scene->SetFocus(false);
       }
       else
       {
-        PostQuitMessage(0);
+        std::thread([] {
+          if (MessageBox(MenuContext::hWndClient,
+            "Do you really want to quit?", "SC2KRender Quit",
+            MB_YESNO | MB_ICONQUESTION) == IDYES)
+          {
+            SendMessage(MenuContext::hWndClient, WM_DESTROY, 0, 0);
+          }
+        }).detach();
       }
+      
     }
     break;    
 
@@ -220,6 +243,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       PostQuitMessage(0);
       break;
 
+    case MENU_SHOW_HELP:       
+      std::thread([] { //A really terrible workaround
+        MessageBox(MenuContext::hWndClient, help_string.c_str(), 
+          "SC2KRender Help", MB_OK | MB_ICONASTERISK);
+        //return DefWindowProc(hWnd, message, wParam, lParam);
+      }).detach();    
+    break;
+    
     case MENU_SHOW_SETTINGS:
       ShowWindow(MenuContext::hWndSettings, TRUE);
       break;
