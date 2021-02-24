@@ -123,7 +123,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   break;
 
   case WM_KEYDOWN:
-    if (wParam == VK_ESCAPE)
+    switch (wParam)
+    {
+    case VK_ESCAPE:
     {
       if (MenuContext::screen_mode == ScreenMode::FULLSCREEN)
       {
@@ -133,7 +135,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
       }
       if (scene->HasFocus())
-      {        
+      {
         scene->SetFocus(false);
       }
       else
@@ -147,7 +149,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           }
         }).detach();
       }
-      
+    }
+    break;
+    case VK_F11:
+    {
+      switch (MenuContext::screen_mode)
+      {
+      case FULLSCREEN:
+        if (scene->SetFullScreen(FALSE))
+        {
+          SetWindowedBorderless();
+        }
+        break;
+      default:
+        SetWindowedBorderless();
+        if (scene->SetFullScreen(TRUE))
+        {
+          Menus::SetFullScreenMode();
+        }
+      }
+      scene->SetFocus(true);
+    }
+    break;
+
     }
     break;    
 
