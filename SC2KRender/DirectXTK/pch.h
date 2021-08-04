@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------------
 // File: pch.h
 //
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=248929
@@ -10,7 +10,7 @@
 #pragma once
 
 // Off by default warnings
-#pragma warning(disable : 4619 4616 4061 4265 4365 4571 4623 4625 4626 4628 4668 4710 4711 4746 4774 4820 4987 5026 5027 5031 5032 5039 5045 26812)
+#pragma warning(disable : 4619 4616 4061 4265 4365 4571 4623 4625 4626 4628 4668 4710 4711 4746 4774 4820 4987 5026 5027 5031 5032 5039 5045 5219 26812)
 // C4619/4616 #pragma warning warnings
 // C4061 enumerator 'X' in switch of enum 'X' is not explicitly handled by a case label
 // C4265 class has virtual functions, but destructor is not virtual
@@ -32,6 +32,7 @@
 // C5031/5032 push/pop mismatches in windows headers
 // C5039 pointer or reference to potentially throwing function passed to extern C function under - EHc
 // C5045 Spectre mitigation warning
+// C5219 implicit conversion from 'int' to 'float', possible loss of data
 // 26812: The enum type 'x' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
 
 // Windows 8.1 SDK related Off by default warnings
@@ -64,6 +65,7 @@
 #pragma clang diagnostic ignored "-Wgnu-anonymous-struct"
 #pragma clang diagnostic ignored "-Wlanguage-extension-token"
 #pragma clang diagnostic ignored "-Wmissing-variable-declarations"
+#pragma clang diagnostic ignored "-Wmicrosoft-include"
 #pragma clang diagnostic ignored "-Wnested-anon-types"
 #pragma clang diagnostic ignored "-Wreserved-id-macro"
 #pragma clang diagnostic ignored "-Wswitch-enum"
@@ -93,29 +95,36 @@
 #define _WIN32_WINNT_WIN10 0x0A00
 #endif
 
-#if defined(_XBOX_ONE) && defined(_TITLE)
+#ifndef WINAPI_FAMILY_GAMES
+#define WINAPI_FAMILY_GAMES 6
+#endif
+
+#ifdef _GAMING_XBOX
+#error This version of DirectX Tool Kit not supported for GDK
+#elif defined(_XBOX_ONE) && defined(_TITLE)
 #include <d3d11_x.h>
 #else
 #include <d3d11_1.h>
 #endif
 
-#define _XM_NO_XMVECTOR_OVERLOADS_
-
-#include <DirectXMath.h>
-#include <DirectXPackedVector.h>
-#include <DirectXCollision.h>
-
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <cwchar>
 #include <exception>
+#include <iterator>
 #include <list>
 #include <map>
 #include <memory>
+#include <new>
 #include <set>
 #include <stdexcept>
 #include <string>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -127,8 +136,18 @@
 
 #include <malloc.h>
 
+#define _XM_NO_XMVECTOR_OVERLOADS_
+
+#include <DirectXMath.h>
+#include <DirectXPackedVector.h>
+#include <DirectXCollision.h>
+
+#if (DIRECTX_MATH_VERSION < 315)
+#define XM_ALIGNED_STRUCT(x) __declspec(align(x)) struct
+#endif
+
 #pragma warning(push)
-#pragma warning(disable : 4467 5038 5204)
+#pragma warning(disable : 4467 5038 5204 5220)
 #include <wrl.h>
 #pragma warning(pop)
 

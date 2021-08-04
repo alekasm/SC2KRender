@@ -1,7 +1,7 @@
 //--------------------------------------------------------------------------------------
 // File: SpriteFont.cpp
 //
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=248929
@@ -40,11 +40,18 @@ public:
     template<typename TAction>
     void ForEachGlyph(_In_z_ wchar_t const* text, TAction action, bool ignoreWhitespace) const;
 
+    void CreateTextureResource(_In_ ID3D11Device* device,
+        uint32_t width, uint32_t height,
+        DXGI_FORMAT format,
+        uint32_t stride, uint32_t rows,
+        _In_reads_(stride * rows) const uint8_t* data) noexcept(false);
+
     const wchar_t* ConvertUTF8(_In_z_ const char *text) noexcept(false);
 
     // Fields.
     ComPtr<ID3D11ShaderResourceView> texture;
     std::vector<Glyph> glyphs;
+    std::vector<uint32_t> glyphsIndex;
     Glyph const* defaultGlyph;
     float lineSpacing;
 
@@ -96,7 +103,7 @@ SpriteFont::Impl::Impl(
         if (reader->Read<uint8_t>() != *magic)
         {
             DebugTrace("ERROR: SpriteFont provided with an invalid .spritefont file\n");
-            throw std::exception("Not a MakeSpriteFont output binary");
+            throw std::runtime_error("Not a MakeSpriteFont output binary");
         }
     }
 
@@ -105,6 +112,12 @@ SpriteFont::Impl::Impl(
     auto glyphData = reader->ReadArray<Glyph>(glyphCount);
 
     glyphs.assign(glyphData, glyphData + glyphCount);
+    glyphsIndex.reserve(glyphs.size());
+
+    for (auto& glyph : glyphs)
+    {
+        glyphsIndex.emplace_back(glyph.Character);
+    }
 
     // Read font properties.
     lineSpacing = reader->Read<float>();
@@ -117,7 +130,15 @@ SpriteFont::Impl::Impl(
     auto textureFormat = reader->Read<DXGI_FORMAT>();
     auto textureStride = reader->Read<uint32_t>();
     auto textureRows = reader->Read<uint32_t>();
-    auto textureData = reader->ReadArray<uint8_t>(size_t(textureStride) * size_t(textureRows));
+
+    uint64_t dataSize = uint64_t(textureStride) * uint64_t(textureRows);
+    if (dataSize > UINT32_MAX)
+    {
+        DebugTrace("ERROR: SpriteFont provided with an invalid .spritefont file\n");
+        throw std::overflow_error("Invalid .spritefont file");
+    }
+
+    auto textureData = reader->ReadArray<uint8_t>(static_cast<size_t>(dataSize));
 
     if (forceSRGB)
     {
@@ -125,21 +146,12 @@ SpriteFont::Impl::Impl(
     }
 
     // Create the D3D texture.
-    CD3D11_TEXTURE2D_DESC textureDesc(textureFormat, textureWidth, textureHeight, 1, 1, D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
-    CD3D11_SHADER_RESOURCE_VIEW_DESC viewDesc(D3D11_SRV_DIMENSION_TEXTURE2D, textureFormat);
-    D3D11_SUBRESOURCE_DATA initData = { textureData, textureStride, 0 };
-    ComPtr<ID3D11Texture2D> texture2D;
-
-    ThrowIfFailed(
-        device->CreateTexture2D(&textureDesc, &initData, &texture2D)
-    );
-
-    ThrowIfFailed(
-        device->CreateShaderResourceView(texture2D.Get(), &viewDesc, &texture)
-    );
-
-    SetDebugObjectName(texture.Get(), "DirectXTK:SpriteFont");
-    SetDebugObjectName(texture2D.Get(), "DirectXTK:SpriteFont");
+    CreateTextureResource(
+        device,
+        textureWidth, textureHeight,
+        textureFormat,
+        textureStride, textureRows,
+        textureData);
 }
 
 
@@ -158,7 +170,14 @@ SpriteFont::Impl::Impl(
 {
     if (!std::is_sorted(iglyphs, iglyphs + glyphCount))
     {
-        throw std::exception("Glyphs must be in ascending codepoint order");
+        throw std::runtime_error("Glyphs must be in ascending codepoint order");
+    }
+
+    glyphsIndex.reserve(glyphs.size());
+
+    for (auto& glyph : glyphs)
+    {
+        glyphsIndex.emplace_back(glyph.Character);
     }
 }
 
@@ -166,11 +185,39 @@ SpriteFont::Impl::Impl(
 // Looks up the requested glyph, falling back to the default character if it is not in the font.
 SpriteFont::Glyph const* SpriteFont::Impl::FindGlyph(wchar_t character) const
 {
-    auto glyph = std::lower_bound(glyphs.begin(), glyphs.end(), character);
+    // Rather than use std::lower_bound (which includes a slow debug path when built for _DEBUG),
+    // we implement a binary search inline to ensure sufficient Debug build performance to be useful
+    // for text-heavy applications.
 
-    if (glyph != glyphs.end() && glyph->Character == character)
+    size_t lower = 0;
+    size_t higher = glyphs.size() - 1;
+    size_t index = higher / 2;
+    const size_t size = glyphs.size();
+
+    while (index < size)
     {
-        return &*glyph;
+        const auto curChar = glyphsIndex[index];
+        if (curChar == character) { return &glyphs[index]; }
+        if (curChar < character)
+        {
+            lower = index + 1;
+        }
+        else
+        {
+            higher = index - 1;
+        }
+        if (higher < lower) { break; }
+        else if (higher - lower <= 4)
+        {
+            for (index = lower; index <= higher; index++)
+            {
+                if (glyphsIndex[index] == character)
+                {
+                    return &glyphs[index];
+                }
+            }
+        }
+        index = lower + ((higher - lower) / 2);
     }
 
     if (defaultGlyph)
@@ -179,7 +226,7 @@ SpriteFont::Glyph const* SpriteFont::Impl::FindGlyph(wchar_t character) const
     }
 
     DebugTrace("ERROR: SpriteFont encountered a character not in the font (%u, %C), and no default glyph was provided\n", character, character);
-    throw std::exception("Character not in font");
+    throw std::runtime_error("Character not in font");
 }
 
 
@@ -244,6 +291,48 @@ void SpriteFont::Impl::ForEachGlyph(_In_z_ wchar_t const* text, TAction action, 
 }
 
 
+_Use_decl_annotations_
+void SpriteFont::Impl::CreateTextureResource(
+    ID3D11Device* device,
+    uint32_t width, uint32_t height,
+    DXGI_FORMAT format,
+    uint32_t stride, uint32_t rows,
+    const uint8_t* data) noexcept(false)
+{
+    uint64_t sliceBytes = uint64_t(stride) * uint64_t(rows);
+    if (sliceBytes > UINT32_MAX)
+    {
+        DebugTrace("ERROR: SpriteFont provided with an invalid .spritefont file\n");
+        throw std::overflow_error("Invalid .spritefont file");
+    }
+
+    D3D11_TEXTURE2D_DESC desc = {};
+    desc.Width = width;
+    desc.Height = height;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Format = format;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_IMMUTABLE;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    D3D11_SUBRESOURCE_DATA initData = { data, stride, static_cast<UINT>(sliceBytes) };
+
+    ComPtr<ID3D11Texture2D> texture2D;
+    ThrowIfFailed(
+        device->CreateTexture2D(&desc, &initData, &texture2D)
+    );
+
+    CD3D11_SHADER_RESOURCE_VIEW_DESC viewDesc(D3D11_SRV_DIMENSION_TEXTURE2D, format);
+    ThrowIfFailed(
+        device->CreateShaderResourceView(texture2D.Get(), &viewDesc, texture.ReleaseAndGetAddressOf())
+    );
+
+    SetDebugObjectName(texture.Get(), "DirectXTK:SpriteFont");
+    SetDebugObjectName(texture2D.Get(), "DirectXTK:SpriteFont");
+}
+
+
 const wchar_t* SpriteFont::Impl::ConvertUTF8(_In_z_ const char *text) noexcept(false)
 {
     if (!utfBuffer)
@@ -267,7 +356,7 @@ const wchar_t* SpriteFont::Impl::ConvertUTF8(_In_z_ const char *text) noexcept(f
     if (!result)
     {
         DebugTrace("ERROR: MultiByteToWideChar failed with error %u.\n", GetLastError());
-        throw std::exception("MultiByteToWideChar");
+        throw std::system_error(std::error_code(static_cast<int>(GetLastError()), std::system_category()), "MultiByteToWideChar");
     }
 
     return utfBuffer.get();

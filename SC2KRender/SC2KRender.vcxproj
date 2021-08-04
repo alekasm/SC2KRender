@@ -149,7 +149,6 @@
     <ClCompile Include="DirectXTK\BufferHelpers.cpp" />
     <ClCompile Include="DirectXTK\CommonStates.cpp" />
     <ClCompile Include="DirectXTK\DDSTextureLoader.cpp" />
-    <ClCompile Include="DirectXTK\DebugEffect.cpp" />
     <ClCompile Include="DirectXTK\DGSLEffect.cpp" />
     <ClCompile Include="DirectXTK\DGSLEffectFactory.cpp" />
     <ClCompile Include="DirectXTK\DirectXHelpers.cpp" />

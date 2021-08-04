@@ -94,11 +94,10 @@ void Scene::PreInitialize(HWND window)
   auto it = AssetLoader::mmodels->begin();
   for (; it != AssetLoader::mmodels->end(); ++it)
   {
-    const std::string s(it->first.begin(), it->first.end());
     size_t mesh_count = it->second->meshes.size();
     if (mesh_count != 1)
     {
-      printf("Model: %s has %d meshes, skipping...\n", s.c_str(), mesh_count);
+      printf("Model: %ls has %d meshes, skipping...\n", it->first.c_str(), mesh_count);
       continue;
     }
     //DirectX::ModelMeshPart::Collection mesh_parts = it->second->meshes.at(0)->meshParts;

@@ -14,7 +14,7 @@
 // For a full-featured DDS file reader, writer, and texture processing pipeline see
 // the 'Texconv' sample and the 'DirectXTex' library.
 //
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 //
 // http://go.microsoft.com/fwlink/?LinkId=248926
@@ -42,11 +42,11 @@ namespace
     //-------------------------------------------------------------------------------------
     struct WICTranslate
     {
-        GUID                wic;
+        const GUID&         wic;
         DXGI_FORMAT         format;
     };
 
-    const WICTranslate g_WICFormats[] =
+    constexpr WICTranslate g_WICFormats[] =
     {
         { GUID_WICPixelFormat128bppRGBAFloat,       DXGI_FORMAT_R32G32B32A32_FLOAT },
 
@@ -76,11 +76,11 @@ namespace
     //-------------------------------------------------------------------------------------
     struct WICConvert
     {
-        GUID        source;
-        GUID        target;
+        const GUID& source;
+        const GUID& target;
     };
 
-    const WICConvert g_WICConvert [] =
+    constexpr WICConvert g_WICConvert [] =
     {
         // Note target GUID in this conversion table must be one of those directly supported formats (above).
 
@@ -218,7 +218,7 @@ namespace
     //---------------------------------------------------------------------------------
     DXGI_FORMAT _WICToDXGI(const GUID& guid) noexcept
     {
-        for (size_t i = 0; i < _countof(g_WICFormats); ++i)
+        for (size_t i = 0; i < std::size(g_WICFormats); ++i)
         {
             if (memcmp(&g_WICFormats[i].wic, &guid, sizeof(GUID)) == 0)
                 return g_WICFormats[i].format;
@@ -278,7 +278,7 @@ namespace
         _In_ unsigned int bindFlags,
         _In_ unsigned int cpuAccessFlags,
         _In_ unsigned int miscFlags,
-        _In_ unsigned int loadFlags,
+        _In_ WIC_LOADER_FLAGS loadFlags,
         _Outptr_opt_ ID3D11Resource** texture,
         _Outptr_opt_ ID3D11ShaderResourceView** textureView) noexcept
     {
@@ -383,7 +383,7 @@ namespace
             }
             else
             {
-                for (size_t i = 0; i < _countof(g_WICConvert); ++i)
+                for (size_t i = 0; i < std::size(g_WICConvert); ++i)
                 {
                     if (memcmp(&g_WICConvert[i].source, &pixelFormat, sizeof(WICPixelFormatGUID)) == 0)
                     {
@@ -528,7 +528,7 @@ namespace
 
         // Allocate temporary memory for image
         uint64_t rowBytes = (uint64_t(twidth) * uint64_t(bpp) + 7u) / 8u;
-        uint64_t numBytes = rowBytes * uint64_t(height);
+        uint64_t numBytes = rowBytes * uint64_t(theight);
 
         if (rowBytes > UINT32_MAX || numBytes > UINT32_MAX)
             return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);

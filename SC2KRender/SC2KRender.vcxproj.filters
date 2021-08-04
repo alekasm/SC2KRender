@@ -42,9 +42,6 @@
     <ClCompile Include="DirectXTK\DDSTextureLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirectXTK\DebugEffect.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DirectXTK\DGSLEffect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
