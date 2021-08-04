@@ -7,3 +7,7 @@ This program is designed to read SimCity 2000 files (.sc2) and display them usin
 **Controls:**  
 Free Cam: W,A,S,D  
 Strafe Up/Down: R,F  
+Toggle Fullscreen: F11
+
+### DirectX Toolkit
+This project uses a *leaned* version of DirectX Toolkit [August 2021](https://github.com/microsoft/DirectXTK/releases/tag/aug2021).
