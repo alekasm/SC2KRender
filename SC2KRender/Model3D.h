@@ -9,9 +9,11 @@ struct Model3D
   Matrix m_world, m_world_identity;
   Vector3 origin, origin_scaled;
   int32_t tile_id = -1;
+  int32_t model_id = -1;
 
-  Model3D(std::shared_ptr<DirectX::Model> model, Vector3 origin)
+  Model3D(int32_t model_id, std::shared_ptr<DirectX::Model> model, Vector3 origin)
   {
+    this->model_id = model_id;
     this->model = model;
     this->origin = origin;
     m_world_identity = Matrix::Identity; 

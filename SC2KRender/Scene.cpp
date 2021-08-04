@@ -12,6 +12,13 @@
 #define USING_SPRITES_2D FALSE
 #define ARRAY_LENGTH TILES_DIMENSION * TILES_DIMENSION
 #define USE_GRID FALSE
+#define MAX_INSTANCES ARRAY_LENGTH * 16
+
+typedef struct _D3DX11_TECHNIQUE_DESC {
+  LPCSTR Name;
+  UINT   Passes;
+  UINT   Annotations;
+} D3DX11_TECHNIQUE_DESC;
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
@@ -19,6 +26,14 @@ using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Plane;
 
 typedef SceneTile::VertexPos VPos;
+
+void Scene::ReplaceBufferContents(ID3D11Buffer* buffer, size_t bufferSize, const void* data)
+{
+  D3D11_MAPPED_SUBRESOURCE mapped;
+  m_d3dContext->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mapped);
+  memcpy(mapped.pData, data, bufferSize);
+  m_d3dContext->Unmap(buffer, 0);
+}
 
 void Scene::UpdateWindow(HWND hWnd)
 {
@@ -74,6 +89,20 @@ void Scene::PreInitialize(HWND window)
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
   AssetLoader::LoadCustomAssets(L"assets/assetmap.cfg");
   AssetLoader::LoadXBLDVisibilityParameters(L"assets/visiblemap.cfg");
+  AssetLoader::LoadXBLDVisibilityParameters(L"assets/visiblemap.cfg");
+
+  auto it = AssetLoader::mmodels->begin();
+  for (; it != AssetLoader::mmodels->end(); ++it)
+  {
+    const std::string s(it->first.begin(), it->first.end());
+    size_t mesh_count = it->second->meshes.size();
+    if (mesh_count != 1)
+    {
+      printf("Model: %s has %d meshes, skipping...\n", s.c_str(), mesh_count);
+      continue;
+    }
+    //DirectX::ModelMeshPart::Collection mesh_parts = it->second->meshes.at(0)->meshParts;
+  }
 }
 
 void Scene::SetFOV(float value)
@@ -171,7 +200,7 @@ void Scene::Initialize(Map& map)
   {
     delete fill_tiles.at(0);
     fill_tiles.erase(fill_tiles.begin());
-  }
+  }  
 
   if (tiles != nullptr)
   {
@@ -205,7 +234,52 @@ void Scene::Initialize(Map& map)
   printf("City Age: %d\n", map.days_elapsed);
   printf("City Founded: %d\n", map.founding_year);
   printf("Rendering %d 3d models\n", v_model3d.size());
+  
+  for (size_t i = 0; i < v_model3d.size(); ++i)
+  {  
+    int32_t index = v_model3d[i]->model_id;
+    m_model3d[index].push_back(v_model3d[i]);
+    //cpu_instance_data[i] = v_model3d[i]->origin_scaled;
+  }
 
+  void const* shaderByteCode;
+  size_t byteCodeLength;
+  m_effect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+
+  m_d3dDevice->CreateInputLayout(
+    VertexPositionInstance,
+    3,
+    shaderByteCode, byteCodeLength,
+    m_instanceInputLayout.ReleaseAndGetAddressOf());
+
+  for (auto m_model3d_it : m_model3d)
+  {
+    size_t instance_c = m_model3d_it.second.size();
+    int32_t index = m_model3d_it.first;
+    printf("Model <%d/0x%x> has <%d> instances\n", index, index, instance_c);
+
+    ID3D11Buffer* instanceBuffer;
+    CD3D11_BUFFER_DESC instance_buffer_desc(
+      sizeof(Vector3) * instance_c,
+      D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC,
+      D3D11_CPU_ACCESS_WRITE);
+    instance_buffer_desc.StructureByteStride = sizeof(Vector3);
+    m_d3dDevice->CreateBuffer(&instance_buffer_desc, nullptr, m_instanceBuffer[index].ReleaseAndGetAddressOf());
+
+    std::unique_ptr<Vector3[]> cpu_instance_data;
+    cpu_instance_data.reset(new Vector3[instance_c]);
+
+    for (size_t i = 0; i < instance_c; ++i)
+    {
+      Model3D* model3d = m_model3d_it.second[i];
+      cpu_instance_data[i] = model3d->origin_scaled;
+    }
+    ReplaceBufferContents(
+      m_instanceBuffer[index].Get(),
+      sizeof(Vector3) * instance_c,
+      cpu_instance_data.get());
+  }
+  
   render_scene = true;
 }
 
@@ -259,7 +333,8 @@ void Scene::CreateDevice()
   size_t byteCodeLength;
   m_effect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
 
-  m_d3dDevice->CreateInputLayout(DirectX::VertexPositionColor::InputElements,
+  m_d3dDevice->CreateInputLayout(
+    DirectX::VertexPositionColor::InputElements,
     DirectX::VertexPositionColor::InputElementCount,
     shaderByteCode, byteCodeLength,
     m_inputLayout.ReleaseAndGetAddressOf());
@@ -268,22 +343,15 @@ void Scene::CreateDevice()
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
 
-  /*
   CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
     D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
     D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
-    */
-  CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
-    D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
-    D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
-  /*
-  CD3D11_RASTERIZER_DESC rastDesc(D3D11_FILL_SOLID, D3D11_CULL_NONE, FALSE,
-    D3D11_DEFAULT_DEPTH_BIAS, D3D11_DEFAULT_DEPTH_BIAS_CLAMP,
-    D3D11_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, TRUE, FALSE, TRUE, FALSE);
-    */
-
-
   m_d3dDevice->CreateRasterizerState(&rastDesc, m_raster.ReleaseAndGetAddressOf());
+
+  //CD3D11_BUFFER_DESC bufferDesc(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_IMMUTABLE);
+  //bufferDesc.StructureByteStride = sizeof(Vertex);
+
+
 }
 
 void Scene::CreateResources()
@@ -626,52 +694,45 @@ void Scene::Render()
         frustum_planes[i].Normalize();
       }
 
-      for (Model3D* model3d : v_model3d)
+      std::map<int32_t, std::vector<Model3D*>>::iterator it;
+      for (it = m_model3d.begin(); it != m_model3d.end(); ++it)
       {
+        
+        Model3D* model3d = it->second.at(0);
+        int32_t index = it->first;
+        size_t instance_c = it->second.size();       
+        //m_d3dContext->IASetInputLayout(m_instanceInputLayout.Get());
 
-        MapSceneTile* tile = nullptr;
-        int32_t id = model3d->tile_id;
-        if (id >= 0)
+        for (auto mesh_it = model3d->model->meshes.begin();
+          mesh_it != model3d->model->meshes.end(); ++mesh_it)
         {
-          tile = tiles[id];
-          if (tile->render == MODEL_HIDDEN)
-            tile->render = MODEL_VISIBLE;
-        }
-
-        if (use_render_distance && Vector3::Distance(m_position, model3d->origin_scaled) > scaled_render_distance)
-        {
-          if (tile != nullptr && tile->render == MODEL_VISIBLE)
+          mesh_it->get()->PrepareForRendering(m_d3dContext.Get(), *m_states, false, false);
+          for (auto mesh_part_it = mesh_it->get()->meshParts.cbegin();
+            mesh_part_it != mesh_it->get()->meshParts.cend(); ++mesh_part_it)
           {
-            tile->render = MODEL_HIDDEN;
-          }
-          continue;
-        }
+            auto part = (*mesh_part_it).get();
+            if (part->isAlpha) continue;
+            auto imatrices = dynamic_cast<DirectX::IEffectMatrices*>(part->effect.get());
+            if (imatrices)
+            {
+              imatrices->SetMatrices(model3d->m_world, m_view, m_proj);
+            }         
 
-        if (!use_aabb_frustum_culling)
-        {
-          model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
-          continue;
-        }
-        bool frustum_test = true;
-        auto mesh_it = model3d->model->meshes.cbegin();
-        if (mesh_it == model3d->model->meshes.cend()) continue;
-        Vector3 center = (Vector3(mesh_it->get()->boundingBox.Center) * scale) + model3d->origin_scaled;
-        for (int i = 0; i < 6; ++i)
-        {
-          Vector3 n = Vector3(fabs(frustum_planes[i].x), fabs(frustum_planes[i].y), fabs(frustum_planes[i].z));
-          DirectX::SimpleMath::Vector4 v4(center.x, center.y, center.z, 1.f);
-          float e = n.Dot(mesh_it->get()->boundingBox.Extents);
-          float s = frustum_planes[i].Dot(v4);
-          if (s + e < -.75f) //TODO Figure out why 0.f is too sensitive
-          {
-            frustum_test = false;
-            break;
+            m_d3dContext->IASetInputLayout(part->inputLayout.Get());
+            ID3D11Buffer* Buffers[] = { part->vertexBuffer.Get(), m_instanceBuffer[index].Get() };
+            UINT Strides[] = { part->vertexStride, sizeof(Vector3) };
+            UINT Offsets[] = { 0, 0 };
+            m_d3dContext->IASetVertexBuffers(0, _countof(Strides), Buffers, Strides, Offsets);
+
+            m_d3dContext->IASetIndexBuffer(part->indexBuffer.Get(), part->indexFormat, 0);
+            part->effect->Apply(m_d3dContext.Get());
+            m_d3dContext->IASetPrimitiveTopology(part->primitiveType);
+            m_d3dContext->DrawIndexedInstanced(part->indexCount, instance_c, part->startIndex, part->vertexOffset, 0);
           }
         }
-        if (frustum_test)
-          model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
       }
 
+     
     }
 
     m_d3dContext->RSSetState(m_states->CullNone());

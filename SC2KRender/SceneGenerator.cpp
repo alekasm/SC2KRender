@@ -78,7 +78,7 @@ void SceneGenerator::Generate(MapTile* map_tiles, MapSceneTile** tiles,
           if (it != AssetLoader::mmodels->end())
           {
             DirectX::SimpleMath::Vector3 position = t->v_pos[SceneTile::VertexPos::TOP_LEFT];
-            Model3D* model = new Model3D(it->second, position);
+            Model3D* model = new Model3D(map_tile->xbld, it->second, position);
 
             if (map_tile->xbit & 0b0100) //appears to be a "water tile"
             {

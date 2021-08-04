@@ -5,6 +5,7 @@ Thanks/Extra Credits:
 fr0zi - https://github.com/fr0zi/sccopter
 bzroom (GameDev.net Discord) - DirectX Help
 slicer4ever (GameDev.net Discord) - DirectX Help
+rawrx3 (GameDev.net Discord) - DirectX Help
 Thomas Nelson - Models
 Frustum Culling: Chris Serson 
 http://thedemonthrone.ca/projects/rendering-terrain/rendering-terrain-part-10-view-frustum-culling/
@@ -364,7 +365,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   break;
 
   case WM_ERASEBKGND:
-    break;
+    break; //Fixes screen-drag flicker 
 
   case WM_PAINT:
     scene->Tick();

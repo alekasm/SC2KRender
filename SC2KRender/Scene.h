@@ -29,6 +29,13 @@ struct Sprite3D;
 struct Model3D;
 using DirectX::SimpleMath::Vector3;
 
+const D3D11_INPUT_ELEMENT_DESC VertexPositionInstance[] =
+{
+  { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  { "INSTANCE_POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+};
+
 class Scene
 {
 public:
@@ -92,6 +99,7 @@ private:
   void CreateDevice();
   void CreateResources();
   void Clear();    
+  void ReplaceBufferContents(ID3D11Buffer*, size_t, const void*);
 
   HWND m_window;
   RECT m_window_coords;
@@ -164,6 +172,13 @@ private:
   std::vector<Sprite3D*> v_sprite3d;
   std::vector<Sprite2D*> v_sprite2d;
   std::vector<Model3D*> v_model3d;
+  std::map<int32_t, std::vector<Model3D*>> m_model3d;
+  std::map<int32_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_instanceBuffer;
+  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_instanceInputLayout;
+
+  //Microsoft::WRL::ComPtr<ID3D11Buffer> m_instanceData;
+  //Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+
   };
 
   
