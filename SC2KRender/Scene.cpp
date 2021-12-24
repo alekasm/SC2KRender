@@ -7,6 +7,7 @@
 #include "ModifyModel.h"
 #include "QuadSceneTile.h"
 #include "SceneGenerator.h"
+#include "SC2KRMath.h"
 
 #define USING_SPRITES_3D FALSE
 #define USING_SPRITES_2D FALSE
@@ -65,11 +66,12 @@ void Scene::UpdateWindow(HWND hWnd)
   if (window_resized)
   {
     m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
-    m_effect->SetProjection(m_proj);
+    m_NormalMapEffect->SetProjection(m_proj);
     CreateResources();
   }
 }
 
+#include <fstream>
 void Scene::PreInitialize(HWND window)
 {
   m_window = window;
@@ -77,7 +79,7 @@ void Scene::PreInitialize(HWND window)
   m_position = Vector3(96.f, 12.f, 96.f);
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  m_effect->SetView(m_view);
+  m_NormalMapEffect->SetView(m_view);
   SetRenderDistance(render_distance);
   UpdateWindow(window);
 
@@ -86,21 +88,51 @@ void Scene::PreInitialize(HWND window)
 #endif
 
   m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
+  m_fxFactory->SetSharing(false);
+  m_fxFactory->EnableNormalMapEffect(true);
+  
+  DirectX::EffectFactory::EffectInfo info;
+  info.name = L"default";
+  info.alpha = 1.f;
+  info.enableNormalMaps = true;
+  
+  auto effect = m_fxFactory->CreateEffect(info, m_d3dContext.Get());
+
+
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
+
   AssetLoader::LoadCustomAssets(L"assets/assetmap.cfg");
   AssetLoader::LoadXBLDVisibilityParameters(L"assets/visiblemap.cfg");
-  AssetLoader::LoadXBLDVisibilityParameters(L"assets/visiblemap.cfg");
+  //AssetLoader::LoadXBLDVisibilityParameters(L"assets/visiblemap.cfg");
 
   auto it = AssetLoader::mmodels->begin();
   for (; it != AssetLoader::mmodels->end(); ++it)
   {
-    size_t mesh_count = it->second->meshes.size();
-    if (mesh_count != 1)
+
+    it->second->UpdateEffects([&](DirectX::IEffect* effect)
+    { 
+      //effect = m_NormalMapEffect.get();
+      if (auto nmap = dynamic_cast<DirectX::NormalMapEffect*>(effect))
+       nmap->SetInstancingEnabled(true);
+    });
+    for (auto mit = it->second->meshes.begin(); mit != it->second->meshes.end(); ++mit)
     {
-      printf("Model: %ls has %d meshes, skipping...\n", it->first.c_str(), mesh_count);
-      continue;
+      auto mesh = mit->get();
+      assert(mesh != 0);
+
+      for (auto it = mesh->meshParts.begin(); it != mesh->meshParts.end(); ++it)
+      {
+        auto part = it->get();
+        assert(part != 0);
+        auto il = *part->vbDecl;
+        il.push_back(NormalEffectInstance[3]);
+        il.push_back(NormalEffectInstance[4]);
+        il.push_back(NormalEffectInstance[5]);
+        CreateInputLayoutFromEffect(m_d3dDevice.Get(), part->effect.get(),
+            il.data(), il.size(),
+            part->inputLayout.ReleaseAndGetAddressOf());
+      }
     }
-    //DirectX::ModelMeshPart::Collection mesh_parts = it->second->meshes.at(0)->meshParts;
   }
 }
 
@@ -108,7 +140,7 @@ void Scene::SetFOV(float value)
 {
   fov = static_cast<float>(value * (M_PI / 180.f));
   m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
-  m_effect->SetProjection(m_proj);
+  m_NormalMapEffect->SetProjection(m_proj);
 }
 
 void Scene::SetScale(float value)
@@ -125,7 +157,7 @@ void Scene::SetScale(float value)
   SetRenderDistance(render_distance);
   m_position *= scale_multiplier;
   m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
-  m_effect->SetProjection(m_proj);
+  m_NormalMapEffect->SetProjection(m_proj);
 }
 
 void Scene::SetEnableVSync(bool value)
@@ -146,10 +178,10 @@ void Scene::SetRenderDistance(float value)
   scaled_render_distance = render_distance * scale;
 
   float scaled_render_start = scaled_render_distance - (16.f * scale);
-  m_effect->SetFogEnabled(use_render_distance);
-  m_effect->SetFogStart(scaled_render_start);
-  m_effect->SetFogEnd(scaled_render_distance);
-  m_effect->SetFogColor(DirectX::Colors::CornflowerBlue);
+  m_NormalMapEffect->SetFogEnabled(use_render_distance);
+  m_NormalMapEffect->SetFogStart(scaled_render_start);
+  m_NormalMapEffect->SetFogEnd(scaled_render_distance);
+  m_NormalMapEffect->SetFogColor(DirectX::Colors::CornflowerBlue);
 
   for (Model3D* model3d : v_model3d)
   {
@@ -241,30 +273,56 @@ void Scene::Initialize(Map& map)
     //cpu_instance_data[i] = v_model3d[i]->origin_scaled;
   }
 
-  void const* shaderByteCode;
-  size_t byteCodeLength;
-  m_effect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
-
-  m_d3dDevice->CreateInputLayout(
-    VertexPositionInstance,
-    3,
-    shaderByteCode, byteCodeLength,
-    m_instanceInputLayout.ReleaseAndGetAddressOf());
-
   for (auto m_model3d_it : m_model3d)
   {
     size_t instance_c = m_model3d_it.second.size();
     int32_t index = m_model3d_it.first;
     printf("Model <%d/0x%x> has <%d> instances\n", index, index, instance_c);
 
-    ID3D11Buffer* instanceBuffer;
+
+    std::unique_ptr<DirectX::XMFLOAT3X4[]> cpu_instance_data;
+    cpu_instance_data.reset(new DirectX::XMFLOAT3X4[instance_c]);
+    for (size_t i = 0; i < instance_c; ++i)
+    {
+      Model3D* model3d = m_model3d_it.second[i];
+      DirectX::XMFLOAT3X4 xm;
+      xm._14 = model3d->origin_scaled.x;
+      xm._24 = model3d->origin_scaled.y;
+      xm._34 = model3d->origin_scaled.z;
+      cpu_instance_data[i] = xm;
+    }
+    auto desc = CD3D11_BUFFER_DESC(
+      instance_c * sizeof(DirectX::XMFLOAT3X4),
+      D3D11_BIND_VERTEX_BUFFER,
+      D3D11_USAGE_DYNAMIC,
+      D3D11_CPU_ACCESS_WRITE
+    );
+    /*
+    CD3D11_BUFFER_DESC buffer_desc;
+    buffer_desc.ByteWidth = instance_c * sizeof(DirectX::XMFLOAT3X4);
+    buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+    buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    buffer_desc.StructureByteStride = sizeof(DirectX::XMFLOAT3X4);
+    */
+    D3D11_SUBRESOURCE_DATA initData = { cpu_instance_data.get(), 0, 0 };
+    HRESULT hr = m_d3dDevice->CreateBuffer(&desc, &initData, m_InstanceBuffer[index].ReleaseAndGetAddressOf());
+    assert(SUCCEEDED(hr));
+
+    /*
+    ReplaceBufferContents(
+      m_InstanceBuffer[index].Get(),
+      sizeof(DirectX::XMFLOAT3X4) * instance_c,
+      cpu_instance_data.get());
+    */
+
+    /*
     CD3D11_BUFFER_DESC instance_buffer_desc(
       sizeof(Vector3) * instance_c,
       D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC,
       D3D11_CPU_ACCESS_WRITE);
     instance_buffer_desc.StructureByteStride = sizeof(Vector3);
-    m_d3dDevice->CreateBuffer(&instance_buffer_desc, nullptr, m_instanceBuffer[index].ReleaseAndGetAddressOf());
-
+    m_d3dDevice->CreateBuffer(&instance_buffer_desc, nullptr, m_InstanceBuffer[index].ReleaseAndGetAddressOf());
     std::unique_ptr<Vector3[]> cpu_instance_data;
     cpu_instance_data.reset(new Vector3[instance_c]);
 
@@ -274,10 +332,13 @@ void Scene::Initialize(Map& map)
       cpu_instance_data[i] = model3d->origin_scaled;
     }
     ReplaceBufferContents(
-      m_instanceBuffer[index].Get(),
+      m_InstanceBuffer[index].Get(),
       sizeof(Vector3) * instance_c,
       cpu_instance_data.get());
-  }
+    */
+
+
+  } 
   
   render_scene = true;
 }
@@ -325,20 +386,74 @@ void Scene::CreateDevice()
 
   m_world = DirectX::SimpleMath::Matrix::Identity;
   m_states = std::make_unique<DirectX::CommonStates>(m_d3dDevice.Get());
-  m_effect = std::make_unique<DirectX::BasicEffect>(m_d3dDevice.Get());
-  m_effect->SetVertexColorEnabled(true);
 
-  void const* shaderByteCode;
-  size_t byteCodeLength;
-  m_effect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+  /*
+  m_BasicEffect = std::make_unique<DirectX::BasicEffect>(m_d3dDevice.Get());
+  m_BasicEffect->SetVertexColorEnabled(true);
+  {
+    void const* shaderByteCode;
+    size_t byteCodeLength;
+    m_BasicEffect->GetVertexShaderBytecode(&shaderByteCode, &byteCodeLength);
+    m_d3dDevice->CreateInputLayout(
+      DirectX::VertexPositionColor::InputElements,
+      DirectX::VertexPositionColor::InputElementCount,
+      shaderByteCode, byteCodeLength,
+      m_BasicInputLayout.ReleaseAndGetAddressOf());
+  }
+  printf("m_BasicInputLayout=%p\n", m_BasicInputLayout.Get());
+  */
 
-  m_d3dDevice->CreateInputLayout(
-    DirectX::VertexPositionColor::InputElements,
-    DirectX::VertexPositionColor::InputElementCount,
-    shaderByteCode, byteCodeLength,
-    m_inputLayout.ReleaseAndGetAddressOf());
+  HRESULT hr1 = DirectX::CreateDDSTextureFromFile(m_d3dDevice.Get(), L"assets/smoothMap.dds", nullptr,
+    m_normalMap.ReleaseAndGetAddressOf());
+  
+  HRESULT hr2 = DirectX::CreateDDSTextureFromFile(m_d3dDevice.Get(), L"assets/default.dds", nullptr,
+    m_normalTex.ReleaseAndGetAddressOf());
+  
 
-  m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContext.Get());
+  m_NormalMapEffect = std::make_unique<DirectX::NormalMapEffect>(m_d3dDevice.Get());
+  m_NormalMapEffect->EnableDefaultLighting();
+  m_NormalMapEffect->SetVertexColorEnabled(true);
+  m_NormalMapEffect->SetInstancingEnabled(true);
+
+  //Code snippet from c.walbourn
+  /*
+  {    
+    const uint32_t s_pixel = 0xffffffff;
+    D3D11_SUBRESOURCE_DATA initData = { &s_pixel, sizeof(uint32_t), 0 };
+    CD3D11_TEXTURE2D_DESC texDesc(DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1,
+      D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> tex;
+    m_d3dDevice->CreateTexture2D(&texDesc, &initData, tex.GetAddressOf());
+    HRESULT hr = m_d3dDevice->CreateShaderResourceView(tex.Get(), nullptr,
+      m_normalTexture.ReleaseAndGetAddressOf());
+
+    m_NormalMapEffect->SetVertexColorEnabled(true);
+    //m_NormalMapEffect->SetNormalTexture(m_normalTexture.Get());
+    m_NormalMapEffect->SetTexture(m_normalTexture.Get());
+    
+
+   // m_NormalMapEffect->SetSpecularTexture(m_normalTexture.Get());
+    //m_effect->SetTexture(m_brickDiffuse.Get());
+    //m_effect->SetNormalTexture(m_brickNormal.Get());
+
+    //m_NormalMapEffect->SetNormalTexture(m_normalMap.Get()); 
+    //m_NormalMapEffect->SetTexture(m_normalTex.Get());
+    m_NormalMapEffect->SetInstancingEnabled(true);
+    //assert(SUCCEEDED(hr));
+  }
+  */
+  {
+    constexpr UINT NormalEffectInstanceCount = std::size(NormalEffectInstance);
+    HRESULT hr = CreateInputLayoutFromEffect(
+      m_d3dDevice.Get(),
+      m_NormalMapEffect.get(),
+      NormalEffectInstance, NormalEffectInstanceCount,
+      m_NormalInputLayout.ReleaseAndGetAddressOf());
+    assert(SUCCEEDED(hr));
+  }
+  
+
+  //m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContexfmt.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
 
@@ -650,58 +765,98 @@ void Scene::Render()
   {
     if (render_models)
     {
+      /*
       Matrix view_proj = m_view * m_proj;
       Plane frustum_planes[6];
+      CreateFrustumPlanes(view_proj, frustum_planes);
 
-      // left
-      frustum_planes[0].x = view_proj.m[0][3] + view_proj.m[0][0];
-      frustum_planes[0].y = view_proj.m[1][3] + view_proj.m[1][0];
-      frustum_planes[0].z = view_proj.m[2][3] + view_proj.m[2][0];
-      frustum_planes[0].w = view_proj.m[3][3] + view_proj.m[3][0];
-
-      // right
-      frustum_planes[1].x = view_proj.m[0][3] - view_proj.m[0][0];
-      frustum_planes[1].y = view_proj.m[1][3] - view_proj.m[1][0];
-      frustum_planes[1].z = view_proj.m[2][3] - view_proj.m[2][0];
-      frustum_planes[1].w = view_proj.m[3][3] - view_proj.m[3][0];
-
-      // bottom
-      frustum_planes[2].x = view_proj.m[0][3] + view_proj.m[0][1];
-      frustum_planes[2].y = view_proj.m[1][3] + view_proj.m[1][1];
-      frustum_planes[2].z = view_proj.m[2][3] + view_proj.m[2][1];
-      frustum_planes[2].w = view_proj.m[3][3] + view_proj.m[3][1];
-
-      // top
-      frustum_planes[3].x = view_proj.m[0][3] - view_proj.m[0][1];
-      frustum_planes[3].y = view_proj.m[1][3] - view_proj.m[1][1];
-      frustum_planes[3].z = view_proj.m[2][3] - view_proj.m[2][1];
-      frustum_planes[3].w = view_proj.m[3][3] - view_proj.m[3][1];
-
-      // near
-      frustum_planes[4].x = view_proj.m[0][2];
-      frustum_planes[4].y = view_proj.m[1][2];
-      frustum_planes[4].z = view_proj.m[2][2];
-      frustum_planes[4].w = view_proj.m[3][2];
-
-      // far
-      frustum_planes[5].x = view_proj.m[0][3] - view_proj.m[0][2];
-      frustum_planes[5].y = view_proj.m[1][3] - view_proj.m[1][2];
-      frustum_planes[5].z = view_proj.m[2][3] - view_proj.m[2][2];
-      frustum_planes[5].w = view_proj.m[3][3] - view_proj.m[3][2];
-      for (unsigned int i = 0; i < 6; ++i)
+      for (Model3D* model3d : v_model3d)
       {
-        frustum_planes[i].Normalize();
+        MapSceneTile* tile = nullptr;
+        int32_t id = model3d->tile_id;
+        if (id >= 0)
+        {
+          tile = tiles[id];
+          if (tile->render == MODEL_HIDDEN)
+            tile->render = MODEL_VISIBLE;
+        }
+
+        if (use_render_distance && Vector3::Distance(m_position, model3d->origin_scaled) > scaled_render_distance)
+        {
+          if (tile != nullptr && tile->render == MODEL_VISIBLE)
+          {
+            tile->render = MODEL_HIDDEN;
+          }
+          continue;
+        }
+
+        if (!use_aabb_frustum_culling)
+        {
+          model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+          continue;
+        }
+        bool frustum_test = true;
+        auto mesh_it = model3d->model->meshes.cbegin();
+        if (mesh_it == model3d->model->meshes.cend()) continue;
+        Vector3 center = (Vector3(mesh_it->get()->boundingBox.Center) * scale) + model3d->origin_scaled;
+        for (int i = 0; i < 6; ++i)
+        {
+          Vector3 n = Vector3(fabs(frustum_planes[i].x), fabs(frustum_planes[i].y), fabs(frustum_planes[i].z));
+          DirectX::SimpleMath::Vector4 v4(center.x, center.y, center.z, 1.f);
+          float e = n.Dot(mesh_it->get()->boundingBox.Extents);
+          float s = frustum_planes[i].Dot(v4);
+          if (s + e < -.75f) //TODO Figure out why 0.f is too sensitive
+          {
+            frustum_test = false;
+            break;
+          }
+          if (frustum_test)
+            model3d->model->Draw(m_d3dContext.Get(), *m_states, model3d->m_world, m_view, m_proj);
+        }
       }
+      */
+
+
+      //UINT stride = sizeof(DirectX::XMFLOAT3X4);
+      //UINT offset = 0;     
+      m_d3dContext->IASetInputLayout(m_NormalInputLayout.Get());
 
       std::map<int32_t, std::vector<Model3D*>>::iterator it;
       for (it = m_model3d.begin(); it != m_model3d.end(); ++it)
-      {
-        
+      {        
         Model3D* model3d = it->second.at(0);
         int32_t index = it->first;
-        size_t instance_c = it->second.size();       
-        //m_d3dContext->IASetInputLayout(m_instanceInputLayout.Get());
+        size_t instance_c = it->second.size();
 
+
+        UINT stride = sizeof(DirectX::XMFLOAT3X4);
+        UINT offset = 0;
+        m_d3dContext->IASetVertexBuffers(1, 1, m_InstanceBuffer[index].GetAddressOf(), &stride, &offset);
+
+        for (auto mit = model3d->model->meshes.cbegin(); mit != model3d->model->meshes.cend(); ++mit)
+        {
+          auto mesh = mit->get();
+          assert(mesh != 0);
+
+          mesh->PrepareForRendering(m_d3dContext.Get(), *m_states.get());
+
+          for (auto it = mesh->meshParts.cbegin(); it != mesh->meshParts.cend(); ++it)
+          {
+            auto part = it->get();
+            assert(part != 0);
+
+            auto imatrices = dynamic_cast<DirectX::IEffectMatrices*>(part->effect.get());
+            if (imatrices)
+            {
+              imatrices->SetMatrices(model3d->m_world, m_view, m_proj);
+            }
+
+            part->DrawInstanced(m_d3dContext.Get(), part->effect.get(), part->inputLayout.Get(), instance_c);
+          }
+        }
+
+
+        /*
         for (auto mesh_it = model3d->model->meshes.begin();
           mesh_it != model3d->model->meshes.end(); ++mesh_it)
         {
@@ -711,15 +866,16 @@ void Scene::Render()
           {
             auto part = (*mesh_part_it).get();
             if (part->isAlpha) continue;
+
             auto imatrices = dynamic_cast<DirectX::IEffectMatrices*>(part->effect.get());
             if (imatrices)
             {
               imatrices->SetMatrices(model3d->m_world, m_view, m_proj);
-            }         
+            }              
 
             m_d3dContext->IASetInputLayout(part->inputLayout.Get());
-            ID3D11Buffer* Buffers[] = { part->vertexBuffer.Get(), m_instanceBuffer[index].Get() };
-            UINT Strides[] = { part->vertexStride, sizeof(Vector3) };
+            ID3D11Buffer* Buffers[] = { part->vertexBuffer.Get(), m_InstanceBuffer[index].Get() };           
+            UINT Strides[] = { part->vertexStride, sizeof(DirectX::XMFLOAT3X4) };
             UINT Offsets[] = { 0, 0 };
             m_d3dContext->IASetVertexBuffers(0, _countof(Strides), Buffers, Strides, Offsets);
 
@@ -729,20 +885,22 @@ void Scene::Render()
             m_d3dContext->DrawIndexedInstanced(part->indexCount, instance_c, part->startIndex, part->vertexOffset, 0);
           }
         }
-      }
 
-     
+        */
+      } 
     }
 
-    m_d3dContext->RSSetState(m_states->CullNone());
-    //m_d3dContext->RSSetState(m_raster.Get());
-    m_effect->SetTextureEnabled(false);
-    m_effect->SetWorld(m_world);
-    m_effect->SetView(m_view);
-    m_effect->Apply(m_d3dContext.Get());
-    m_d3dContext->IASetInputLayout(m_inputLayout.Get());
     m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
     m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
+    m_d3dContext->RSSetState(m_states->CullNone());
+    m_NormalMapEffect->SetWorld(m_world);
+    m_NormalMapEffect->SetView(m_view);
+    m_NormalMapEffect->Apply(m_d3dContext.Get());
+   // auto sampler = m_states->LinearClamp();
+   // m_d3dContext->PSSetSamplers(0, 1, &sampler);
+
+    m_d3dContext->IASetInputLayout(m_BasicInputLayout.Get());
+
 
     m_batch->Begin();
 
@@ -769,12 +927,11 @@ void Scene::Render()
     for (int y = 0; y < TILES_DIMENSION; y++)
       m_batch->DrawLine(DirectX::VertexPositionColor(Vector3(0, 4, y), DirectX::Colors::Black),
         DirectX::VertexPositionColor(Vector3(128, 4, y), DirectX::Colors::Black));
-#endif
-    
+#endif    
 
     m_batch->End();
 
-    //Separating the water into its own loop afterwards prevents 'blinds effect' artifacting
+    //Separating the water into its own loop afterwards prevents 'blinds effect'
     m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
     m_batch->Begin();
     for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)

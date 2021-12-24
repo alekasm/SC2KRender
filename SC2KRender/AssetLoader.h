@@ -12,7 +12,7 @@ struct AssetLoader
   static void FindFiles(std::wstring directory, std::vector<std::wstring>& vector);
   static void LoadModels(
     Microsoft::WRL::ComPtr<ID3D11Device1> device,
-    const std::unique_ptr<DirectX::IEffectFactory>& effect,
+    const std::unique_ptr<DirectX::EffectFactory>& effect,
     std::wstring directory);
   static void LoadCustomAssets(std::wstring file);
   static void LoadSprites(Microsoft::WRL::ComPtr<ID3D11Device1> device, std::wstring directory);

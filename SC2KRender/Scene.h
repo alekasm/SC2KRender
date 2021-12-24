@@ -29,12 +29,59 @@ struct Sprite3D;
 struct Model3D;
 using DirectX::SimpleMath::Vector3;
 
+/*
 const D3D11_INPUT_ELEMENT_DESC VertexPositionInstance[] =
 {
   { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
   { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
   { "INSTANCE_POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
 };
+*/
+
+/*
+const D3D11_INPUT_ELEMENT_DESC NormalEffectInstance[] =
+{
+  { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+  { "INSTANCE_POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+};
+*/
+
+/*
+const D3D11_INPUT_ELEMENT_DESC NormalEffectInstance[] =
+{
+    { "SV_Position", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    { "NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    { "COLOR",       0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    //{ "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    { "InstMatrix",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "InstMatrix",  1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "InstMatrix",  2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+};
+*/
+
+const D3D11_INPUT_ELEMENT_DESC NormalEffectInstance[] =
+{
+    { "SV_Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "COLOR",       0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "NORMAL",      0, DXGI_FORMAT_R32G32B32_FLOAT,    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    { "TEXCOORD",  0, DXGI_FORMAT_R32G32_FLOAT,       0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA,   0 },
+    { "InstMatrix",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "InstMatrix",  1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+    { "InstMatrix",  2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 }
+};
+
+
+/*
+const D3D11_INPUT_ELEMENT_DESC NormalEffectInstance[] =
+{
+  // XMFLOAT3X4
+  { "InstMatrix",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+  { "InstMatrix",  1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+  { "InstMatrix",  2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1 },
+};
+*/
+
 
 class Scene
 {
@@ -134,15 +181,29 @@ private:
   ID3D11DeviceContext* pd3dDeferredContext = NULL;
 
   std::unique_ptr<DirectX::CommonStates> m_states;
-  std::unique_ptr<DirectX::BasicEffect> m_effect;
-  std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>> m_texbatch;
+
+  //Used for instancing
+  std::unique_ptr<DirectX::NormalMapEffect> m_NormalMapEffect;
+  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_NormalInputLayout;
+  std::map<int32_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_InstanceBuffer;
+  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_normalTexture;
+  //UINT m_instanceCount;
+  //std::unique_ptr<DirectX::XMFLOAT3X4[]> m_instanceTransforms;
+
+
+
+  //std::unique_ptr<DirectX::BasicEffect> m_BasicEffect;
+  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_BasicInputLayout;
+
+  //std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>> m_texbatch;
   std::unique_ptr<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>> m_batch;
   std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch;
+ 
 
-  std::unique_ptr<DirectX::IEffectFactory> m_fxFactory;
+  std::unique_ptr<DirectX::EffectFactory> m_fxFactory;
   //std::unique_ptr<DirectX::Model> m_model;
 
-  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_inputLayout;
+  
   DirectX::SimpleMath::Matrix m_world;
   DirectX::SimpleMath::Matrix m_view;
   DirectX::SimpleMath::Matrix m_proj;
@@ -173,11 +234,19 @@ private:
   std::vector<Sprite2D*> v_sprite2d;
   std::vector<Model3D*> v_model3d;
   std::map<int32_t, std::vector<Model3D*>> m_model3d;
-  std::map<int32_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_instanceBuffer;
-  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_instanceInputLayout;
 
-  //Microsoft::WRL::ComPtr<ID3D11Buffer> m_instanceData;
-  //Microsoft::WRL::ComPtr<ID3D11Buffer> m_vertexBuffer;
+  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_normalMap;
+  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_normalTex;
+
+  /*
+  UINT m_instanceCount;
+  std::unique_ptr<DirectX::XMFLOAT3X4[]> m_instanceTransforms;
+  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_instanceLayout;
+  Microsoft::WRL::ComPtr<ID3D11Buffer> m_instancedVB;
+  */
+  //std::unique_ptr<DirectX::DeviceResources> m_deviceResources;
+  
+
 
   };
 

@@ -225,6 +225,7 @@
     <ClInclude Include="ModifyModel.h" />
     <ClInclude Include="QuadSceneTile.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="SC2KRMath.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneGenerator.h" />
     <ClInclude Include="SceneTile.h" />
@@ -239,6 +240,8 @@
     <ResourceCompile Include="SC2KRender.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="assets\default.dds" />
+    <Image Include="assets\smoothMap.dds" />
     <Image Include="icon.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -57,7 +57,7 @@ void AssetLoader::FindFiles(std::wstring directory, std::vector<std::wstring>& v
 
 void AssetLoader::LoadModels(
   Microsoft::WRL::ComPtr<ID3D11Device1> device,
-  const std::unique_ptr<DirectX::IEffectFactory>& effect,
+  const std::unique_ptr<DirectX::EffectFactory>& effect,
   std::wstring directory)
 {
   mmodels = new std::map<std::wstring, std::shared_ptr<DirectX::Model>>();

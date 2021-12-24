@@ -650,7 +650,8 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
         UNREFERENCED_PARAMETER(bSkeleton);
     #endif
 
-        bool enableSkinning = (*nSkinVBs) != 0;
+        bool enableSkinning = false;
+        //bool enableSkinning = (*nSkinVBs) != 0;
 
         // Build vertex buffers
         std::vector<ComPtr<ID3D11Buffer>> vbs;
@@ -840,6 +841,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                 info.perVertexColor = true;
                 info.enableSkinning = enableSkinning;
                 info.alpha = m.pMaterial->Diffuse.w;
+                info.enableNormalMaps = true; //Dumb trick
                 info.ambientColor = GetMaterialColor(m.pMaterial->Ambient.x, m.pMaterial->Ambient.y, m.pMaterial->Ambient.z, srgb);
                 info.diffuseColor = GetMaterialColor(m.pMaterial->Diffuse.x, m.pMaterial->Diffuse.y, m.pMaterial->Diffuse.z, srgb);
                 info.specularColor = GetMaterialColor(m.pMaterial->Specular.x, m.pMaterial->Specular.y, m.pMaterial->Specular.z, srgb);

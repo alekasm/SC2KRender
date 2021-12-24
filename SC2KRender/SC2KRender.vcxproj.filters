@@ -278,6 +278,9 @@
     <ClInclude Include="SceneGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SC2KRMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="DirectXTK\SimpleMath.inl">
@@ -293,5 +296,7 @@
     <Image Include="icon.ico">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="assets\default.dds" />
+    <Image Include="assets\smoothMap.dds" />
   </ItemGroup>
 </Project>
