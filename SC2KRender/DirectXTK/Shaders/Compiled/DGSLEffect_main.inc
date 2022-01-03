@@ -54,7 +54,7 @@
     dcl_texcoord2 v2  // vertex<7,8,9,10>
     dcl_texcoord3 v3  // vertex<11,12>
 
-#line 125 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\DGSLEffect.fx"
+#line 125 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\DGSLEffect.fx"
     dp4 oPos.z, v0, c7  // ::main<2>
     mad r0.xyz, v3.xyxw, c12.xxyw, c12.yyxw
     dp3 oT1.x, r0, c9.xyww  // ::main<8>
@@ -132,10 +132,10 @@ ret
 
 const BYTE DGSLEffect_main[] =
 {
-     68,  88,  66,  67, 105,  18, 
-    149,  61, 241, 236, 214, 172, 
-    103, 174, 101, 254, 170,   0, 
-    227, 195,   1,   0,   0,   0, 
+     68,  88,  66,  67,  90,  58, 
+    143, 213, 188,  25, 254, 193, 
+    160,  22,  19, 172, 146,  30, 
+    239, 193,   1,   0,   0,   0, 
     116,  10,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
       4,   6,   0,   0, 244,   8, 
@@ -172,7 +172,7 @@ const BYTE DGSLEffect_main[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  68,  71,  83,  76, 

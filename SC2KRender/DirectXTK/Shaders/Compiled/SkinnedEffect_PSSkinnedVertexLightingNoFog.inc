@@ -34,11 +34,11 @@
     dcl t2.xy  // pin<8,9>
     dcl_2d s0
 
-#line 365 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\SkinnedEffect.fx"
+#line 350 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\SkinnedEffect.fx"
     texld r0, t2, s0
     mul r0, r0, t0  // ::color<0,1,2,3>
 
-#line 24 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 23 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     mad r0.xyz, t1, r0.w, r0  // AddSpecular::color<0,1,2>
     mov oC0, r0  // ::PSSkinnedVertexLightingNoFog<0,1,2,3>
 
@@ -61,10 +61,10 @@ ret
 
 const BYTE SkinnedEffect_PSSkinnedVertexLightingNoFog[] =
 {
-     68,  88,  66,  67, 140, 236, 
-     97,  10, 242,  40, 205, 225, 
-    161,  92, 230, 219, 199, 153, 
-    237, 226,   1,   0,   0,   0, 
+     68,  88,  66,  67, 164,  17, 
+     35, 241, 233,  26,  85,  79, 
+    119, 133, 167,  59,  82, 156, 
+    120, 104,   1,   0,   0,   0, 
     188,   4,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
      64,   3,   0,   0,  32,   4, 
@@ -91,7 +91,7 @@ const BYTE SkinnedEffect_PSSkinnedVertexLightingNoFog[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  83, 107, 105, 110, 
@@ -102,7 +102,7 @@ const BYTE SkinnedEffect_PSSkinnedVertexLightingNoFog[] =
     101, 107,  92,  68, 101, 115, 
     107, 116, 111, 112,  92,  68, 
     105, 114, 101,  99, 116,  88, 
-     84,  75,  45,  97, 117, 103, 
+     84,  75,  45, 110, 111, 118, 
      50,  48,  50,  49,  92,  83, 
     114,  99,  92,  83, 104,  97, 
     100, 101, 114, 115,  92,  67, 
@@ -114,11 +114,11 @@ const BYTE SkinnedEffect_PSSkinnedVertexLightingNoFog[] =
     120,   2,   0,   0,   0,   0, 
     255, 255, 132,   2,   0,   0, 
       0,   0, 255, 255, 144,   2, 
-      0,   0, 109,   1,   0,   0, 
-    156,   2,   0,   0, 109,   1, 
+      0,   0,  94,   1,   0,   0, 
+    156,   2,   0,   0,  94,   1, 
       0,   0, 172,   2,   0,   0, 
-     24,   0,   1,   0, 188,   2, 
-      0,   0,  24,   0,   1,   0, 
+     23,   0,   1,   0, 188,   2, 
+      0,   0,  23,   0,   1,   0, 
     208,   2,   0,   0,  80,  83, 
      83, 107, 105, 110, 110, 101, 
     100,  86, 101, 114, 116, 101, 

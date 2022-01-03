@@ -48,70 +48,70 @@
     dcl_texcoord1 v1  // vin<4,5,6>
     dcl_texcoord2 v2  // vin<7,8,9,10>
 
-#line 55 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 54 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp4 r0.x, v0, c9  // ::pos_ws<0>
     dp4 r0.y, v0, c10  // ::pos_ws<1>
     dp4 r0.z, v0, c11  // ::pos_ws<2>
     add r0.xyz, -r0, c7
     nrm r1.xyz, r0  // ::eyeVector<0,1,2>
 
-#line 31
+#line 30
     add r0.xyz, r1, -c4
     nrm r1.xyz, r0  // ::halfVectors<0,1,2>
 
-#line 57
+#line 56
     dp3 r0.x, v1, c12
     dp3 r0.y, v1, c13
     dp3 r0.z, v1, c14
     nrm r2.xyz, r0  // ::worldNormal<0,1,2>
 
-#line 35
+#line 34
     dp3 r0.x, r1, r2  // ::dotH<0>
     dp3 r0.y, -c4, r2  // ::dotL<0>
 
-#line 40
+#line 39
     max r0.x, r0.x, c19.x
 
-#line 37
+#line 36
     sge r0.z, r0.y, c19.x  // ::zeroL<0>
 
-#line 40
+#line 39
     mul r0.x, r0.z, r0.x
     mul r0.z, r0.y, r0.z  // ::diffuse<0>
 
-#line 44
+#line 43
     mul r1.xyz, r0.z, c5
     mov r2.xyz, c1  // Parameters::DiffuseColor<0,1,2>
     mad r1.xyz, r1, r2, c2  // ::result<0,1,2>
 
-#line 292 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 291 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     mul oT0.xyz, r1, v2  // ::VSBasicOneLightVc<0,1,2>
 
-#line 40 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 39 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     pow r1.x, r0.x, c3.w
     mul r0.x, r0.y, r1.x  // ::specular<0>
 
-#line 45
+#line 44
     mul r0.xyz, r0.x, c6
     mul oT1.xyz, r0, c3  // ::VSBasicOneLightVc<4,5,6>
 
-#line 61
+#line 60
     dp4 oPos.z, v0, c17  // ::VSBasicOneLightVc<10>
 
-#line 12 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 11 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     dp4 r0.x, v0, c8
     max r0.x, r0.x, c19.x
     min oT1.w, r0.x, c19.y  // ::VSBasicOneLightVc<7>
 
-#line 292 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 291 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     mul oT0.w, v2.w, c1.w  // ::VSBasicOneLightVc<3>
 
-#line 61 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 60 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp4 r0.x, v0, c15  // ::vout<0>
     dp4 r0.y, v0, c16  // ::vout<1>
     dp4 r0.z, v0, c18  // ::vout<3>
 
-#line 285 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 284 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     mad oPos.xy, r0.z, c0, r0  // ::VSBasicOneLightVc<8,9>
     mov oPos.w, r0.z  // ::VSBasicOneLightVc<11>
 
@@ -169,10 +169,10 @@ ret
 
 const BYTE BasicEffect_VSBasicOneLightVc[] =
 {
-     68,  88,  66,  67, 101, 199, 
-    234,  87, 133,  54,  72,  86, 
-     40,  67, 115, 222, 214,  34, 
-    203, 109,   1,   0,   0,   0, 
+     68,  88,  66,  67, 133, 134, 
+     87,   8, 131, 125, 119,  19, 
+    185, 104, 182,  90,  47,   7, 
+     18,  33,   1,   0,   0,   0, 
      84,  15,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
     140,   9,   0,   0, 116,  14, 
@@ -211,7 +211,7 @@ const BYTE BasicEffect_VSBasicOneLightVc[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  76, 105, 103, 104, 
@@ -221,8 +221,8 @@ const BYTE BasicEffect_VSBasicOneLightVc[] =
      65, 108, 101, 107,  92,  68, 
     101, 115, 107, 116, 111, 112, 
      92,  68, 105, 114, 101,  99, 
-    116,  88,  84,  75,  45,  97, 
-    117, 103,  50,  48,  50,  49, 
+    116,  88,  84,  75,  45, 110, 
+    111, 118,  50,  48,  50,  49, 
      92,  83, 114,  99,  92,  83, 
     104,  97, 100, 101, 114, 115, 
      92,  66,  97, 115, 105,  99, 
@@ -233,7 +233,7 @@ const BYTE BasicEffect_VSBasicOneLightVc[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  67, 111, 109, 109, 
@@ -245,53 +245,53 @@ const BYTE BasicEffect_VSBasicOneLightVc[] =
     255, 255, 152,   6,   0,   0, 
       0,   0, 255, 255, 164,   6, 
       0,   0,   0,   0, 255, 255, 
-    176,   6,   0,   0,  55,   0, 
+    176,   6,   0,   0,  54,   0, 
       0,   0, 188,   6,   0,   0, 
-     55,   0,   0,   0, 204,   6, 
-      0,   0,  55,   0,   0,   0, 
-    220,   6,   0,   0,  56,   0, 
+     54,   0,   0,   0, 204,   6, 
+      0,   0,  54,   0,   0,   0, 
+    220,   6,   0,   0,  55,   0, 
       0,   0, 236,   6,   0,   0, 
-     56,   0,   0,   0, 252,   6, 
-      0,   0,  31,   0,   0,   0, 
-      8,   7,   0,   0,  31,   0, 
+     55,   0,   0,   0, 252,   6, 
+      0,   0,  30,   0,   0,   0, 
+      8,   7,   0,   0,  30,   0, 
       0,   0,  24,   7,   0,   0, 
-     57,   0,   0,   0,  36,   7, 
-      0,   0,  57,   0,   0,   0, 
-     52,   7,   0,   0,  57,   0, 
+     56,   0,   0,   0,  36,   7, 
+      0,   0,  56,   0,   0,   0, 
+     52,   7,   0,   0,  56,   0, 
       0,   0,  68,   7,   0,   0, 
-     57,   0,   0,   0,  84,   7, 
-      0,   0,  35,   0,   0,   0, 
-     96,   7,   0,   0,  34,   0, 
+     56,   0,   0,   0,  84,   7, 
+      0,   0,  34,   0,   0,   0, 
+     96,   7,   0,   0,  33,   0, 
       0,   0, 112,   7,   0,   0, 
-     40,   0,   0,   0, 128,   7, 
-      0,   0,  37,   0,   0,   0, 
-    144,   7,   0,   0,  40,   0, 
+     39,   0,   0,   0, 128,   7, 
+      0,   0,  36,   0,   0,   0, 
+    144,   7,   0,   0,  39,   0, 
       0,   0, 160,   7,   0,   0, 
-     39,   0,   0,   0, 176,   7, 
-      0,   0,  44,   0,   0,   0, 
-    192,   7,   0,   0,  44,   0, 
+     38,   0,   0,   0, 176,   7, 
+      0,   0,  43,   0,   0,   0, 
+    192,   7,   0,   0,  43,   0, 
       0,   0, 208,   7,   0,   0, 
-     44,   0,   0,   0, 220,   7, 
-      0,   0,  36,   1,   1,   0, 
-    240,   7,   0,   0,  40,   0, 
+     43,   0,   0,   0, 220,   7, 
+      0,   0,  35,   1,   1,   0, 
+    240,   7,   0,   0,  39,   0, 
       0,   0,   0,   8,   0,   0, 
-     40,   0,   0,   0,  16,   8, 
-      0,   0,  45,   0,   0,   0, 
-     32,   8,   0,   0,  45,   0, 
+     39,   0,   0,   0,  16,   8, 
+      0,   0,  44,   0,   0,   0, 
+     32,   8,   0,   0,  44,   0, 
       0,   0,  48,   8,   0,   0, 
-     61,   0,   0,   0,  64,   8, 
-      0,   0,  12,   0,   2,   0, 
-     80,   8,   0,   0,  12,   0, 
+     60,   0,   0,   0,  64,   8, 
+      0,   0,  11,   0,   2,   0, 
+     80,   8,   0,   0,  11,   0, 
       2,   0,  96,   8,   0,   0, 
-     12,   0,   2,   0, 112,   8, 
-      0,   0,  36,   1,   1,   0, 
-    128,   8,   0,   0,  61,   0, 
+     11,   0,   2,   0, 112,   8, 
+      0,   0,  35,   1,   1,   0, 
+    128,   8,   0,   0,  60,   0, 
       0,   0, 144,   8,   0,   0, 
-     61,   0,   0,   0, 160,   8, 
-      0,   0,  61,   0,   0,   0, 
-    176,   8,   0,   0,  29,   1, 
+     60,   0,   0,   0, 160,   8, 
+      0,   0,  60,   0,   0,   0, 
+    176,   8,   0,   0,  28,   1, 
       1,   0, 192,   8,   0,   0, 
-     29,   1,   1,   0, 212,   8, 
+     28,   1,   1,   0, 212,   8, 
       0,   0,  80,  97, 114,  97, 
     109, 101, 116, 101, 114, 115, 
       0,  68, 105, 102, 102, 117, 

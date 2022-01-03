@@ -47,16 +47,16 @@
     dcl_texcoord1 v1  // vin<4,5,6>
     dcl_texcoord2 v2  // vin<7,8>
 
-#line 83 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 82 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp4 oPos.z, v0, c11  // ::VSEnvMapPixelLightingBn<15>
     dp4 oT1.x, v0, c3  // ::VSEnvMapPixelLightingBn<2>
     dp4 oT1.y, v0, c4  // ::VSEnvMapPixelLightingBn<3>
     dp4 oT1.z, v0, c5  // ::VSEnvMapPixelLightingBn<4>
 
-#line 11 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Utilities.fxh"
+#line 11 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Utilities.fxh"
     mad r0.xyz, v1, c13.x, c13.y  // ::BiasX2<0,1,2>
 
-#line 85 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 84 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp3 r1.x, r0, c6
     dp3 r1.y, r0, c7
     dp3 r1.z, r0, c8
@@ -64,21 +64,21 @@
     rsq r0.x, r0.x
     mul oT2.xyz, r0.x, r1  // ::VSEnvMapPixelLightingBn<6,7,8>
 
-#line 12 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 11 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     dp4 r0.x, v0, c2
     max r0.x, r0.x, c13.z
     min oT1.w, r0.x, c13.w  // ::VSEnvMapPixelLightingBn<5>
 
-#line 83 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 82 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp4 r0.x, v0, c9  // ::vout<0>
     dp4 r0.y, v0, c10  // ::vout<1>
     dp4 r0.z, v0, c12  // ::vout<3>
 
-#line 255 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\EnvironmentMapEffect.fx"
+#line 254 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\EnvironmentMapEffect.fx"
     mad oPos.xy, r0.z, c0, r0  // ::VSEnvMapPixelLightingBn<13,14>
     mov oPos.w, r0.z  // ::VSEnvMapPixelLightingBn<16>
 
-#line 265
+#line 264
     mov oT0.xy, v2  // ::VSEnvMapPixelLightingBn<0,1>
     mov r0.zw, c13
     mad oT3, c1.w, r0.zzzw, r0.wwwz  // ::VSEnvMapPixelLightingBn<9,10,11,12>
@@ -119,10 +119,10 @@ ret
 
 const BYTE EnvironmentMapEffect_VSEnvMapPixelLightingBn[] =
 {
-     68,  88,  66,  67,  40,  43, 
-    237,   2, 121, 142, 220,  76, 
-    199,  34, 238,  64, 192, 200, 
-    202,  63,   1,   0,   0,   0, 
+     68,  88,  66,  67, 161,  54, 
+     52, 158,  93,  76, 199, 133, 
+    230,   6, 135, 123, 120,  70, 
+    119, 108,   1,   0,   0,   0, 
     216,  10,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
     252,   6,   0,   0, 192,   9, 
@@ -155,7 +155,7 @@ const BYTE EnvironmentMapEffect_VSEnvMapPixelLightingBn[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  76, 105, 103, 104, 
@@ -165,8 +165,8 @@ const BYTE EnvironmentMapEffect_VSEnvMapPixelLightingBn[] =
      65, 108, 101, 107,  92,  68, 
     101, 115, 107, 116, 111, 112, 
      92,  68, 105, 114, 101,  99, 
-    116,  88,  84,  75,  45,  97, 
-    117, 103,  50,  48,  50,  49, 
+    116,  88,  84,  75,  45, 110, 
+    111, 118,  50,  48,  50,  49, 
      92,  83, 114,  99,  92,  83, 
     104,  97, 100, 101, 114, 115, 
      92,  85, 116, 105, 108, 105, 
@@ -176,8 +176,8 @@ const BYTE EnvironmentMapEffect_VSEnvMapPixelLightingBn[] =
      65, 108, 101, 107,  92,  68, 
     101, 115, 107, 116, 111, 112, 
      92,  68, 105, 114, 101,  99, 
-    116,  88,  84,  75,  45,  97, 
-    117, 103,  50,  48,  50,  49, 
+    116,  88,  84,  75,  45, 110, 
+    111, 118,  50,  48,  50,  49, 
      92,  83, 114,  99,  92,  83, 
     104,  97, 100, 101, 114, 115, 
      92,  67, 111, 109, 109, 111, 
@@ -187,7 +187,7 @@ const BYTE EnvironmentMapEffect_VSEnvMapPixelLightingBn[] =
     107,  92,  68, 101, 115, 107, 
     116, 111, 112,  92,  68, 105, 
     114, 101,  99, 116,  88,  84, 
-     75,  45,  97, 117, 103,  50, 
+     75,  45, 110, 111, 118,  50, 
      48,  50,  49,  92,  83, 114, 
      99,  92,  83, 104,  97, 100, 
     101, 114, 115,  92,  69, 110, 
@@ -203,35 +203,35 @@ const BYTE EnvironmentMapEffect_VSEnvMapPixelLightingBn[] =
       0,   0,   0,   0, 255, 255, 
       0,   5,   0,   0,   0,   0, 
     255, 255,  12,   5,   0,   0, 
-     83,   0,   0,   0,  24,   5, 
-      0,   0,  84,   0,   0,   0, 
-     40,   5,   0,   0,  84,   0, 
-      0,   0,  56,   5,   0,   0, 
-     84,   0,   0,   0,  72,   5, 
-      0,   0,  11,   0,   1,   0, 
-     88,   5,   0,   0,  85,   0, 
-      0,   0, 108,   5,   0,   0, 
-     85,   0,   0,   0, 124,   5, 
-      0,   0,  85,   0,   0,   0, 
-    140,   5,   0,   0,  85,   0, 
-      0,   0, 156,   5,   0,   0, 
-     85,   0,   0,   0, 172,   5, 
-      0,   0,  85,   0,   0,   0, 
-    184,   5,   0,   0,  12,   0, 
-      2,   0, 200,   5,   0,   0, 
-     12,   0,   2,   0, 216,   5, 
-      0,   0,  12,   0,   2,   0, 
-    232,   5,   0,   0,  83,   0, 
-      0,   0, 248,   5,   0,   0, 
-     83,   0,   0,   0,   8,   6, 
+     82,   0,   0,   0,  24,   5, 
       0,   0,  83,   0,   0,   0, 
-     24,   6,   0,   0, 255,   0, 
+     40,   5,   0,   0,  83,   0, 
+      0,   0,  56,   5,   0,   0, 
+     83,   0,   0,   0,  72,   5, 
+      0,   0,  11,   0,   1,   0, 
+     88,   5,   0,   0,  84,   0, 
+      0,   0, 108,   5,   0,   0, 
+     84,   0,   0,   0, 124,   5, 
+      0,   0,  84,   0,   0,   0, 
+    140,   5,   0,   0,  84,   0, 
+      0,   0, 156,   5,   0,   0, 
+     84,   0,   0,   0, 172,   5, 
+      0,   0,  84,   0,   0,   0, 
+    184,   5,   0,   0,  11,   0, 
+      2,   0, 200,   5,   0,   0, 
+     11,   0,   2,   0, 216,   5, 
+      0,   0,  11,   0,   2,   0, 
+    232,   5,   0,   0,  82,   0, 
+      0,   0, 248,   5,   0,   0, 
+     82,   0,   0,   0,   8,   6, 
+      0,   0,  82,   0,   0,   0, 
+     24,   6,   0,   0, 254,   0, 
       3,   0,  40,   6,   0,   0, 
-    255,   0,   3,   0,  60,   6, 
-      0,   0,   9,   1,   3,   0, 
-     72,   6,   0,   0,   8,   1, 
+    254,   0,   3,   0,  60,   6, 
+      0,   0,   8,   1,   3,   0, 
+     72,   6,   0,   0,   7,   1, 
       3,   0,  84,   6,   0,   0, 
-      8,   1,   3,   0,  96,   6, 
+      7,   1,   3,   0,  96,   6, 
       0,   0,  66, 105,  97, 115, 
      88,  50,   0, 171,   1,   0, 
       3,   0,   1,   0,   3,   0, 

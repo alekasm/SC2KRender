@@ -33,14 +33,13 @@ namespace DirectX
         IPostProcess(const IPostProcess&) = delete;
         IPostProcess& operator=(const IPostProcess&) = delete;
 
-        IPostProcess(IPostProcess&&) = delete;
-        IPostProcess& operator=(IPostProcess&&) = delete;
-
         virtual void __cdecl Process(_In_ ID3D11DeviceContext* deviceContext,
             _In_opt_ std::function<void __cdecl()> setCustomState = nullptr) = 0;
 
     protected:
         IPostProcess() = default;
+        IPostProcess(IPostProcess&&) = default;
+        IPostProcess& operator=(IPostProcess&&) = default;
     };
 
 
@@ -63,8 +62,9 @@ namespace DirectX
         };
 
         explicit BasicPostProcess(_In_ ID3D11Device* device);
-        BasicPostProcess(BasicPostProcess&& moveFrom) noexcept;
-        BasicPostProcess& operator= (BasicPostProcess&& moveFrom) noexcept;
+
+        BasicPostProcess(BasicPostProcess&&) noexcept;
+        BasicPostProcess& operator= (BasicPostProcess&&) noexcept;
 
         BasicPostProcess(BasicPostProcess const&) = delete;
         BasicPostProcess& operator= (BasicPostProcess const&) = delete;
@@ -112,8 +112,9 @@ namespace DirectX
         };
 
         explicit DualPostProcess(_In_ ID3D11Device* device);
-        DualPostProcess(DualPostProcess&& moveFrom) noexcept;
-        DualPostProcess& operator= (DualPostProcess&& moveFrom) noexcept;
+
+        DualPostProcess(DualPostProcess&&) noexcept;
+        DualPostProcess& operator= (DualPostProcess&&) noexcept;
 
         DualPostProcess(DualPostProcess const&) = delete;
         DualPostProcess& operator= (DualPostProcess const&) = delete;
@@ -178,8 +179,9 @@ namespace DirectX
         };
 
         explicit ToneMapPostProcess(_In_ ID3D11Device* device);
-        ToneMapPostProcess(ToneMapPostProcess&& moveFrom) noexcept;
-        ToneMapPostProcess& operator= (ToneMapPostProcess&& moveFrom) noexcept;
+
+        ToneMapPostProcess(ToneMapPostProcess&&) noexcept;
+        ToneMapPostProcess& operator= (ToneMapPostProcess&&) noexcept;
 
         ToneMapPostProcess(ToneMapPostProcess const&) = delete;
         ToneMapPostProcess& operator= (ToneMapPostProcess const&) = delete;
@@ -205,7 +207,7 @@ namespace DirectX
 
         // Sets the Color Rotation Transform for HDR10 signal output
         void __cdecl SetColorRotation(ColorPrimaryRotation value);
-        void XM_CALLCONV SetColorRotation(FXMMATRIX value);
+        void __cdecl SetColorRotation(CXMMATRIX value);
 
         // Sets exposure value for LDR tonemap operators
         void __cdecl SetExposure(float exposureValue);

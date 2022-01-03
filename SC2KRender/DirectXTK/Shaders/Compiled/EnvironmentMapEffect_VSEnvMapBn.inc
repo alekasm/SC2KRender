@@ -47,67 +47,67 @@
     dcl_texcoord1 v1  // vin<4,5,6>
     dcl_texcoord2 v2  // vin<7,8>
 
-#line 11 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Utilities.fxh"
+#line 11 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Utilities.fxh"
     mad r0.xyz, v1, c22.x, c22.y  // ::BiasX2<0,1,2>
 
-#line 66 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\EnvironmentMapEffect.fx"
+#line 65 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\EnvironmentMapEffect.fx"
     dp3 r1.x, r0, c15
     dp3 r1.y, r0, c16
     dp3 r1.z, r0, c17
     nrm r0.xyz, r1  // ::worldNormal<0,1,2>
 
-#line 34 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 33 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp3 r1.x, -c4, r0  // ::dotL<0>
     dp3 r1.y, -c5, r0  // ::dotL<1>
     dp3 r1.z, -c6, r0  // ::dotL<2>
 
-#line 37
+#line 36
     sge r2.xyz, r1, c22.z  // ::zeroL<0,1,2>
     mul r1.xyz, r1, r2  // ::diffuse<0,1,2>
 
-#line 44
+#line 43
     mul r2.xyz, r1.y, c8
     mad r1.xyw, r1.x, c7.xyzz, r2.xyzz
     mad r1.xyz, r1.z, c9, r1.xyww
     mov r2.xyz, c2  // Parameters::DiffuseColor<0,1,2>
     mad oT0.xyz, r1, r2, c3  // ::VSEnvMapBn<0,1,2>
 
-#line 70 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\EnvironmentMapEffect.fx"
+#line 69 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\EnvironmentMapEffect.fx"
     dp4 oPos.z, v0, c20  // ::VSEnvMapBn<15>
 
-#line 12 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 11 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     dp4 r0.w, v0, c11
     max r0.w, r0.w, c22.z
     min oT1.w, r0.w, c22.w  // ::VSEnvMapBn<7>
 
-#line 64 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\EnvironmentMapEffect.fx"
+#line 63 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\EnvironmentMapEffect.fx"
     dp4 r1.x, v0, c12  // ::pos_ws<0>
     dp4 r1.y, v0, c13  // ::pos_ws<1>
     dp4 r1.z, v0, c14  // ::pos_ws<2>
     add r1.xyz, -r1, c10
     nrm r2.xyz, r1  // ::eyeVector<0,1,2>
 
-#line 80
+#line 79
     dp3 r0.w, -r2, r0
     add r0.w, r0.w, r0.w
     mad oT3.xyz, r0, -r0.w, -r2  // ::VSEnvMapBn<10,11,12>
 
-#line 70
+#line 69
     dp4 r0.x, v0, c18  // ::vout<13>
     dp4 r0.y, v0, c19  // ::vout<14>
     dp4 r0.z, v0, c21  // ::vout<16>
 
-#line 186
+#line 185
     mad oPos.xy, r0.z, c0, r0  // ::VSEnvMapBn<13,14>
     mov oPos.w, r0.z  // ::VSEnvMapBn<16>
 
-#line 44 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 43 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     mov oT0.w, c2.w  // ::VSEnvMapBn<3>
 
-#line 76 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\EnvironmentMapEffect.fx"
+#line 75 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\EnvironmentMapEffect.fx"
     mov oT1.xyz, c1.x  // ::VSEnvMapBn<4,5,6>
 
-#line 190
+#line 189
     mov oT2.xy, v2  // ::VSEnvMapBn<8,9>
 
 // approximately 39 instruction slots used
@@ -163,10 +163,10 @@ ret
 
 const BYTE EnvironmentMapEffect_VSEnvMapBn[] =
 {
-     68,  88,  66,  67,  76,  65, 
-    233, 225, 225, 222, 192, 247, 
-      6, 138,   3, 210, 154,  19, 
-     79, 149,   1,   0,   0,   0, 
+     68,  88,  66,  67,  43, 151, 
+    125,  43, 179, 240,  67, 166, 
+    131,   7, 169, 242,  73, 153, 
+    218,   5,   1,   0,   0,   0, 
      88,  15,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
      56,   9,   0,   0,  64,  14, 
@@ -199,7 +199,7 @@ const BYTE EnvironmentMapEffect_VSEnvMapBn[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  85, 116, 105, 108, 
@@ -210,7 +210,7 @@ const BYTE EnvironmentMapEffect_VSEnvMapBn[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  69, 110, 118, 105, 
@@ -222,8 +222,8 @@ const BYTE EnvironmentMapEffect_VSEnvMapBn[] =
     108, 101, 107,  92,  68, 101, 
     115, 107, 116, 111, 112,  92, 
      68, 105, 114, 101,  99, 116, 
-     88,  84,  75,  45,  97, 117, 
-    103,  50,  48,  50,  49,  92, 
+     88,  84,  75,  45, 110, 111, 
+    118,  50,  48,  50,  49,  92, 
      83, 114,  99,  92,  83, 104, 
      97, 100, 101, 114, 115,  92, 
      76, 105, 103, 104, 116, 105, 
@@ -233,7 +233,7 @@ const BYTE EnvironmentMapEffect_VSEnvMapBn[] =
     101, 107,  92,  68, 101, 115, 
     107, 116, 111, 112,  92,  68, 
     105, 114, 101,  99, 116,  88, 
-     84,  75,  45,  97, 117, 103, 
+     84,  75,  45, 110, 111, 118, 
      50,  48,  50,  49,  92,  83, 
     114,  99,  92,  83, 104,  97, 
     100, 101, 114, 115,  92,  67, 
@@ -248,51 +248,51 @@ const BYTE EnvironmentMapEffect_VSEnvMapBn[] =
     108,   6,   0,   0,   0,   0, 
     255, 255, 120,   6,   0,   0, 
      11,   0,   0,   0, 132,   6, 
-      0,   0,  66,   0,   1,   0, 
-    152,   6,   0,   0,  66,   0, 
-      1,   0, 168,   6,   0,   0, 
-     66,   0,   1,   0, 184,   6, 
-      0,   0,  66,   0,   1,   0, 
-    200,   6,   0,   0,  34,   0, 
-      2,   0, 212,   6,   0,   0, 
-     34,   0,   2,   0, 228,   6, 
-      0,   0,  34,   0,   2,   0, 
-    244,   6,   0,   0,  37,   0, 
-      2,   0,   4,   7,   0,   0, 
-     39,   0,   2,   0,  20,   7, 
-      0,   0,  44,   0,   2,   0, 
-     36,   7,   0,   0,  44,   0, 
-      2,   0,  52,   7,   0,   0, 
-     44,   0,   2,   0,  72,   7, 
-      0,   0,  44,   0,   2,   0, 
-     92,   7,   0,   0,  44,   0, 
-      2,   0, 104,   7,   0,   0, 
-     70,   0,   1,   0, 124,   7, 
-      0,   0,  12,   0,   3,   0, 
-    140,   7,   0,   0,  12,   0, 
-      3,   0, 156,   7,   0,   0, 
-     12,   0,   3,   0, 172,   7, 
-      0,   0,  64,   0,   1,   0, 
-    188,   7,   0,   0,  64,   0, 
-      1,   0, 204,   7,   0,   0, 
-     64,   0,   1,   0, 220,   7, 
       0,   0,  65,   0,   1,   0, 
-    236,   7,   0,   0,  65,   0, 
+    152,   6,   0,   0,  65,   0, 
+      1,   0, 168,   6,   0,   0, 
+     65,   0,   1,   0, 184,   6, 
+      0,   0,  65,   0,   1,   0, 
+    200,   6,   0,   0,  33,   0, 
+      2,   0, 212,   6,   0,   0, 
+     33,   0,   2,   0, 228,   6, 
+      0,   0,  33,   0,   2,   0, 
+    244,   6,   0,   0,  36,   0, 
+      2,   0,   4,   7,   0,   0, 
+     38,   0,   2,   0,  20,   7, 
+      0,   0,  43,   0,   2,   0, 
+     36,   7,   0,   0,  43,   0, 
+      2,   0,  52,   7,   0,   0, 
+     43,   0,   2,   0,  72,   7, 
+      0,   0,  43,   0,   2,   0, 
+     92,   7,   0,   0,  43,   0, 
+      2,   0, 104,   7,   0,   0, 
+     69,   0,   1,   0, 124,   7, 
+      0,   0,  11,   0,   3,   0, 
+    140,   7,   0,   0,  11,   0, 
+      3,   0, 156,   7,   0,   0, 
+     11,   0,   3,   0, 172,   7, 
+      0,   0,  63,   0,   1,   0, 
+    188,   7,   0,   0,  63,   0, 
+      1,   0, 204,   7,   0,   0, 
+     63,   0,   1,   0, 220,   7, 
+      0,   0,  64,   0,   1,   0, 
+    236,   7,   0,   0,  64,   0, 
       1,   0, 252,   7,   0,   0, 
-     80,   0,   1,   0,   8,   8, 
-      0,   0,  80,   0,   1,   0, 
-     24,   8,   0,   0,  80,   0, 
+     79,   0,   1,   0,   8,   8, 
+      0,   0,  79,   0,   1,   0, 
+     24,   8,   0,   0,  79,   0, 
       1,   0,  40,   8,   0,   0, 
-     70,   0,   1,   0,  60,   8, 
-      0,   0,  70,   0,   1,   0, 
-     76,   8,   0,   0,  70,   0, 
+     69,   0,   1,   0,  60,   8, 
+      0,   0,  69,   0,   1,   0, 
+     76,   8,   0,   0,  69,   0, 
       1,   0,  92,   8,   0,   0, 
-    186,   0,   1,   0, 108,   8, 
-      0,   0, 186,   0,   1,   0, 
-    128,   8,   0,   0,  44,   0, 
+    185,   0,   1,   0, 108,   8, 
+      0,   0, 185,   0,   1,   0, 
+    128,   8,   0,   0,  43,   0, 
       2,   0, 140,   8,   0,   0, 
-     76,   0,   1,   0, 152,   8, 
-      0,   0, 190,   0,   1,   0, 
+     75,   0,   1,   0, 152,   8, 
+      0,   0, 189,   0,   1,   0, 
     164,   8,   0,   0,  66, 105, 
      97, 115,  88,  50,   0, 171, 
       1,   0,   3,   0,   1,   0, 

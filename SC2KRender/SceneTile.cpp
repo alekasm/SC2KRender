@@ -1,5 +1,7 @@
 #include "SceneTile.h"
 
+using DirectX::SimpleMath::Vector2;
+
 SceneTile::SceneTile()
 {
   c_pos[TOP_LEFT] = DirectX::Colors::SC2K_DIRT_NORMAL;
@@ -16,6 +18,12 @@ SceneTile::SceneTile()
 
 void SceneTile::CreateVertexPositionColors()
 {
+  /*
+  vpc_pos[TOP_LEFT] = DirectX::VertexPositionNormalColorTexture(v_pos[TOP_LEFT], Vector3::One, c_pos[TOP_LEFT], Vector2::One);
+  vpc_pos[BOTTOM_LEFT] = DirectX::VertexPositionNormalColorTexture(v_pos[BOTTOM_LEFT], Vector3::One, c_pos[BOTTOM_LEFT], Vector2::One);
+  vpc_pos[TOP_RIGHT] = DirectX::VertexPositionNormalColorTexture(v_pos[TOP_RIGHT], Vector3::One, c_pos[TOP_RIGHT], Vector2::One);
+  vpc_pos[BOTTOM_RIGHT] = DirectX::VertexPositionNormalColorTexture(v_pos[BOTTOM_RIGHT], Vector3::One, c_pos[BOTTOM_RIGHT], Vector2::One);
+  */
   vpc_pos[TOP_LEFT] = DirectX::VertexPositionColor(v_pos[TOP_LEFT], c_pos[TOP_LEFT]);
   vpc_pos[BOTTOM_LEFT] = DirectX::VertexPositionColor(v_pos[BOTTOM_LEFT], c_pos[BOTTOM_LEFT]);
   vpc_pos[TOP_RIGHT] = DirectX::VertexPositionColor(v_pos[TOP_RIGHT], c_pos[TOP_RIGHT]);
@@ -25,6 +33,7 @@ void SceneTile::CreateVertexPositionColors()
 void SceneTile::Rotate90Degrees()
 {
   DirectX::VertexPositionColor original = vpc_pos[TOP_LEFT];
+  //DirectX::VertexPositionNormalColorTexture original = vpc_pos[TOP_LEFT];
   vpc_pos[TOP_LEFT] = vpc_pos[BOTTOM_LEFT];
   vpc_pos[BOTTOM_LEFT] = vpc_pos[BOTTOM_RIGHT];
   vpc_pos[BOTTOM_RIGHT] = vpc_pos[TOP_RIGHT];

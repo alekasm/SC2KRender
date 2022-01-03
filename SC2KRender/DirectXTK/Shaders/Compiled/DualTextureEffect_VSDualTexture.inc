@@ -46,28 +46,28 @@
     dcl_texcoord1 v1  // vin<4,5>
     dcl_texcoord2 v2  // vin<6,7>
 
-#line 41 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 40 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     dp4 oPos.z, v0, c5  // ::VSDualTexture<14>
 
-#line 12
+#line 11
     dp4 r0.x, v0, c2
     max r0.x, r0.x, c7.x
     min oT1.w, r0.x, c7.y  // ::VSDualTexture<7>
 
-#line 41
+#line 40
     dp4 r0.x, v0, c3  // ::vout<0>
     dp4 r0.y, v0, c4  // ::vout<1>
     dp4 r0.z, v0, c6  // ::vout<3>
 
-#line 29 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\DualTextureEffect.fx"
+#line 28 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\DualTextureEffect.fx"
     mad oPos.xy, r0.z, c0, r0  // ::VSDualTexture<12,13>
     mov oPos.w, r0.z  // ::VSDualTexture<15>
 
-#line 42 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 41 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     mov oT0, c1  // ::VSDualTexture<0,1,2,3>
     mov oT1.xyz, c7.x  // ::VSDualTexture<4,5,6>
 
-#line 36 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\DualTextureEffect.fx"
+#line 35 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\DualTextureEffect.fx"
     mov oT2.xy, v1  // ::VSDualTexture<8,9>
     mov oT2.zw, v2.xyyx  // ::VSDualTexture<11,10>
 
@@ -97,10 +97,10 @@ ret
 
 const BYTE DualTextureEffect_VSDualTexture[] =
 {
-     68,  88,  66,  67, 123, 130, 
-     37, 249,  32, 118,  68, 200, 
-    235,  30, 210, 232,  41, 105, 
-     54,  99,   1,   0,   0,   0, 
+     68,  88,  66,  67, 137, 161, 
+    121, 129,  95,  55,  61,  13, 
+     45, 156,  33, 224,  91,  25, 
+    231,  32,   1,   0,   0,   0, 
     168,   7,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
      12,   5,   0,   0, 148,   6, 
@@ -131,7 +131,7 @@ const BYTE DualTextureEffect_VSDualTexture[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  67, 111, 109, 109, 
@@ -141,7 +141,7 @@ const BYTE DualTextureEffect_VSDualTexture[] =
     101, 107,  92,  68, 101, 115, 
     107, 116, 111, 112,  92,  68, 
     105, 114, 101,  99, 116,  88, 
-     84,  75,  45,  97, 117, 103, 
+     84,  75,  45, 110, 111, 118, 
      50,  48,  50,  49,  92,  83, 
     114,  99,  92,  83, 104,  97, 
     100, 101, 114, 115,  92,  68, 
@@ -155,23 +155,23 @@ const BYTE DualTextureEffect_VSDualTexture[] =
       0,   0,   0,   0, 255, 255, 
     184,   3,   0,   0,   0,   0, 
     255, 255, 196,   3,   0,   0, 
-     41,   0,   0,   0, 208,   3, 
-      0,   0,  12,   0,   0,   0, 
-    224,   3,   0,   0,  12,   0, 
+     40,   0,   0,   0, 208,   3, 
+      0,   0,  11,   0,   0,   0, 
+    224,   3,   0,   0,  11,   0, 
       0,   0, 240,   3,   0,   0, 
-     12,   0,   0,   0,   0,   4, 
-      0,   0,  41,   0,   0,   0, 
-     16,   4,   0,   0,  41,   0, 
+     11,   0,   0,   0,   0,   4, 
+      0,   0,  40,   0,   0,   0, 
+     16,   4,   0,   0,  40,   0, 
       0,   0,  32,   4,   0,   0, 
-     41,   0,   0,   0,  48,   4, 
-      0,   0,  29,   0,   1,   0, 
-     64,   4,   0,   0,  29,   0, 
+     40,   0,   0,   0,  48,   4, 
+      0,   0,  28,   0,   1,   0, 
+     64,   4,   0,   0,  28,   0, 
       1,   0,  84,   4,   0,   0, 
-     42,   0,   0,   0,  96,   4, 
-      0,   0,  43,   0,   0,   0, 
-    108,   4,   0,   0,  36,   0, 
+     41,   0,   0,   0,  96,   4, 
+      0,   0,  42,   0,   0,   0, 
+    108,   4,   0,   0,  35,   0, 
       1,   0, 120,   4,   0,   0, 
-     36,   0,   1,   0, 132,   4, 
+     35,   0,   1,   0, 132,   4, 
       0,   0,  86,  83,  68, 117, 
      97, 108,  84, 101, 120, 116, 
     117, 114, 101,   0,  68, 105, 

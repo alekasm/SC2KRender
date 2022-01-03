@@ -34,42 +34,42 @@
     dcl t1.xyz  // pin<4,5,6>
     dcl t2  // pin<7,8,9,10>
 
-#line 577 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 576 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     add r0.xyz, -t0, c12
     dp3 r0.w, r0, r0
     rsq r0.w, r0.w
 
-#line 31 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 30 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     mad r1.xyz, r0, r0.w, -c3
     nrm r2.xyz, r1  // ::halfVectors<0,1,2>
 
-#line 578 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 577 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     nrm r1.xyz, t1  // ::worldNormal<0,1,2>
 
-#line 35 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 34 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     dp3 r2.x, r2, r1  // ::dotH<0>
 
-#line 31
+#line 30
     mad r3.xyz, r0, r0.w, -c4
     mad r0.xyz, r0, r0.w, -c5
     nrm r4.xyz, r0  // ::halfVectors<6,7,8>
 
-#line 35
+#line 34
     dp3 r2.z, r4, r1  // ::dotH<2>
 
-#line 31
+#line 30
     nrm r0.xyz, r3  // ::halfVectors<3,4,5>
 
-#line 35
+#line 34
     dp3 r2.y, r0, r1  // ::dotH<1>
     dp3 r0.x, -c3, r1  // ::dotL<0>
     dp3 r0.y, -c4, r1  // ::dotL<1>
     dp3 r0.z, -c5, r1  // ::dotL<2>
 
-#line 37
+#line 36
     cmp r1.xyz, r0, c14.x, c14.y  // ::zeroL<0,1,2>
 
-#line 40
+#line 39
     mul r3.xyz, r1, r2
     cmp r2.xyz, r2, r3, c14.y
     mul r1.xyz, r0, r1  // ::diffuse<0,1,2>
@@ -82,26 +82,26 @@
     exp r3.z, r2.z
     mul r0.xyz, r0, r3  // ::specular<0,1,2>
 
-#line 45
+#line 44
     mul r2.xyz, r0.y, c10
     mad r2.xyz, r0.x, c9, r2
     mad r0.xyz, r0.z, c11, r2
     mul r0.xyz, r0, c2  // ::result<3,4,5>
 
-#line 24 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 23 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     mul r0.xyz, r0, t2.w
 
-#line 44 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Lighting.fxh"
+#line 43 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Lighting.fxh"
     mul r2.xyz, r1.y, c7
     mad r2.xyz, r1.x, c6, r2
     mad r1.xyz, r1.z, c8, r2
     mov r2.xyz, c0  // Parameters::DiffuseColor<0,1,2>
     mad r1.xyz, r1, r2, c1  // ::result<0,1,2>
 
-#line 24 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 23 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     mad r0.xyz, t2, r1, r0  // AddSpecular::color<0,1,2>
 
-#line 18
+#line 17
     mad r1.xyz, c13, t2.w, -r0
     mad r0.xyz, t0.w, r1, r0  // ApplyFog::color<0,1,2>
     mov r0.w, t2.w
@@ -167,10 +167,10 @@ ret
 
 const BYTE BasicEffect_PSBasicPixelLighting[] =
 {
-     68,  88,  66,  67,  66, 244, 
-    217,  77, 155, 233,  93,  42, 
-    203,  82,  41, 224, 120,  18, 
-    245, 234,   1,   0,   0,   0, 
+     68,  88,  66,  67, 217, 184, 
+    228,   9, 147, 121, 214, 243, 
+     62,  67, 127,  95,  44, 200, 
+    118,  14,   1,   0,   0,   0, 
       0,  16,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
      92,   9,   0,   0, 100,  15, 
@@ -198,7 +198,7 @@ const BYTE BasicEffect_PSBasicPixelLighting[] =
     107,  92,  68, 101, 115, 107, 
     116, 111, 112,  92,  68, 105, 
     114, 101,  99, 116,  88,  84, 
-     75,  45,  97, 117, 103,  50, 
+     75,  45, 110, 111, 118,  50, 
      48,  50,  49,  92,  83, 114, 
      99,  92,  83, 104,  97, 100, 
     101, 114, 115,  92,  66,  97, 
@@ -209,7 +209,7 @@ const BYTE BasicEffect_PSBasicPixelLighting[] =
     101, 107,  92,  68, 101, 115, 
     107, 116, 111, 112,  92,  68, 
     105, 114, 101,  99, 116,  88, 
-     84,  75,  45,  97, 117, 103, 
+     84,  75,  45, 110, 111, 118, 
      50,  48,  50,  49,  92,  83, 
     114,  99,  92,  83, 104,  97, 
     100, 101, 114, 115,  92,  76, 
@@ -220,7 +220,7 @@ const BYTE BasicEffect_PSBasicPixelLighting[] =
     107,  92,  68, 101, 115, 107, 
     116, 111, 112,  92,  68, 105, 
     114, 101,  99, 116,  88,  84, 
-     75,  45,  97, 117, 103,  50, 
+     75,  45, 110, 111, 118,  50, 
      48,  50,  49,  92,  83, 114, 
      99,  92,  83, 104,  97, 100, 
     101, 114, 115,  92,  67, 111, 
@@ -233,63 +233,63 @@ const BYTE BasicEffect_PSBasicPixelLighting[] =
       0,   0,   0,   0, 255, 255, 
      44,   6,   0,   0,   0,   0, 
     255, 255,  56,   6,   0,   0, 
-     65,   2,   0,   0,  68,   6, 
-      0,   0,  65,   2,   0,   0, 
-     84,   6,   0,   0,  65,   2, 
+     64,   2,   0,   0,  68,   6, 
+      0,   0,  64,   2,   0,   0, 
+     84,   6,   0,   0,  64,   2, 
       0,   0, 100,   6,   0,   0, 
-     31,   0,   1,   0, 112,   6, 
-      0,   0,  31,   0,   1,   0, 
-    132,   6,   0,   0,  66,   2, 
+     30,   0,   1,   0, 112,   6, 
+      0,   0,  30,   0,   1,   0, 
+    132,   6,   0,   0,  65,   2, 
       0,   0, 144,   6,   0,   0, 
-     35,   0,   1,   0, 156,   6, 
-      0,   0,  31,   0,   1,   0, 
-    172,   6,   0,   0,  31,   0, 
+     34,   0,   1,   0, 156,   6, 
+      0,   0,  30,   0,   1,   0, 
+    172,   6,   0,   0,  30,   0, 
       1,   0, 192,   6,   0,   0, 
-     31,   0,   1,   0, 212,   6, 
-      0,   0,  35,   0,   1,   0, 
-    224,   6,   0,   0,  31,   0, 
-      1,   0, 240,   6,   0,   0, 
-     35,   0,   1,   0, 252,   6, 
+     30,   0,   1,   0, 212,   6, 
       0,   0,  34,   0,   1,   0, 
-     12,   7,   0,   0,  34,   0, 
+    224,   6,   0,   0,  30,   0, 
+      1,   0, 240,   6,   0,   0, 
+     34,   0,   1,   0, 252,   6, 
+      0,   0,  33,   0,   1,   0, 
+     12,   7,   0,   0,  33,   0, 
       1,   0,  28,   7,   0,   0, 
-     34,   0,   1,   0,  44,   7, 
-      0,   0,  37,   0,   1,   0, 
-     60,   7,   0,   0,  40,   0, 
+     33,   0,   1,   0,  44,   7, 
+      0,   0,  36,   0,   1,   0, 
+     60,   7,   0,   0,  39,   0, 
       1,   0,  80,   7,   0,   0, 
-     40,   0,   1,   0,  96,   7, 
-      0,   0,  39,   0,   1,   0, 
-    116,   7,   0,   0,  40,   0, 
+     39,   0,   1,   0,  96,   7, 
+      0,   0,  38,   0,   1,   0, 
+    116,   7,   0,   0,  39,   0, 
       1,   0, 132,   7,   0,   0, 
-     40,   0,   1,   0, 144,   7, 
-      0,   0,  40,   0,   1,   0, 
-    156,   7,   0,   0,  40,   0, 
+     39,   0,   1,   0, 144,   7, 
+      0,   0,  39,   0,   1,   0, 
+    156,   7,   0,   0,  39,   0, 
       1,   0, 168,   7,   0,   0, 
-     40,   0,   1,   0, 184,   7, 
-      0,   0,  40,   0,   1,   0, 
-    196,   7,   0,   0,  40,   0, 
+     39,   0,   1,   0, 184,   7, 
+      0,   0,  39,   0,   1,   0, 
+    196,   7,   0,   0,  39,   0, 
       1,   0, 208,   7,   0,   0, 
-     40,   0,   1,   0, 220,   7, 
-      0,   0,  45,   0,   1,   0, 
-    236,   7,   0,   0,  45,   0, 
+     39,   0,   1,   0, 220,   7, 
+      0,   0,  44,   0,   1,   0, 
+    236,   7,   0,   0,  44,   0, 
       1,   0, 252,   7,   0,   0, 
-     45,   0,   1,   0,  16,   8, 
-      0,   0,  45,   0,   1,   0, 
-     36,   8,   0,   0,  24,   0, 
+     44,   0,   1,   0,  16,   8, 
+      0,   0,  44,   0,   1,   0, 
+     36,   8,   0,   0,  23,   0, 
       2,   0,  52,   8,   0,   0, 
-     44,   0,   1,   0,  68,   8, 
-      0,   0,  44,   0,   1,   0, 
-     84,   8,   0,   0,  44,   0, 
+     43,   0,   1,   0,  68,   8, 
+      0,   0,  43,   0,   1,   0, 
+     84,   8,   0,   0,  43,   0, 
       1,   0, 104,   8,   0,   0, 
-     44,   0,   1,   0, 124,   8, 
-      0,   0,  44,   0,   1,   0, 
-    136,   8,   0,   0,  24,   0, 
+     43,   0,   1,   0, 124,   8, 
+      0,   0,  43,   0,   1,   0, 
+    136,   8,   0,   0,  23,   0, 
       2,   0, 156,   8,   0,   0, 
-     18,   0,   2,   0, 176,   8, 
-      0,   0,  18,   0,   2,   0, 
-    196,   8,   0,   0,  18,   0, 
+     17,   0,   2,   0, 176,   8, 
+      0,   0,  17,   0,   2,   0, 
+    196,   8,   0,   0,  17,   0, 
       2,   0, 216,   8,   0,   0, 
-     18,   0,   2,   0, 228,   8, 
+     17,   0,   2,   0, 228,   8, 
       0,   0,  80,  97, 114,  97, 
     109, 101, 116, 101, 114, 115, 
       0,  68, 105, 102, 102, 117, 

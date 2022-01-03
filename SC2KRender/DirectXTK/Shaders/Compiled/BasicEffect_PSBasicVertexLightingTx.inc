@@ -41,14 +41,14 @@
     dcl t2.xy  // pin<8,9>
     dcl_2d s0
 
-#line 552 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 551 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     texld r0, t2, s0
     mul r0, r0, t0  // ::color<0,1,2,3>
 
-#line 24 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 23 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     mad r1.xyz, t1, r0.w, r0  // AddSpecular::color<0,1,2>
 
-#line 18
+#line 17
     mad r2.xyz, c0, r0.w, -r1
     mad r0.xyz, t1.w, r2, r1  // ApplyFog::color<0,1,2>
     mov oC0, r0  // ::PSBasicVertexLightingTx<0,1,2,3>
@@ -75,10 +75,10 @@ ret
 
 const BYTE BasicEffect_PSBasicVertexLightingTx[] =
 {
-     68,  88,  66,  67,  68,  71, 
-     79, 188, 101, 147,  51, 235, 
-    224, 126, 167, 149, 242, 147, 
-     86, 237,   1,   0,   0,   0, 
+     68,  88,  66,  67, 165, 129, 
+    220,  98,  16, 204,  57, 157, 
+    235, 126,  95,  58,  86, 137, 
+    198, 246,   1,   0,   0,   0, 
     128,   5,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
     164,   3,   0,   0, 228,   4, 
@@ -107,7 +107,7 @@ const BYTE BasicEffect_PSBasicVertexLightingTx[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  66,  97, 115, 105, 
@@ -118,7 +118,7 @@ const BYTE BasicEffect_PSBasicVertexLightingTx[] =
      92,  68, 101, 115, 107, 116, 
     111, 112,  92,  68, 105, 114, 
     101,  99, 116,  88,  84,  75, 
-     45,  97, 117, 103,  50,  48, 
+     45, 110, 111, 118,  50,  48, 
      50,  49,  92,  83, 114,  99, 
      92,  83, 104,  97, 100, 101, 
     114, 115,  92,  67, 111, 109, 
@@ -130,14 +130,14 @@ const BYTE BasicEffect_PSBasicVertexLightingTx[] =
     168,   2,   0,   0,   0,   0, 
     255, 255, 180,   2,   0,   0, 
       0,   0, 255, 255, 192,   2, 
-      0,   0,  40,   2,   0,   0, 
-    204,   2,   0,   0,  40,   2, 
+      0,   0,  39,   2,   0,   0, 
+    204,   2,   0,   0,  39,   2, 
       0,   0, 220,   2,   0,   0, 
-     24,   0,   1,   0, 236,   2, 
-      0,   0,  18,   0,   1,   0, 
-      0,   3,   0,   0,  18,   0, 
+     23,   0,   1,   0, 236,   2, 
+      0,   0,  17,   0,   1,   0, 
+      0,   3,   0,   0,  17,   0, 
       1,   0,  20,   3,   0,   0, 
-     18,   0,   1,   0,  40,   3, 
+     17,   0,   1,   0,  40,   3, 
       0,   0,  80,  83,  66,  97, 
     115, 105,  99,  86, 101, 114, 
     116, 101, 120,  76, 105, 103, 

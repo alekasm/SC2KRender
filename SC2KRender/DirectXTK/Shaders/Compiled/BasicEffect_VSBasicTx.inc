@@ -44,28 +44,28 @@
     dcl_texcoord v0  // vin<0,1,2,3>
     dcl_texcoord1 v1  // vin<4,5>
 
-#line 41 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 40 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     dp4 oPos.z, v0, c5  // ::VSBasicTx<12>
 
-#line 12
+#line 11
     dp4 r0.x, v0, c2
     max r0.x, r0.x, c7.x
     min oT1.w, r0.x, c7.y  // ::VSBasicTx<7>
 
-#line 41
+#line 40
     dp4 r0.x, v0, c3  // ::vout<0>
     dp4 r0.y, v0, c4  // ::vout<1>
     dp4 r0.z, v0, c6  // ::vout<3>
 
-#line 93 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 92 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     mad oPos.xy, r0.z, c0, r0  // ::VSBasicTx<10,11>
     mov oPos.w, r0.z  // ::VSBasicTx<13>
 
-#line 42 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\Common.fxh"
+#line 41 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\Common.fxh"
     mov oT0, c1  // ::VSBasicTx<0,1,2,3>
     mov oT1.xyz, c7.x  // ::VSBasicTx<4,5,6>
 
-#line 100 "C:\Users\Alek\Desktop\DirectXTK-aug2021\Src\Shaders\BasicEffect.fx"
+#line 99 "C:\Users\Alek\Desktop\DirectXTK-nov2021\Src\Shaders\BasicEffect.fx"
     mov oT2.xy, v1  // ::VSBasicTx<8,9>
 
 // approximately 12 instruction slots used
@@ -91,10 +91,10 @@ ret
 
 const BYTE BasicEffect_VSBasicTx[] =
 {
-     68,  88,  66,  67,  91,  47, 
-    102,  23,  59,   3, 200,  53, 
-    171, 166, 186, 118,   8, 155, 
-    181, 124,   1,   0,   0,   0, 
+     68,  88,  66,  67, 139,  38, 
+     62, 161, 236,  12, 242,  75, 
+    186, 164,  48,  20, 237, 200, 
+     58, 224,   1,   0,   0,   0, 
     244,   6,   0,   0,   4,   0, 
       0,   0,  48,   0,   0,   0, 
     180,   4,   0,   0,  16,   6, 
@@ -127,7 +127,7 @@ const BYTE BasicEffect_VSBasicTx[] =
      68, 101, 115, 107, 116, 111, 
     112,  92,  68, 105, 114, 101, 
      99, 116,  88,  84,  75,  45, 
-     97, 117, 103,  50,  48,  50, 
+    110, 111, 118,  50,  48,  50, 
      49,  92,  83, 114,  99,  92, 
      83, 104,  97, 100, 101, 114, 
     115,  92,  67, 111, 109, 109, 
@@ -137,7 +137,7 @@ const BYTE BasicEffect_VSBasicTx[] =
     101, 107,  92,  68, 101, 115, 
     107, 116, 111, 112,  92,  68, 
     105, 114, 101,  99, 116,  88, 
-     84,  75,  45,  97, 117, 103, 
+     84,  75,  45, 110, 111, 118, 
      50,  48,  50,  49,  92,  83, 
     114,  99,  92,  83, 104,  97, 
     100, 101, 114, 115,  92,  66, 
@@ -149,21 +149,21 @@ const BYTE BasicEffect_VSBasicTx[] =
       0,   0,   0,   0, 255, 255, 
      96,   3,   0,   0,   0,   0, 
     255, 255, 108,   3,   0,   0, 
-     41,   0,   0,   0, 120,   3, 
-      0,   0,  12,   0,   0,   0, 
-    136,   3,   0,   0,  12,   0, 
+     40,   0,   0,   0, 120,   3, 
+      0,   0,  11,   0,   0,   0, 
+    136,   3,   0,   0,  11,   0, 
       0,   0, 152,   3,   0,   0, 
-     12,   0,   0,   0, 168,   3, 
-      0,   0,  41,   0,   0,   0, 
-    184,   3,   0,   0,  41,   0, 
+     11,   0,   0,   0, 168,   3, 
+      0,   0,  40,   0,   0,   0, 
+    184,   3,   0,   0,  40,   0, 
       0,   0, 200,   3,   0,   0, 
-     41,   0,   0,   0, 216,   3, 
-      0,   0,  93,   0,   1,   0, 
-    232,   3,   0,   0,  93,   0, 
+     40,   0,   0,   0, 216,   3, 
+      0,   0,  92,   0,   1,   0, 
+    232,   3,   0,   0,  92,   0, 
       1,   0, 252,   3,   0,   0, 
-     42,   0,   0,   0,   8,   4, 
-      0,   0,  43,   0,   0,   0, 
-     20,   4,   0,   0, 100,   0, 
+     41,   0,   0,   0,   8,   4, 
+      0,   0,  42,   0,   0,   0, 
+     20,   4,   0,   0,  99,   0, 
       1,   0,  32,   4,   0,   0, 
      86,  83,  66,  97, 115, 105, 
      99,  84, 120,   0,  68, 105, 

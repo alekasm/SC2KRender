@@ -66,7 +66,7 @@ void Scene::UpdateWindow(HWND hWnd)
   if (window_resized)
   {
     m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
-    m_NormalMapEffect->SetProjection(m_proj);
+    m_BasicEffect->SetProjection(m_proj);
     CreateResources();
   }
 }
@@ -79,7 +79,7 @@ void Scene::PreInitialize(HWND window)
   m_position = Vector3(96.f, 12.f, 96.f);
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
-  m_NormalMapEffect->SetView(m_view);
+  m_BasicEffect->SetView(m_view);
   SetRenderDistance(render_distance);
   UpdateWindow(window);
 
@@ -89,14 +89,19 @@ void Scene::PreInitialize(HWND window)
 
   m_fxFactory = std::make_unique<DirectX::EffectFactory>(m_d3dDevice.Get());
   m_fxFactory->SetSharing(false);
-  m_fxFactory->EnableNormalMapEffect(true);
+  m_fxFactory->EnableNormalMapEffect(true); //Set to true to enable instancing
   
+  
+  /*
   DirectX::EffectFactory::EffectInfo info;
   info.name = L"default";
   info.alpha = 1.f;
-  info.enableNormalMaps = true;
-  
+  info.enableNormalMaps = false;  
   auto effect = m_fxFactory->CreateEffect(info, m_d3dContext.Get());
+  */
+  
+  
+
 
 
   AssetLoader::LoadModels(m_d3dDevice, m_fxFactory, L"assets/models");
@@ -125,9 +130,9 @@ void Scene::PreInitialize(HWND window)
         auto part = it->get();
         assert(part != 0);
         auto il = *part->vbDecl;
-        il.push_back(NormalEffectInstance[3]);
         il.push_back(NormalEffectInstance[4]);
         il.push_back(NormalEffectInstance[5]);
+        il.push_back(NormalEffectInstance[6]);
         CreateInputLayoutFromEffect(m_d3dDevice.Get(), part->effect.get(),
             il.data(), il.size(),
             part->inputLayout.ReleaseAndGetAddressOf());
@@ -140,7 +145,7 @@ void Scene::SetFOV(float value)
 {
   fov = static_cast<float>(value * (M_PI / 180.f));
   m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
-  m_NormalMapEffect->SetProjection(m_proj);
+  m_BasicEffect->SetProjection(m_proj);
 }
 
 void Scene::SetScale(float value)
@@ -157,7 +162,7 @@ void Scene::SetScale(float value)
   SetRenderDistance(render_distance);
   m_position *= scale_multiplier;
   m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
-  m_NormalMapEffect->SetProjection(m_proj);
+  m_BasicEffect->SetProjection(m_proj);
 }
 
 void Scene::SetEnableVSync(bool value)
@@ -178,10 +183,10 @@ void Scene::SetRenderDistance(float value)
   scaled_render_distance = render_distance * scale;
 
   float scaled_render_start = scaled_render_distance - (16.f * scale);
-  m_NormalMapEffect->SetFogEnabled(use_render_distance);
-  m_NormalMapEffect->SetFogStart(scaled_render_start);
-  m_NormalMapEffect->SetFogEnd(scaled_render_distance);
-  m_NormalMapEffect->SetFogColor(DirectX::Colors::CornflowerBlue);
+  m_BasicEffect->SetFogEnabled(use_render_distance);
+  m_BasicEffect->SetFogStart(scaled_render_start);
+  m_BasicEffect->SetFogEnd(scaled_render_distance);
+  m_BasicEffect->SetFogColor(DirectX::Colors::CornflowerBlue);
 
   for (Model3D* model3d : v_model3d)
   {
@@ -387,7 +392,7 @@ void Scene::CreateDevice()
   m_world = DirectX::SimpleMath::Matrix::Identity;
   m_states = std::make_unique<DirectX::CommonStates>(m_d3dDevice.Get());
 
-  /*
+  
   m_BasicEffect = std::make_unique<DirectX::BasicEffect>(m_d3dDevice.Get());
   m_BasicEffect->SetVertexColorEnabled(true);
   {
@@ -400,48 +405,21 @@ void Scene::CreateDevice()
       shaderByteCode, byteCodeLength,
       m_BasicInputLayout.ReleaseAndGetAddressOf());
   }
-  printf("m_BasicInputLayout=%p\n", m_BasicInputLayout.Get());
-  */
+  
+  /*
 
   HRESULT hr1 = DirectX::CreateDDSTextureFromFile(m_d3dDevice.Get(), L"assets/smoothMap.dds", nullptr,
     m_normalMap.ReleaseAndGetAddressOf());
   
   HRESULT hr2 = DirectX::CreateDDSTextureFromFile(m_d3dDevice.Get(), L"assets/default.dds", nullptr,
     m_normalTex.ReleaseAndGetAddressOf());
+    */
   
 
   m_NormalMapEffect = std::make_unique<DirectX::NormalMapEffect>(m_d3dDevice.Get());
   m_NormalMapEffect->EnableDefaultLighting();
   m_NormalMapEffect->SetVertexColorEnabled(true);
-  m_NormalMapEffect->SetInstancingEnabled(true);
-
-  //Code snippet from c.walbourn
-  /*
-  {    
-    const uint32_t s_pixel = 0xffffffff;
-    D3D11_SUBRESOURCE_DATA initData = { &s_pixel, sizeof(uint32_t), 0 };
-    CD3D11_TEXTURE2D_DESC texDesc(DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1,
-      D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
-    Microsoft::WRL::ComPtr<ID3D11Texture2D> tex;
-    m_d3dDevice->CreateTexture2D(&texDesc, &initData, tex.GetAddressOf());
-    HRESULT hr = m_d3dDevice->CreateShaderResourceView(tex.Get(), nullptr,
-      m_normalTexture.ReleaseAndGetAddressOf());
-
-    m_NormalMapEffect->SetVertexColorEnabled(true);
-    //m_NormalMapEffect->SetNormalTexture(m_normalTexture.Get());
-    m_NormalMapEffect->SetTexture(m_normalTexture.Get());
-    
-
-   // m_NormalMapEffect->SetSpecularTexture(m_normalTexture.Get());
-    //m_effect->SetTexture(m_brickDiffuse.Get());
-    //m_effect->SetNormalTexture(m_brickNormal.Get());
-
-    //m_NormalMapEffect->SetNormalTexture(m_normalMap.Get()); 
-    //m_NormalMapEffect->SetTexture(m_normalTex.Get());
-    m_NormalMapEffect->SetInstancingEnabled(true);
-    //assert(SUCCEEDED(hr));
-  }
-  */
+  m_NormalMapEffect->SetInstancingEnabled(false);
   {
     constexpr UINT NormalEffectInstanceCount = std::size(NormalEffectInstance);
     HRESULT hr = CreateInputLayoutFromEffect(
@@ -451,9 +429,49 @@ void Scene::CreateDevice()
       m_NormalInputLayout.ReleaseAndGetAddressOf());
     assert(SUCCEEDED(hr));
   }
+
+  //Code snippet from c.walbourn
+  
+  {    
+    /*
+    const uint32_t s_pixel = 0xffffffff;
+    D3D11_SUBRESOURCE_DATA initData = { &s_pixel, sizeof(uint32_t), 0 };
+    CD3D11_TEXTURE2D_DESC texDesc(DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1, 1, 1,
+      D3D11_BIND_SHADER_RESOURCE, D3D11_USAGE_IMMUTABLE);
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> tex;
+    m_d3dDevice->CreateTexture2D(&texDesc, &initData, tex.GetAddressOf());
+    HRESULT hr = m_d3dDevice->CreateShaderResourceView(tex.Get(), nullptr,
+      m_normalTexture.ReleaseAndGetAddressOf());
+    m_NormalMapEffect->SetNormalTexture(m_normalTexture.Get());
+    */
+    //m_NormalMapEffect->SetTexture(m_normalTexture.Get());
+    
+
+   // m_NormalMapEffect->SetSpecularTexture(m_normalTexture.Get());
+    //m_effect->SetTexture(m_brickDiffuse.Get());
+    //m_effect->SetNormalTexture(m_brickNormal.Get());
+
+    //m_NormalMapEffect->SetNormalTexture(m_normalMap.Get()); 
+    //m_NormalMapEffect->SetTexture(m_normalTex.Get());
+    //m_NormalMapEffect->SetInstancingEnabled(true);
+    //assert(SUCCEEDED(hr));
+  }
+  
+  {
+    /*
+    constexpr UINT NormalEffectInstanceCount = std::size(NormalEffectInstance);
+    HRESULT hr = CreateInputLayoutFromEffect(
+      m_d3dDevice.Get(),
+      m_NormalMapEffect.get(),
+      NormalEffectInstance, NormalEffectInstanceCount,
+      m_NormalInputLayout.ReleaseAndGetAddressOf());
+   
+    assert(SUCCEEDED(hr));
+     */
+  }
   
 
-  //m_texbatch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionTexture>>(m_d3dContexfmt.Get());
+  //m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_batch = std::make_unique<DirectX::PrimitiveBatch<DirectX::VertexPositionColor>>(m_d3dContext.Get());
   m_spriteBatch = std::make_unique<DirectX::SpriteBatch>(m_d3dContext.Get());
 
@@ -818,7 +836,7 @@ void Scene::Render()
 
 
       //UINT stride = sizeof(DirectX::XMFLOAT3X4);
-      //UINT offset = 0;     
+      //UINT offset = 0;
       m_d3dContext->IASetInputLayout(m_NormalInputLayout.Get());
 
       std::map<int32_t, std::vector<Model3D*>>::iterator it;
@@ -893,12 +911,14 @@ void Scene::Render()
     m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
     m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
     m_d3dContext->RSSetState(m_states->CullNone());
-    m_NormalMapEffect->SetWorld(m_world);
-    m_NormalMapEffect->SetView(m_view);
-    m_NormalMapEffect->Apply(m_d3dContext.Get());
-   // auto sampler = m_states->LinearClamp();
-   // m_d3dContext->PSSetSamplers(0, 1, &sampler);
+    m_BasicEffect->SetWorld(m_world);
+    m_BasicEffect->SetView(m_view);
+    m_BasicEffect->Apply(m_d3dContext.Get());
 
+    //auto sampler = m_states->LinearClamp();
+    //m_d3dContext->PSSetSamplers(0, 1, &sampler);
+
+    //m_d3dContext->IASetInputLayout(m_NormalInputLayout.Get());
     m_d3dContext->IASetInputLayout(m_BasicInputLayout.Get());
 
 
@@ -915,6 +935,7 @@ void Scene::Render()
       //t should never be null
       if (t->render == ALWAYS || t->render == MODEL_HIDDEN || !render_models)
       {
+        
         m_batch->DrawTriangle(t->vpc_pos[VPos::TOP_LEFT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
         m_batch->DrawTriangle(t->vpc_pos[VPos::BOTTOM_RIGHT], t->vpc_pos[VPos::BOTTOM_LEFT], t->vpc_pos[VPos::TOP_RIGHT]);
       }
@@ -955,9 +976,9 @@ void Scene::Render()
     {
       m_effect->SetTexture(sprite3d->resource.Get());
       m_effect->Apply(m_d3dContext.Get());
-      m_texbatch->Begin();
-      m_texbatch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
-      m_texbatch->End();
+      m_batch->Begin();
+      m_batch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
+      m_batch->End();
     }
     m_effect->SetVertexColorEnabled(true);
     m_effect->SetTextureEnabled(false);
