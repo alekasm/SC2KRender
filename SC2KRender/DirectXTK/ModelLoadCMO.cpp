@@ -901,6 +901,7 @@ std::unique_ptr<Model> DirectX::Model::CreateFromCMO(
                 info.specularColor = GetMaterialColor(m.pMaterial->Specular.x, m.pMaterial->Specular.y, m.pMaterial->Specular.z, srgb);
                 info.emissiveColor = GetMaterialColor(m.pMaterial->Emissive.x, m.pMaterial->Emissive.y, m.pMaterial->Emissive.z, srgb);
                 info.diffuseTexture = m.texture[0].c_str();
+                info.enableNormalMaps = true;
 
                 m.effect = fxFactory.CreateEffect(info, nullptr);
             }
