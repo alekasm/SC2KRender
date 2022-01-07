@@ -284,79 +284,15 @@ void Scene::Initialize(Map& map)
   {
     size_t instance_c = m_model3d_it.second.size();
     int32_t index = m_model3d_it.first;
-   // printf("Model <%d/0x%x> has <%d> instances\n", index, index, instance_c);
 
-    /*
-    constexpr DirectX::XMFLOAT3X4 s_identity = {
-      1.f, 0.f, 0.f, 0.f,
-      0.f, 1.f, 0.f, 0.f,
-      0.f, 0.f, 1.f, 0.f };
-    */
-    //std::unique_ptr<DirectX::XMFLOAT3X4[]> cpu_instance_data;
     m_InstanceData[index].reset(new DirectX::XMFLOAT3X4[instance_c]);
-    //m_InstanceData[index].reset(new DirectX::SimpleMath::Matrix[instance_c]);
     for (size_t i = 0; i < instance_c; ++i)
     {
       Model3D* model3d = m_model3d_it.second[i];
 
-      DirectX::XMFLOAT3X4 xm;// = s_identity;
-      //DirectX::XMStoreFloat3x4(&xm, model3d->m_world);
-      xm.m[0][0] = model3d->m_world.m[0][0];
-      xm.m[0][1] = model3d->m_world.m[1][0];
-      xm.m[0][2] = model3d->m_world.m[2][0];
-      xm.m[0][3] = model3d->m_world.m[3][0];
-
-      xm.m[1][0] = model3d->m_world.m[0][1];
-      xm.m[1][1] = model3d->m_world.m[1][1];
-      xm.m[1][2] = model3d->m_world.m[2][1];
-      xm.m[1][3] = model3d->m_world.m[3][1];
-
-      xm.m[2][0] = model3d->m_world.m[0][2];
-      xm.m[2][1] = model3d->m_world.m[1][2];
-      xm.m[2][2] = model3d->m_world.m[2][2];
-      xm.m[2][3] = model3d->m_world.m[3][2];
-
-
-      /*
-      model3d->m_world_col.m[0][0] = xm.m[0][0];
-      model3d->m_world_col.m[0][1] = xm.m[0][1];
-      model3d->m_world_col.m[0][2] = xm.m[0][2];
-      model3d->m_world_col.m[0][3] = xm.m[0][3];
-
-      model3d->m_world_col.m[1][0] = xm.m[1][0];
-      model3d->m_world_col.m[1][1] = xm.m[1][1];
-      model3d->m_world_col.m[1][2] = xm.m[1][2];
-      model3d->m_world_col.m[1][3] = xm.m[1][3];
-
-      model3d->m_world_col.m[2][0] = xm.m[2][0];
-      model3d->m_world_col.m[2][1] = xm.m[2][1];
-      model3d->m_world_col.m[2][2] = xm.m[2][2];
-      model3d->m_world_col.m[2][3] = xm.m[2][3];
-
-      model3d->m_world_col.m[3][0] = 0.f;
-      model3d->m_world_col.m[3][1] = 0.f;
-      model3d->m_world_col.m[3][2] = 0.f;
-      model3d->m_world_col.m[3][3] = 1.f;
-      */
-
-      //xm._11 = model3d->m_world._11;
-      //xm._12 = model3d->m_world._12;
-      //xm._13 = model3d->m_world._13;
-      //xm._14 = model3d->m_world._14;
-      //xm._21 = model3d->m_world._21;
-      //xm._22 = model3d->m_world._22;
-      //xm._23 = model3d->m_world._23;
-      //xm._24 = model3d->m_world._24;
-      //xm._31 = model3d->m_world._31;
-      //xm._32 = model3d->m_world._32;
-      //xm._33 = model3d->m_world._33;
-      //xm._34 = model3d->m_world._34;
-      //model3d->m_world3x4 = xm;
-      //xm._14 = model3d->origin.x;
-      //xm._24 = model3d->origin.y;
-      //xm._34 = model3d->origin.z;
+      DirectX::XMFLOAT3X4 xm;
+      DirectX::XMStoreFloat3x4(&xm, model3d->m_world);
       m_InstanceData[index][i] = xm;
-      //printf("Origin: %f %f %f\n", xm._14, xm._24, xm._34);
     }
     auto desc = CD3D11_BUFFER_DESC(
       instance_c * sizeof(DirectX::XMFLOAT3X4),
@@ -366,42 +302,9 @@ void Scene::Initialize(Map& map)
       sizeof(DirectX::XMFLOAT3X4)
     );
     
-    
     D3D11_SUBRESOURCE_DATA initData = { m_InstanceData[index].get(), 0, 0 };
     HRESULT hr = m_d3dDevice->CreateBuffer(&desc, &initData, m_InstanceBuffer[index].ReleaseAndGetAddressOf());
     assert(SUCCEEDED(hr));
-
-    /*
-    ReplaceBufferContents(
-      m_InstanceBuffer[index].Get(),
-      sizeof(DirectX::XMFLOAT3X4) * instance_c,
-      cpu_instance_data.get());
-    */
-    printf("m_InstanceBuffer[%d] = %lu\n", index, instance_c);
-    
-
-    /*
-    CD3D11_BUFFER_DESC instance_buffer_desc(
-      sizeof(Vector3) * instance_c,
-      D3D11_BIND_VERTEX_BUFFER, D3D11_USAGE_DYNAMIC,
-      D3D11_CPU_ACCESS_WRITE);
-    instance_buffer_desc.StructureByteStride = sizeof(Vector3);
-    m_d3dDevice->CreateBuffer(&instance_buffer_desc, nullptr, m_InstanceBuffer[index].ReleaseAndGetAddressOf());
-    std::unique_ptr<Vector3[]> cpu_instance_data;
-    cpu_instance_data.reset(new Vector3[instance_c]);
-
-    for (size_t i = 0; i < instance_c; ++i)
-    {
-      Model3D* model3d = m_model3d_it.second[i];
-      cpu_instance_data[i] = model3d->origin_scaled;
-    }
-    ReplaceBufferContents(
-      m_InstanceBuffer[index].Get(),
-      sizeof(Vector3) * instance_c,
-      cpu_instance_data.get());
-    */
-
-
   } 
   
   render_scene = true;
