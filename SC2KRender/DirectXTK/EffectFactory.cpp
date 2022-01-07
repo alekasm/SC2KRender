@@ -265,7 +265,8 @@ std::shared_ptr<IEffect> EffectFactory::Impl::CreateEffect(IEffectFactory* facto
 
         return std::move(effect);
     }
-    else if (info.enableNormalMaps && mUseNormalMapEffect)
+    //else if (info.enableNormalMaps && mUseNormalMapEffect)
+    else if (info.enableNormalMaps)
     {
         // NormalMapEffect
         if (mSharing && info.name && *info.name)

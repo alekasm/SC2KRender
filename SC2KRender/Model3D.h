@@ -3,6 +3,13 @@
 #include "Scene.h"
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Matrix;
+
+/*
+constexpr DirectX::XMFLOAT3X4 s_identity = {
+  1.f, 0.f, 0.f, 0.f,
+  0.f, 1.f, 0.f, 0.f,
+  0.f, 0.f, 1.f, 0.f };*/
+
 struct Model3D
 {
   std::shared_ptr<DirectX::Model> model;
@@ -10,13 +17,15 @@ struct Model3D
   Vector3 origin, origin_scaled;
   int32_t tile_id = -1;
   int32_t model_id = -1;
+  DirectX::XMFLOAT3X4 m_world3x4;
+  Matrix m_world_col;
 
   Model3D(int32_t model_id, std::shared_ptr<DirectX::Model> model, Vector3 origin)
   {
     this->model_id = model_id;
     this->model = model;
     this->origin = origin;
-    m_world_identity = Matrix::Identity; 
+    m_world_identity = Matrix::Identity;
   }
 
   void SetTileId(int32_t tile_id)
@@ -28,13 +37,13 @@ struct Model3D
   { 
     float scale = scene->GetScale();
     m_world = Matrix::Identity;
-    m_world *= m_world_identity;  
-    m_world *= DirectX::XMMatrixTranslation(origin.x, origin.y, origin.z);    
+    m_world *= m_world_identity;
+    m_world *= DirectX::XMMatrixTranslation(origin.x, origin.y, origin.z);
     m_world.m[3][0] *= scale;
     m_world.m[3][1] *= scale;
     m_world.m[3][2] *= scale;
     origin_scaled = origin * scale;
-    m_world = XMMatrixMultiply(scene->GetWorldMatrix(), m_world); 
+    m_world = XMMatrixMultiply(scene->GetWorldMatrix(), m_world);
   }
 
 };
