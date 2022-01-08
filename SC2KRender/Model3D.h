@@ -4,12 +4,6 @@
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Matrix;
 
-/*
-constexpr DirectX::XMFLOAT3X4 s_identity = {
-  1.f, 0.f, 0.f, 0.f,
-  0.f, 1.f, 0.f, 0.f,
-  0.f, 0.f, 1.f, 0.f };*/
-
 struct Model3D
 {
   std::shared_ptr<DirectX::Model> model;
@@ -17,8 +11,7 @@ struct Model3D
   Vector3 origin, origin_scaled;
   int32_t tile_id = -1;
   int32_t model_id = -1;
-  DirectX::XMFLOAT3X4 m_world3x4;
-  Matrix m_world_col;
+  bool alpha = false;
 
   Model3D(int32_t model_id, std::shared_ptr<DirectX::Model> model, Vector3 origin)
   {
@@ -26,6 +19,19 @@ struct Model3D
     this->model = model;
     this->origin = origin;
     m_world_identity = Matrix::Identity;
+    for (auto mit = model->meshes.cbegin(); mit != model->meshes.cend(); ++mit)
+    {
+      DirectX::ModelMesh* mesh = mit->get();
+      for (auto it = mesh->meshParts.cbegin(); it != mesh->meshParts.cend(); ++it)
+      {
+        auto part = it->get();
+        if (part->isAlpha != alpha)
+        {
+          alpha = true;
+          return;
+        }
+      }
+    }
   }
 
   void SetTileId(int32_t tile_id)
