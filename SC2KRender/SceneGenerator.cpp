@@ -196,6 +196,7 @@ void SceneGenerator::Generate(MapTile* map_tiles, MapSceneTile** tiles,
                 std::map<std::wstring, std::shared_ptr<DirectX::Model>>::iterator it;
                 it = AssetLoader::mmodels->find(AssetLoader::xbld_map.at(xbld_value));
                 model->model = it->second;
+                model->model_id = xbld_value;
               }
 
             } //end XBLD_IS_HIGHWAY   
