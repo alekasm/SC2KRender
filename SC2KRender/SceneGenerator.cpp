@@ -408,12 +408,6 @@ BOOL SceneGenerator::FillMapSceneTile(const MapSceneTile* a, std::vector<QuadSce
     qst_terrain->vpc[2] = DirectX::VertexPositionColor(b2, winner_color);
     qst_terrain->vpc[3] = DirectX::VertexPositionColor(b1, winner_color);
     
-    /*
-    qst_terrain->vpc[0] = DirectX::VertexPositionNormalColorTexture(a1, Vector3::One, winner_color, Vector2::One);
-    qst_terrain->vpc[1] = DirectX::VertexPositionNormalColorTexture(a2, Vector3::One, winner_color, Vector2::One);
-    qst_terrain->vpc[2] = DirectX::VertexPositionNormalColorTexture(b2, Vector3::One, winner_color, Vector2::One);
-    qst_terrain->vpc[3] = DirectX::VertexPositionNormalColorTexture(b1, Vector3::One, winner_color, Vector2::One);
-    */
     if (winner_color.f[3] == 1.f)
       fill_tiles.push_back(qst_terrain);
     //else
@@ -461,12 +455,6 @@ BOOL SceneGenerator::FillEdgeSceneTile(MapSceneTile** tiles, std::vector<QuadSce
   qst->vpc[2] = DirectX::VertexPositionColor(b2, DirectX::Colors::SC2K_DIRT_DARKEST);
   qst->vpc[3] = DirectX::VertexPositionColor(b1, DirectX::Colors::SC2K_DIRT_DARKEST);
   
-  /*
-  qst->vpc[0] = DirectX::VertexPositionNormalColorTexture(a1, Vector3::One, DirectX::Colors::SC2K_DIRT_DARKEST, Vector2::One);
-  qst->vpc[1] = DirectX::VertexPositionNormalColorTexture(a2, Vector3::One, DirectX::Colors::SC2K_DIRT_DARKEST, Vector2::One);
-  qst->vpc[2] = DirectX::VertexPositionNormalColorTexture(b2, Vector3::One, DirectX::Colors::SC2K_DIRT_DARKEST, Vector2::One);
-  qst->vpc[3] = DirectX::VertexPositionNormalColorTexture(b1, Vector3::One, DirectX::Colors::SC2K_DIRT_DARKEST, Vector2::One);
-  */
   fill_tiles.push_back(qst);
   const SceneTile* w = tiles[index]->sea_tile;
   if (w != nullptr)
@@ -478,12 +466,6 @@ BOOL SceneGenerator::FillEdgeSceneTile(MapSceneTile** tiles, std::vector<QuadSce
     qst_sea->vpc[2] = DirectX::VertexPositionColor(a2, DirectX::Colors::SC2K_SEA_BLUE);
     qst_sea->vpc[3] = DirectX::VertexPositionColor(a1, DirectX::Colors::SC2K_SEA_BLUE);
     
-    /*
-    qst_sea->vpc[0] = DirectX::VertexPositionNormalColorTexture(w->v_pos[pos1], Vector3::One, DirectX::Colors::SC2K_SEA_BLUE, DirectX::SimpleMath::Vector2(1, 1));
-    qst_sea->vpc[1] = DirectX::VertexPositionNormalColorTexture(w->v_pos[pos2], Vector3::One, DirectX::Colors::SC2K_SEA_BLUE, DirectX::SimpleMath::Vector2(1, 1));
-    qst_sea->vpc[2] = DirectX::VertexPositionNormalColorTexture(a2, Vector3::One, DirectX::Colors::SC2K_SEA_BLUE, DirectX::SimpleMath::Vector2(1, 1));
-    qst_sea->vpc[3] = DirectX::VertexPositionNormalColorTexture(a1, Vector3::One, DirectX::Colors::SC2K_SEA_BLUE, DirectX::SimpleMath::Vector2(1, 1));
-    */
     fill_tiles.push_back(qst_sea);
   }
   return TRUE;

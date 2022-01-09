@@ -7,8 +7,7 @@ bzroom (GameDev.net Discord) - DirectX Help
 slicer4ever (GameDev.net Discord) - DirectX Help
 rawrx3 (GameDev.net Discord) - DirectX Help
 Thomas Nelson - Models
-Frustum Culling: Chris Serson 
-http://thedemonthrone.ca/projects/rendering-terrain/rendering-terrain-part-10-view-frustum-culling/
+DirectXTK Nov 2021
 */
 
 #include <vector>
@@ -62,12 +61,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   std::filesystem::path map_path = std::filesystem::current_path();
   map_path.append("maps");
 
-  help_string = "SC2KRender Version 1.0\n";
+  help_string = "SC2KRender Version 1.1\n";
   help_string.append("Written by Aleksander Krimsky | www.krimsky.net\n");
   help_string.append("Lead Artist: Thomas Nelson\n");
   help_string.append("Written with DirectX 11 - Modified DirectXTK\n");
   help_string.append("GitHub: https://github.com/alekasm/SC2KRender \n\n");
-  help_string.append("Controls:\nFree Cam: WASD\nStrafe Up/Down: RF\n\n");
+  help_string.append("Controls:\nFree Cam: WASD\nStrafe Up/Down: RF\n");
+  help_string.append("Toggle Fullscreen: F11\n\n");
   if (std::filesystem::exists(map_path))
   {
     help_string.append("Maps: ");
@@ -172,9 +172,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       scene->SetFocus(true);
     }
     break;
-
+    case VK_F9:
+      scene->ToggleRenderDebugUI();
+      break;
     }
-    break;    
+    break;
 
   case WM_WINDOWPOSCHANGED:
     if (hWnd == MenuContext::hWndClient)

@@ -55,6 +55,7 @@ public:
   void SetScale(float);
   void SetFOV(float);
   void SetRenderDebugUI(bool);
+  void ToggleRenderDebugUI();
   void SetAABBFrustumCulling(bool);
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
@@ -142,12 +143,6 @@ private:
   std::unique_ptr<DirectX::NormalMapEffect> m_NormalMapEffect;
   Microsoft::WRL::ComPtr<ID3D11InputLayout> m_NormalInputLayout;
   std::map<int32_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_InstanceBuffer;
-  std::map<int32_t, Microsoft::WRL::ComPtr<ID3D11Buffer>> m_InstanceBufferAlpha;
-
-  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_normalTexture;
-  //UINT m_instanceCount;
-  //std::unique_ptr<DirectX::XMFLOAT3X4[]> m_instanceTransforms;
-
 
 
   std::unique_ptr<DirectX::BasicEffect> m_BasicEffect;
@@ -183,24 +178,10 @@ private:
   std::vector<QuadSceneTile*> fill_tiles;
   std::vector<QuadSceneTile*> fill_tiles_alpha;
   DirectX::SimpleMath::Vector3 m_position;
-  std::vector<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>> m_texture;
   std::vector<Sprite3D*> v_sprite3d;
   std::vector<Sprite2D*> v_sprite2d;
   std::vector<Model3D*> v_model3d;
   std::map<int32_t, std::vector<Model3D*>> m_model3d;
-
-  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_normalMap;
-  Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_normalTex;
-
-  /*
-  UINT m_instanceCount;
-  std::unique_ptr<DirectX::XMFLOAT3X4[]> m_instanceTransforms;
-  Microsoft::WRL::ComPtr<ID3D11InputLayout> m_instanceLayout;
-  Microsoft::WRL::ComPtr<ID3D11Buffer> m_instancedVB;
-  */
-  //std::unique_ptr<DirectX::DeviceResources> m_deviceResources;
-  
-
 
   };
 

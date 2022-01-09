@@ -256,7 +256,7 @@ void Scene::Initialize(Map& map)
     int32_t index = v_model3d[i]->model_id;
     m_model3d[index].push_back(v_model3d[i]);
   }
-  std::map<int32_t, std::unique_ptr<DirectX::XMFLOAT3X4[]>> m_InstanceData;
+  
 
   for (auto m_model3d_it : m_model3d)
   {
@@ -510,17 +510,10 @@ void Scene::CreateResources()
 void Scene::Clear()
 {
   CD3D11_VIEWPORT viewport(0.0f, 0.0f, m_outputWidth, m_outputHeight);
-
   m_d3dContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
   m_d3dContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
   m_d3dContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
   m_d3dContext->RSSetViewports(1, &viewport);
-
-  //pd3dDeferredContext->ClearRenderTargetView(m_renderTargetView.Get(), DirectX::Colors::CornflowerBlue);
-  //pd3dDeferredContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-  //pd3dDeferredContext->RSSetViewports(1, &viewport);
-  //pd3dDeferredContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());   
-  //pd3dDeferredContext->ClearState();
 }
 
 
@@ -575,6 +568,11 @@ void Scene::SetMouseSpeed(float value)
 void Scene::SetRenderDebugUI(bool value)
 {
   render_debug_ui = value;
+}
+
+void Scene::ToggleRenderDebugUI()
+{
+  render_debug_ui ^= true;
 }
 
 void Scene::SetAABBFrustumCulling(bool value)
@@ -691,10 +689,6 @@ void Scene::Render()
 
   if (render_scene)
   {
-
-
-
-
     m_d3dContext->OMSetBlendState(m_states->Opaque(), NULL, 0xFFFFFFFF);
     m_d3dContext->OMSetDepthStencilState(m_states->DepthDefault(), 0);
     m_d3dContext->RSSetState(m_states->CullNone());
@@ -705,10 +699,7 @@ void Scene::Render()
     //auto sampler = m_states->LinearClamp();
     //m_d3dContext->PSSetSamplers(0, 1, &sampler);
 
-    //m_d3dContext->IASetInputLayout(m_NormalInputLayout.Get());
     m_d3dContext->IASetInputLayout(m_BasicInputLayout.Get());
-
-
     m_batch->Begin();
 
     for (const QuadSceneTile* qst : fill_tiles)
@@ -755,38 +746,9 @@ void Scene::Render()
     }
     m_batch->End();
 
-#if USING_SPRITES_3D
-    m_effect->SetVertexColorEnabled(false);
-    m_effect->SetTextureEnabled(true);
-    m_d3dContext->OMSetBlendState(m_states->NonPremultiplied(), nullptr, 0xFFFFFFFF);
-    for (const Sprite3D* sprite3d : v_sprite3d)
-    {
-      m_effect->SetTexture(sprite3d->resource.Get());
-      m_effect->Apply(m_d3dContext.Get());
-      m_batch->Begin();
-      m_batch->DrawQuad(sprite3d->v1, sprite3d->v2, sprite3d->v3, sprite3d->v4);
-      m_batch->End();
-    }
-    m_effect->SetVertexColorEnabled(true);
-    m_effect->SetTextureEnabled(false);
-#endif
-
-#if USING_SPRITES_2D
-    m_spriteBatch->Begin(DirectX::SpriteSortMode_Deferred, m_states->NonPremultiplied());
-    for (Sprite2D* sprite2d : v_sprite2d)
-    {
-      sprite2d->Update(this);
-      float distance = Vector3::Distance(sprite2d->position3d * scale, m_position);
-      float dscale = 1.f / distance;
-      m_spriteBatch->Draw(sprite2d->resource.Get(), sprite2d->position2d, nullptr, DirectX::Colors::White, 0.f,
-        sprite2d->origin2d, dscale);
-    }
-    m_spriteBatch->End();
-#endif
 
     if (render_models)
     {
-
       UINT stride = sizeof(DirectX::XMFLOAT3X4);
       UINT offset = 0;
       m_d3dContext->IASetInputLayout(m_NormalInputLayout.Get());
@@ -803,9 +765,8 @@ void Scene::Render()
         if (model3d->alpha)
           DrawInstancedModel(model3d, true, instance_c);
       }
+      m_d3dContext->IASetInputLayout(m_BasicInputLayout.Get());
     }
-
-
 
     if (render_debug_ui)
     {

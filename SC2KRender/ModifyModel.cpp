@@ -493,7 +493,7 @@ void ModifyModel::FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_mod
             break;
           }
           DirectX::SimpleMath::Vector3 position = end_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
-          Model3D* model = new Model3D(end_tile->map_tile->xbld, it->second, position);
+          Model3D* model = new Model3D(start_tile->map_tile->xbld, it->second, position);
           model->origin.y = start_tile->height;
           ModifyModel::RotateModel(start_tile->map_tile->xbld, model, start_tile->map_tile);
           v_model3d->push_back(model);
@@ -517,7 +517,7 @@ void ModifyModel::FillTunnels(MapSceneTile** tiles, std::vector<Model3D*>* v_mod
             break;
           }
           DirectX::SimpleMath::Vector3 position = end_tile->v_pos[SceneTile::VertexPos::TOP_LEFT];
-          Model3D* model = new Model3D(end_tile->map_tile->xbld, it->second, position);
+          Model3D* model = new Model3D(start_tile->map_tile->xbld, it->second, position);
           model->origin.y = start_tile->height;
           ModifyModel::RotateModel(start_tile->map_tile->xbld, model, start_tile->map_tile);
           v_model3d->push_back(model);

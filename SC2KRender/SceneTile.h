@@ -8,8 +8,6 @@ struct SceneTile
   DirectX::SimpleMath::Vector3 v_pos[4];
   DirectX::XMVECTORF32 c_pos[4];
   DirectX::VertexPositionColor vpc_pos[4];
-  //DirectX::VertexPositionTexture vpc_tex[4];
-  //DirectX::VertexPositionNormalColorTexture vpc_pos[4];
   DirectX::XMVECTORF32 fill_color;
   float height = -1.f;
   TileRenderMode render = ALWAYS;
