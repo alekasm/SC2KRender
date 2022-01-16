@@ -18,7 +18,7 @@ HWND MenuContext::RenderDistText = NULL;
 
 HWND MenuContext::FOVBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
-HWND MenuContext::AABBFrustumCullingCheckbox = NULL;
+//HWND MenuContext::AABBFrustumCullingCheckbox = NULL;
 HWND MenuContext::MSAAComboBox = NULL;
 HWND MenuContext::VSyncCheckbox = NULL;
 HWND MenuContext::hWndSettings = NULL;
@@ -207,14 +207,16 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
   SendMessage(MenuContext::MSAAComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)"No Anti-Aliasing");
   SendMessage(MenuContext::MSAAComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 
+  /*
   MenuContext::AABBFrustumCullingCheckbox = CreateWindow(
     "Button", "AABB Frustum Culling", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
     180, 170, 200, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::AABBFrustumCullingCheckbox, BST_CHECKED);
+  */
 
   MenuContext::ShowDebugUICheckbox = CreateWindow(
-    "Button", "Show Debug UI", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
+    "Button", "Enable Debug", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
     10, 195, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_UNCHECKED);

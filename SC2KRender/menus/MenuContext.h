@@ -23,8 +23,7 @@ struct MenuContext
   static RECT WindowRect;
   static RECT ClientRect;
   static RECT SettingsRect;
-  static HWND ShowDebugUICheckbox, AABBFrustumCullingCheckbox,
-              VSyncCheckbox;
+  static HWND ShowDebugUICheckbox, VSyncCheckbox; //, AABBFrustumCullingCheckbox;
   static HWND MSAAComboBox;
   static ScreenMode screen_mode;
   
@@ -41,7 +40,7 @@ struct MenuContext
     UpdateWindow(RenderDistBar);
     UpdateWindow(RenderDistText);
     UpdateWindow(VSyncCheckbox);
-    UpdateWindow(AABBFrustumCullingCheckbox);
+    //UpdateWindow(AABBFrustumCullingCheckbox);
     UpdateWindow(MSAAComboBox);
   }
 

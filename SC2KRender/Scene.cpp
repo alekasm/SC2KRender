@@ -347,8 +347,8 @@ void Scene::CreateDevice()
   }
   
   m_NormalMapEffect = std::make_unique<DirectX::NormalMapEffect>(m_d3dDevice.Get());
-  m_NormalMapEffect->EnableDefaultLighting();
-  //m_NormalMapEffect->SetFogEnabled(true);
+  //m_NormalMapEffect->EnableDefaultLighting();
+  m_NormalMapEffect->SetFogEnabled(true);
   //m_NormalMapEffect->SetVertexColorEnabled(false);
   m_NormalMapEffect->SetInstancingEnabled(true);
   {
@@ -730,21 +730,6 @@ void Scene::Render()
 
     m_batch->End();
 
-    //Separating the water into its own loop afterwards prevents 'blinds effect'
-    m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
-    m_batch->Begin();
-    for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
-    {
-      const SceneTile* w = tiles[i]->sea_tile;
-      if (w == nullptr) continue;
-      m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
-      m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
-    }
-    for (const QuadSceneTile* qst : fill_tiles_alpha)
-    {
-      m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
-    }
-    m_batch->End();
 
 
     if (render_models)
@@ -766,7 +751,27 @@ void Scene::Render()
           DrawInstancedModel(model3d, true, instance_c);
       }
       m_d3dContext->IASetInputLayout(m_BasicInputLayout.Get());
+      m_d3dContext->RSSetState(m_states->CullNone());
+      m_BasicEffect->Apply(m_d3dContext.Get());
     }
+
+    //Separating the water into its own loop afterwards prevents 'blinds effect'
+    m_d3dContext->OMSetBlendState(m_states->AlphaBlend(), NULL, 0xFFFFFFFF);
+    m_batch->Begin();
+    for (unsigned int i = 0; i < ARRAY_LENGTH; ++i)
+    {
+      const SceneTile* w = tiles[i]->sea_tile;
+      if (w == nullptr) continue;
+      m_batch->DrawTriangle(w->vpc_pos[VPos::TOP_LEFT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
+      m_batch->DrawTriangle(w->vpc_pos[VPos::BOTTOM_RIGHT], w->vpc_pos[VPos::BOTTOM_LEFT], w->vpc_pos[VPos::TOP_RIGHT]);
+    }
+    for (const QuadSceneTile* qst : fill_tiles_alpha)
+    {
+      m_batch->DrawQuad(qst->vpc[0], qst->vpc[1], qst->vpc[2], qst->vpc[3]);
+    }
+    m_batch->End();
+
+
 
     if (render_debug_ui)
     {

@@ -23,6 +23,7 @@ DirectXTK Nov 2021
 #include <conio.h>
 #include <filesystem>
 #include <CommCtrl.h> 
+#include <Windowsx.h>
 
 #include "menus/MenuContext.h"
 #include "menus/Menus.h"
@@ -173,7 +174,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
     case VK_F9:
-      scene->ToggleRenderDebugUI();
+      LRESULT next_state = BST_CHECKED ^ SendMessage(MenuContext::ShowDebugUICheckbox, BM_GETCHECK, 0, 0);
+      Button_SetCheck(MenuContext::ShowDebugUICheckbox, next_state);
+      MenuContext::UpdateWindows();
+      scene->SetRenderDebugUI(next_state == BST_CHECKED);
       break;
     }
     break;
@@ -210,17 +214,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
         scene->SetRenderDebugUI(chkState == BST_CHECKED);
       }
+      /*
       else if ((HWND)lParam == MenuContext::AABBFrustumCullingCheckbox)
       {
         LRESULT chkState = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);
         scene->SetAABBFrustumCulling(chkState == BST_CHECKED);
       }
+      */
       else if ((HWND)lParam == MenuContext::MSAAComboBox)
       {
         if (HIWORD(wParam) == CBN_SELCHANGE)
         {
           unsigned int index = SendMessage((HWND)lParam, (UINT)CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
-          scene->SetMSAA(index);          
+          scene->SetMSAA(index);
         }
       }
       else if ((HWND)lParam == MenuContext::VSyncCheckbox)
