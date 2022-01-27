@@ -68,7 +68,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   help_string.append("Written with DirectX 11 - Modified DirectXTK\n");
   help_string.append("GitHub: https://github.com/alekasm/SC2KRender \n\n");
   help_string.append("Controls:\nFree Cam: WASD\nStrafe Up/Down: RF\n");
-  help_string.append("Toggle Fullscreen: F11\n\n");
+  help_string.append("Toggle Fullscreen: F11\n");
+  help_string.append("Toggle Debug: F9\n");
+  help_string.append("Adjust Move Speed: Numpad +/-\n\n");
   if (std::filesystem::exists(map_path))
   {
     help_string.append("Maps: ");
@@ -83,6 +85,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
   Menus::InitializeClientMenu(hInstance);
   Menus::InitializeSettingsMenu(hInstance);
 
+  scene->SetMouseSpeed(Menus::GetMouseSpeed());
+  scene->SetMovementSpeed(Menus::GetMoveSpeed());
   scene->PreInitialize(MenuContext::hWndClient);
   Menus::SetMaxSamples(scene->GetMaxSampleCount());
 
@@ -114,84 +118,121 @@ void SetWindowedBorderless()
   Menus::SetBorderlessMode();
 }
 
+void Handle_WM_KEYDOWN(WPARAM wParam)
+{
+  switch (wParam)
+  {
+  case VK_ESCAPE:
+  {
+    if (MenuContext::screen_mode == ScreenMode::FULLSCREEN)
+    {
+      if (scene->SetFullScreen(FALSE))
+      {
+        SetWindowedBorderless();
+      }
+    }
+    if (scene->HasFocus())
+    {
+      scene->SetFocus(false);
+    }
+    else
+    {
+      std::thread([] {
+        if (MessageBox(MenuContext::hWndClient,
+          "Do you really want to quit?", "SC2KRender Quit",
+          MB_YESNO | MB_ICONQUESTION) == IDYES)
+        {
+          SendMessage(MenuContext::hWndClient, WM_DESTROY, 0, 0);
+        }
+      }).detach();
+    }
+  }
+  break;
+  case VK_F11:
+  {
+    switch (MenuContext::screen_mode)
+    {
+    case FULLSCREEN:
+      if (scene->SetFullScreen(FALSE))
+      {
+        SetWindowedBorderless();
+      }
+      break;
+    default:
+      SetWindowedBorderless();
+      if (scene->SetFullScreen(TRUE))
+      {
+        Menus::SetFullScreenMode();
+      }
+    }
+    scene->SetFocus(true);
+  }
+  break;
+  case VK_F9:
+  {
+    LRESULT next_state = BST_CHECKED ^ SendMessage(MenuContext::ShowDebugUICheckbox, BM_GETCHECK, 0, 0);
+    Button_SetCheck(MenuContext::ShowDebugUICheckbox, next_state);
+    MenuContext::UpdateWindows();
+    scene->SetRenderDebugUI(next_state == BST_CHECKED);
+    break;
+  }
+  break;
+  case VK_ADD:
+  {
+    int slider_value = SendMessage(MenuContext::MoveSpeedBar, (UINT)TBM_GETPOS, (WPARAM)0, (LPARAM)0);
+    int max_value = SendMessage(MenuContext::MoveSpeedBar, (UINT)TBM_GETRANGEMAX, (WPARAM)0, (LPARAM)0);
+    if (slider_value < max_value)
+    {
+      int next_value = slider_value + 1;
+      SendMessage(MenuContext::MoveSpeedBar, (UINT)TBM_SETPOS, (WPARAM)TRUE, (LPARAM)next_value);
+      Menus::UpdateMoveSpeedBar(next_value);
+      scene->SetMovementSpeed(Menus::GetMoveSpeed());
+    }
+  }
+  break;
+  case VK_SUBTRACT:
+  {
+    int slider_value = SendMessage(MenuContext::MoveSpeedBar, (UINT)TBM_GETPOS, (WPARAM)0, (LPARAM)0);
+    int min_value = SendMessage(MenuContext::MoveSpeedBar, (UINT)TBM_GETRANGEMIN, (WPARAM)0, (LPARAM)0);
+    if (slider_value > min_value)
+    {
+      int next_value = slider_value - 1;
+      SendMessage(MenuContext::MoveSpeedBar, (UINT)TBM_SETPOS, (WPARAM)TRUE, (LPARAM)next_value);
+      Menus::UpdateMoveSpeedBar(next_value);
+      scene->SetMovementSpeed(Menus::GetMoveSpeed());
+    }
+  }
+  break;
+  }
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message)
   {
 
-  case WM_SETCURSOR: //Patches an unsolved edge case with ShowCursor(FALSE) 
-      SetCursor(scene->HasFocus() ? NULL : cursor);
+  case WM_SETCURSOR: //Patches an unsolved edge case with ShowCursor(FALSE)
+    SetCursor(scene->HasFocus() ? NULL : cursor);
   break;
 
   case WM_KEYDOWN:
-    switch (wParam)
-    {
-    case VK_ESCAPE:
-    {
-      if (MenuContext::screen_mode == ScreenMode::FULLSCREEN)
-      {
-        if (scene->SetFullScreen(FALSE))
-        {
-          SetWindowedBorderless();
-        }
-      }
-      if (scene->HasFocus())
-      {
-        scene->SetFocus(false);
-      }
-      else
-      {
-        std::thread([] {
-          if (MessageBox(MenuContext::hWndClient,
-            "Do you really want to quit?", "SC2KRender Quit",
-            MB_YESNO | MB_ICONQUESTION) == IDYES)
-          {
-            SendMessage(MenuContext::hWndClient, WM_DESTROY, 0, 0);
-          }
-        }).detach();
-      }
-    }
-    break;
-    case VK_F11:
-    {
-      switch (MenuContext::screen_mode)
-      {
-      case FULLSCREEN:
-        if (scene->SetFullScreen(FALSE))
-        {
-          SetWindowedBorderless();
-        }
-        break;
-      default:
-        SetWindowedBorderless();
-        if (scene->SetFullScreen(TRUE))
-        {
-          Menus::SetFullScreenMode();
-        }
-      }
-      scene->SetFocus(true);
-    }
-    break;
-    case VK_F9:
-      LRESULT next_state = BST_CHECKED ^ SendMessage(MenuContext::ShowDebugUICheckbox, BM_GETCHECK, 0, 0);
-      Button_SetCheck(MenuContext::ShowDebugUICheckbox, next_state);
-      MenuContext::UpdateWindows();
-      scene->SetRenderDebugUI(next_state == BST_CHECKED);
-      break;
-    }
-    break;
+    Handle_WM_KEYDOWN(wParam);
+  break;
 
   case WM_WINDOWPOSCHANGED:
+  {
     if (hWnd == MenuContext::hWndClient)
     {
       if (MenuContext::screen_mode != ScreenMode::FULLSCREEN)
       {
         scene->UpdateWindow(hWnd);
       }
-    }    
-    break;
+    }
+  }
+  break;
+
   case WM_CLOSE:
+  {
     if (hWnd == MenuContext::hWndSettings)
     {
       ShowWindow(hWnd, SW_HIDE);
@@ -201,7 +242,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
       DestroyWindow(hWnd);
     }
-    break;
+  }
+  break;
   case WM_COMMAND:
     if (hWnd == MenuContext::hWndSettings)
     {
@@ -279,12 +321,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       PostQuitMessage(0);
       break;
 
-    case MENU_SHOW_HELP:       
+    case MENU_SHOW_HELP:
       std::thread([] { //A really terrible workaround
         MessageBox(MenuContext::hWndClient, help_string.c_str(), 
           "SC2KRender Help", MB_OK | MB_ICONASTERISK);
         //return DefWindowProc(hWnd, message, wParam, lParam);
-      }).detach();    
+      }).detach();
     break;
     
     case MENU_SHOW_SETTINGS:
@@ -313,7 +355,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       SetWindowedBorderless();
       if (scene->SetFullScreen(TRUE))
       {
-        Menus::SetFullScreenMode();  
+        Menus::SetFullScreenMode();
         scene->SetFocus(true);
       }
       break;

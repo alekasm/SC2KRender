@@ -55,7 +55,6 @@ public:
   void SetScale(float);
   void SetFOV(float);
   void SetRenderDebugUI(bool);
-  void ToggleRenderDebugUI();
   void SetAABBFrustumCulling(bool);
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
@@ -89,7 +88,7 @@ public:
   {
     focused = render_scene ? value : false;
     ShowCursor(!focused);
-    if (focused)
+    //if (focused)
     {
       SetCursorPos(window_cx, window_cy);
     }
@@ -163,9 +162,9 @@ private:
   float yaw = 0.f;
   float pitch = 0.f;
   float scale = 1.f; //Dev-use only
-  float base_move_speed = 0.2f;
-  float mouse_move_speed = 0.003f;
-  float move_speed = base_move_speed * scale;
+  //float base_move_speed = 0.2f;
+  float mouse_move_speed;
+  float move_speed;
   unsigned int max_supported_sample_count = 0;
   float fov = 70.f * DirectX::XM_PI / 180.f;
   int window_cx = 0, window_cy = 0;

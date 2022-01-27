@@ -23,9 +23,9 @@ HWND MenuContext::MSAAComboBox = NULL;
 HWND MenuContext::VSyncCheckbox = NULL;
 HWND MenuContext::hWndSettings = NULL;
 
-const std::string speed_text_values[7] = { "Slowest", "Slower", "Slow", "Normal", "Fast", "Faster", "Fastest" };
-const float move_speed_values[7] = {0.01f, 0.05f, 0.1f, 0.2f, 0.3f, 0.35f, 0.75f};
-const float mouse_speed_values[7] = {0.00025f, 0.001f, 0.002f, 0.003f, 0.004f, 0.005f, 0.01f};
+const std::string speed_text_values[10] = { "Slowest", "Extra Slow", "Very Slow", "Slower", "Slow", "Normal", "Fast", "Faster", "Very Fast", "Fastest" };
+const float move_speed_values[10] = { 0.0005f, 0.001f, 0.005f, 0.01f, 0.05f, 0.1f, 0.2f, 0.3f, 0.35f, 0.75f };
+const float mouse_speed_values[10] = { 0.0001f, 0.00025f, 0.0005f, 0.001f, 0.002f, 0.003f, 0.004f, 0.005f, 0.0075f, 0.01f };
 const float render_dist_values[7] = { 16.f, 32.f, 48.f, 64.f, 96.f, 128.f, 0.f };
 
 float mouse_speed_value;
@@ -40,7 +40,7 @@ void Menus::SetMaxSamples(unsigned int count)
   {
     char text[64];
     snprintf(text, sizeof(text), "MSAA %dx", samples);
-    SendMessage(MenuContext::MSAAComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)text);   
+    SendMessage(MenuContext::MSAAComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)text);
     ++index;
   }  
   SendMessage(MenuContext::MSAAComboBox, CB_SETCURSEL, (WPARAM)index, (LPARAM)0);
@@ -49,7 +49,7 @@ void Menus::SetMaxSamples(unsigned int count)
 
 void Menus::UpdateMouseSpeedBar(int slider_value)
 {
-  if (slider_value < 1 || slider_value > 7) return;
+  if (slider_value < 1 || slider_value > 10) return;
   mouse_speed_value = mouse_speed_values[slider_value - 1];
 
   std::string mouse_speed_text("Mouse Sensitivity: ");
@@ -60,7 +60,7 @@ void Menus::UpdateMouseSpeedBar(int slider_value)
 
 void Menus::UpdateMoveSpeedBar(int slider_value)
 {
-  if (slider_value < 1 || slider_value > 7) return;
+  if (slider_value < 1 || slider_value > 10) return;
   move_speed_value = move_speed_values[slider_value - 1];
 
   std::string move_speed_text("Movement Speed: ");
@@ -138,15 +138,15 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     MenuContext::SettingsRect.right - MenuContext::SettingsRect.left,
     MenuContext::SettingsRect.bottom - MenuContext::SettingsRect.top, NULL, NULL, NULL, NULL);
 
-  ShowWindow(MenuContext::hWndSettings, FALSE);    
+  ShowWindow(MenuContext::hWndSettings, FALSE);
 
   MenuContext::MouseSensBar = CreateWindow(
     TRACKBAR_CLASS, "MouseSensBar", WS_VISIBLE | WS_CHILD | TBS_HORZ | TBS_AUTOTICKS,
     10, 10, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
 
   SendMessage(MenuContext::MouseSensBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
-  SendMessage(MenuContext::MouseSensBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
-  SendMessage(MenuContext::MouseSensBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(4));
+  SendMessage(MenuContext::MouseSensBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(10));
+  SendMessage(MenuContext::MouseSensBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(6));
   SendMessage(MenuContext::MouseSensBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
   UpdateWindow(MenuContext::MouseSensBar);
 
@@ -160,8 +160,8 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     10, 50, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
 
   SendMessage(MenuContext::MoveSpeedBar, TBM_SETRANGEMIN, WPARAM(FALSE), LPARAM(1));
-  SendMessage(MenuContext::MoveSpeedBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(7));
-  SendMessage(MenuContext::MoveSpeedBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(4));
+  SendMessage(MenuContext::MoveSpeedBar, TBM_SETRANGEMAX, WPARAM(FALSE), LPARAM(10));
+  SendMessage(MenuContext::MoveSpeedBar, TBM_SETPOS, WPARAM(FALSE), LPARAM(6));
   SendMessage(MenuContext::MoveSpeedBar, TBM_SETTICFREQ, WPARAM(1), LPARAM(0));
   UpdateWindow(MenuContext::MoveSpeedBar);
 
@@ -228,8 +228,8 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
   Button_SetCheck(MenuContext::VSyncCheckbox, BST_CHECKED);
 
 
-  UpdateMoveSpeedBar(4);
-  UpdateMouseSpeedBar(4);
+  UpdateMoveSpeedBar(6);
+  UpdateMouseSpeedBar(6);
   UpdateRenderDistBar(7);
   UpdateFOVBar(2);
 }

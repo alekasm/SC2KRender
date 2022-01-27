@@ -64,7 +64,6 @@ void Scene::UpdateWindow(HWND hWnd)
   }
 }
 
-#include <fstream>
 void Scene::PreInitialize(HWND window)
 {
   m_window = window;
@@ -131,7 +130,6 @@ void Scene::SetScale(float value)
   float scale_clamp = std::clamp(value, 0.1f, 1.f);
   float scale_multiplier = value / scale;
   scale = scale_clamp;
-  move_speed = base_move_speed * scale;
   m_world = Matrix::CreateScale(scale);
   for (Model3D* model3d : v_model3d)
   {
@@ -556,8 +554,7 @@ unsigned int Scene::GetMaxSampleCount()
 
 void Scene::SetMovementSpeed(float value)
 {
-  base_move_speed = std::clamp(value, 0.025f, 0.4f);
-  move_speed = base_move_speed * scale;
+  move_speed = value;
 }
 
 void Scene::SetMouseSpeed(float value)
@@ -568,11 +565,6 @@ void Scene::SetMouseSpeed(float value)
 void Scene::SetRenderDebugUI(bool value)
 {
   render_debug_ui = value;
-}
-
-void Scene::ToggleRenderDebugUI()
-{
-  render_debug_ui ^= true;
 }
 
 void Scene::SetAABBFrustumCulling(bool value)

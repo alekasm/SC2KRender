@@ -11,7 +11,7 @@ struct Menus
   static void UpdateRenderDistBar(int);
   static float GetMoveSpeed();
   static float GetMouseSpeed();
-  static float GetFOV();  
+  static float GetFOV();
   static float GetRenderDist();
   static void SetMaxSamples(unsigned int);
   static void SetWindowedMode();

@@ -90,7 +90,7 @@ void SceneGenerator::Generate(MapTile* map_tiles, MapSceneTile** tiles,
             {
               model->origin.y = map_tile->water_height;
             }
-            //else if (map_tile->water_height == map_tile->height)           
+            //else if (map_tile->water_height == map_tile->height)
 
             XBLDType xbld_value = map_tile->xbld;
 
@@ -199,7 +199,7 @@ void SceneGenerator::Generate(MapTile* map_tiles, MapSceneTile** tiles,
                 model->model_id = xbld_value;
               }
 
-            } //end XBLD_IS_HIGHWAY   
+            } //end XBLD_IS_HIGHWAY
 
             ModifyModel::RotateModel(xbld_value, model, map_tile);
             v_model3d.push_back(model);
