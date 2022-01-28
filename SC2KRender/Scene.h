@@ -58,7 +58,6 @@ public:
   void SetAABBFrustumCulling(bool);
   void SetMovementSpeed(float);
   void SetMouseSpeed(float);
-  void SetRenderDistance(float);
   void SetMSAA(unsigned int);
   void SetEnableVSync(bool);
   bool SetFullScreen(BOOL);
@@ -84,11 +83,11 @@ public:
   {
     return scale;
   }
-  void SetFocus(bool value)
+  void SetFocus(bool value, HCURSOR cursor)
   {
     focused = render_scene ? value : false;
-    ShowCursor(!focused);
-    //if (focused)
+    SetCursor(focused ? NULL : cursor);
+    if (focused)
     {
       SetCursorPos(window_cx, window_cy);
     }
@@ -113,7 +112,6 @@ private:
   bool render_debug_ui = false;
   bool use_aabb_frustum_culling = true;
   bool use_vsync = true;
-  bool use_render_distance;
   unsigned int msaa_value = 0;
   bool focused = false;
 
@@ -169,8 +167,6 @@ private:
   float fov = 70.f * DirectX::XM_PI / 180.f;
   int window_cx = 0, window_cy = 0;
   int client_cx = 0, client_cy = 0;
-  float render_distance = 0.f;
-  float scaled_render_distance = render_distance * scale;
   MapSceneTile** tiles = nullptr;
   MapTile* map_tiles = nullptr;
   const Map map;

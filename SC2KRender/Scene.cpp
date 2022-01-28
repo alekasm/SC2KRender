@@ -72,7 +72,6 @@ void Scene::PreInitialize(HWND window)
   m_world = Matrix::CreateScale(scale);
   m_view = Matrix::CreateLookAt(m_position, Vector3(0.f, 0.f, 0.f), Vector3::UnitY);
   m_BasicEffect->SetView(m_view);
-  SetRenderDistance(render_distance);
   UpdateWindow(window);
 
 #if USING_SPRITES_3D || USING_SPRITES_2D
@@ -135,7 +134,6 @@ void Scene::SetScale(float value)
   {
     model3d->Update(this);
   }
-  SetRenderDistance(render_distance);
   m_position *= scale_multiplier;
   m_proj = Matrix::CreatePerspectiveFieldOfView(fov, m_outputWidth / m_outputHeight, .1f * scale, 256.f * scale);
   m_BasicEffect->SetProjection(m_proj);
@@ -150,35 +148,6 @@ void Scene::SetMSAA(unsigned int value)
 {
   msaa_value = static_cast<unsigned int>(std::pow(2, value));
   CreateResources();
-}
-
-void Scene::SetRenderDistance(float value)
-{
-  render_distance = value;
-  use_render_distance = value > 0.f;
-  scaled_render_distance = render_distance * scale;
-
-  float scaled_render_start = scaled_render_distance - (16.f * scale);
-  m_BasicEffect->SetFogEnabled(use_render_distance);
-  m_BasicEffect->SetFogStart(scaled_render_start);
-  m_BasicEffect->SetFogEnd(scaled_render_distance);
-  m_BasicEffect->SetFogColor(DirectX::Colors::CornflowerBlue);
-
-  for (Model3D* model3d : v_model3d)
-  {
-    model3d->model->UpdateEffects(
-      [&](DirectX::IEffect* effect)
-    {
-      auto fog = dynamic_cast<DirectX::IEffectFog*>(effect);
-      if (fog)
-      {
-        fog->SetFogEnabled(use_render_distance);
-        fog->SetFogColor(DirectX::Colors::CornflowerBlue);
-        fog->SetFogStart(scaled_render_start);
-        fog->SetFogEnd(scaled_render_distance);
-      }
-    });
-  }  
 }
 
 void Scene::Initialize(Map& map)
@@ -287,8 +256,8 @@ void Scene::Initialize(Map& map)
 }
 
 bool Scene::SetFullScreen(BOOL value)
-{
-  return m_swapChain->SetFullscreenState(value, NULL) == S_OK;
+{ 
+  return  m_swapChain->SetFullscreenState(value, NULL) == S_OK;
 }
 
 void Scene::CreateDevice()

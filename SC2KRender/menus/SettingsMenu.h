@@ -7,14 +7,14 @@
 #include <d3d11_1.h>
 #include <string>
 
-RECT MenuContext::SettingsRect = { 0, 0, 420, 270 };
+RECT MenuContext::SettingsRect = { 0, 0, 420, 240 };
 HWND MenuContext::MouseSensText = NULL;
 HWND MenuContext::MoveSpeedText = NULL;
 HWND MenuContext::FOVText = NULL;
 HWND MenuContext::MouseSensBar = NULL;
 HWND MenuContext::MoveSpeedBar = NULL;
-HWND MenuContext::RenderDistBar = NULL;
-HWND MenuContext::RenderDistText = NULL;
+//HWND MenuContext::RenderDistBar = NULL;
+//HWND MenuContext::RenderDistText = NULL;
 
 HWND MenuContext::FOVBar = NULL;
 HWND MenuContext::ShowDebugUICheckbox = NULL;
@@ -26,12 +26,12 @@ HWND MenuContext::hWndSettings = NULL;
 const std::string speed_text_values[10] = { "Slowest", "Extra Slow", "Very Slow", "Slower", "Slow", "Normal", "Fast", "Faster", "Very Fast", "Fastest" };
 const float move_speed_values[10] = { 0.0005f, 0.001f, 0.005f, 0.01f, 0.05f, 0.1f, 0.2f, 0.3f, 0.35f, 0.75f };
 const float mouse_speed_values[10] = { 0.0001f, 0.00025f, 0.0005f, 0.001f, 0.002f, 0.003f, 0.004f, 0.005f, 0.0075f, 0.01f };
-const float render_dist_values[7] = { 16.f, 32.f, 48.f, 64.f, 96.f, 128.f, 0.f };
+//const float render_dist_values[7] = { 16.f, 32.f, 48.f, 64.f, 96.f, 128.f, 0.f };
 
 float mouse_speed_value;
 float move_speed_value;
 float fov_value;
-float render_dist_value; //each tile is .5f, so 2 tiles = 1.f, each 0.5m = 50m
+//float render_dist_value; //each tile is .5f, so 2 tiles = 1.f, each 0.5m = 50m
 
 void Menus::SetMaxSamples(unsigned int count)
 {
@@ -80,6 +80,7 @@ void Menus::UpdateFOVBar(int slider_value)
   UpdateWindow(MenuContext::FOVText);
 }
 
+/*
 void Menus::UpdateRenderDistBar(int slider_value)
 {
   if (slider_value < 1 || slider_value > 7) return;
@@ -91,6 +92,7 @@ void Menus::UpdateRenderDistBar(int slider_value)
   SetWindowText(MenuContext::RenderDistText, render_dist_text.c_str());
   UpdateWindow(MenuContext::RenderDistText);
 }
+*/
 
 float Menus::GetMoveSpeed()
 {
@@ -105,11 +107,6 @@ float Menus::GetMouseSpeed()
 float Menus::GetFOV()
 {
   return fov_value;
-}
-
-float Menus::GetRenderDist()
-{
-  return render_dist_value;
 }
 
 void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
@@ -185,6 +182,7 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     190, 90, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
   UpdateWindow(MenuContext::FOVText);
 
+  /*
   MenuContext::RenderDistBar = CreateWindow(
     TRACKBAR_CLASS, "RenderDistBar", WS_VISIBLE | WS_CHILD | TBS_HORZ | TBS_AUTOTICKS,
     10, 130, 150, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
@@ -199,10 +197,11 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
     WS_CHILD | WS_VISIBLE | ES_LEFT | ES_READONLY | ES_MULTILINE,
     190, 130, 290, 20, MenuContext::hWndSettings, NULL, NULL, NULL);
   UpdateWindow(MenuContext::RenderDistText);
+  */
 
   MenuContext::MSAAComboBox = CreateWindow(
     "COMBOBOX", "", WS_VISIBLE | WS_CHILDWINDOW | CBS_DROPDOWNLIST | CBS_HASSTRINGS | WS_BORDER,
-    10, 170, 150, 150, MenuContext::hWndSettings, NULL, NULL, NULL);
+    10, 130, 150, 150, MenuContext::hWndSettings, NULL, NULL, NULL);
 
   SendMessage(MenuContext::MSAAComboBox, (UINT)CB_ADDSTRING, (WPARAM)0, (LPARAM)"No Anti-Aliasing");
   SendMessage(MenuContext::MSAAComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
@@ -217,19 +216,18 @@ void Menus::InitializeSettingsMenu(HINSTANCE hInstance)
 
   MenuContext::ShowDebugUICheckbox = CreateWindow(
     "Button", "Enable Debug", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    10, 195, 150, 25, MenuContext::hWndSettings, NULL,
+    190, 120, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::ShowDebugUICheckbox, BST_UNCHECKED);
 
   MenuContext::VSyncCheckbox = CreateWindow(
     "Button", "Enable VSync", WS_VISIBLE | WS_CHILDWINDOW | BS_AUTOCHECKBOX,
-    180, 195, 150, 25, MenuContext::hWndSettings, NULL,
+    190, 145, 150, 25, MenuContext::hWndSettings, NULL,
     NULL, NULL);
   Button_SetCheck(MenuContext::VSyncCheckbox, BST_CHECKED);
 
 
   UpdateMoveSpeedBar(6);
   UpdateMouseSpeedBar(6);
-  UpdateRenderDistBar(7);
   UpdateFOVBar(2);
 }

@@ -116,6 +116,20 @@ void SetWindowedBorderless()
   SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_WINDOWED, FALSE, &mii);
   SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_FULLSCREEN, FALSE, &mii);
   Menus::SetBorderlessMode();
+
+}
+
+void SetWindowed()
+{
+  MENUITEMINFO mii;
+  mii.cbSize = sizeof(MENUITEMINFO);
+  mii.fMask = MIIM_STATE;
+  mii.fState = MFS_CHECKED;
+  SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_WINDOWED, FALSE, &mii);
+  mii.fState = MFS_UNCHECKED;
+  SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_BORDERLESS, FALSE, &mii);
+  SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_FULLSCREEN, FALSE, &mii);
+  Menus::SetWindowedMode();
 }
 
 void Handle_WM_KEYDOWN(WPARAM wParam)
@@ -133,7 +147,7 @@ void Handle_WM_KEYDOWN(WPARAM wParam)
     }
     if (scene->HasFocus())
     {
-      scene->SetFocus(false);
+      scene->SetFocus(false, cursor);
     }
     else
     {
@@ -165,7 +179,7 @@ void Handle_WM_KEYDOWN(WPARAM wParam)
         Menus::SetFullScreenMode();
       }
     }
-    scene->SetFocus(true);
+    scene->SetFocus(true, cursor);
   }
   break;
   case VK_F9:
@@ -304,7 +318,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       {
         SetWindowTextA(MenuContext::hWndClient, std::string("SC2KRender - " + filename).c_str());
         scene->Initialize(map);
-        scene->SetFocus(true);
+        scene->SetFocus(true, cursor);
       }
     }
     break;
@@ -334,17 +348,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       break;
 
     case MENU_SCREEN_WINDOWED:
-    {
-      MENUITEMINFO mii;
-      mii.cbSize = sizeof(MENUITEMINFO);
-      mii.fMask = MIIM_STATE;
-      mii.fState = MFS_CHECKED;
-      SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_WINDOWED, FALSE, &mii);
-      mii.fState = MFS_UNCHECKED;
-      SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_BORDERLESS, FALSE, &mii);
-      SetMenuItemInfo(MenuContext::ResolutionMenu, MENU_SCREEN_FULLSCREEN, FALSE, &mii);
-      Menus::SetWindowedMode();
-    }
+      SetWindowed();
     break;
 
     case MENU_SCREEN_BORDERLESS:
@@ -356,7 +360,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       if (scene->SetFullScreen(TRUE))
       {
         Menus::SetFullScreenMode();
-        scene->SetFocus(true);
+        scene->SetFocus(true, cursor);
       }
       break;
 
@@ -406,11 +410,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       Menus::UpdateFOVBar(slider_value);
       scene->SetFOV(Menus::GetFOV());
     }
-    else if ((HWND)lParam == MenuContext::RenderDistBar)
-    {
-      Menus::UpdateRenderDistBar(slider_value);
-      scene->SetRenderDistance(Menus::GetRenderDist());
-    }
   }
   break;
 
@@ -431,21 +430,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_LBUTTONDOWN:
-    if (wParam == MK_LBUTTON)
+    if (hWnd == MenuContext::hWndClient)
     {
-      if (scene->HasFocus())
+      if (wParam == MK_LBUTTON)
       {
-        scene->MouseClick();
-      }
-      else
-      {
-        POINT p;
-        GetCursorPos(&p);
-        RECT rc;
-        GetWindowRect(MenuContext::hWndClient, &rc);
-        if (PtInRect(&rc, p))
+        if (scene->HasFocus())
         {
-          scene->SetFocus(true);
+          scene->MouseClick();
+        }
+        else
+        {
+          POINT p;
+          GetCursorPos(&p);
+          RECT rc;
+          GetWindowRect(MenuContext::hWndClient, &rc);
+          if (PtInRect(&rc, p))
+          {
+            scene->SetFocus(true, cursor);
+          }
         }
       }
     }

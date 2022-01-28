@@ -17,8 +17,8 @@ enum ScreenMode{WINDOWED, BORDERLESS, FULLSCREEN};
 struct MenuContext
 {
   static HWND hWndClient, hWndSettings;
-  static HWND MouseSensBar, MoveSpeedBar, FOVBar, RenderDistBar;
-  static HWND MouseSensText, MoveSpeedText, FOVText, RenderDistText;
+  static HWND MouseSensBar, MoveSpeedBar, FOVBar;
+  static HWND MouseSensText, MoveSpeedText, FOVText;
   static HMENU Menu, FileMenu, OptionsMenu, ResolutionMenu;
   static RECT WindowRect;
   static RECT ClientRect;
@@ -37,8 +37,6 @@ struct MenuContext
     UpdateWindow(MoveSpeedText);
     UpdateWindow(FOVText);
     UpdateWindow(ShowDebugUICheckbox);
-    UpdateWindow(RenderDistBar);
-    UpdateWindow(RenderDistText);
     UpdateWindow(VSyncCheckbox);
     //UpdateWindow(AABBFrustumCullingCheckbox);
     UpdateWindow(MSAAComboBox);
@@ -46,10 +44,9 @@ struct MenuContext
 
   static BOOL IsTextHWND(HWND hWnd)
   {
-    return 
+    return
       hWnd == MouseSensText ||
       hWnd == MoveSpeedText ||
-      hWnd == FOVText ||
-      hWnd == RenderDistText;
+      hWnd == FOVText;
   }
 };
